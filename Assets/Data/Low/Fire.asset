@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 515ba1c77ff34a945a878e734c074a7b, type: 3}
+  m_Name: Fire
+  m_EditorClassIdentifier: 
+  unitName: Fire
+  grade: 0
+  damage: 300
+  attackRange: 3
+  attackSpeed: 1
+  unitSprite: {fileID: -2363448843327527782, guid: 023aa9acfc5ef0745a918ce005b5b627, type: 3}
+  projectilePrefab: {fileID: 4113111827210690632, guid: 2fc285519df487e4f942b3d2be2eaf44, type: 3}
+  skillProjectilePrefab: {fileID: 2643208338281181209, guid: 32e5b338cea442d4c96b9e4bd0feb67d, type: 3}
+  skillChance: 0.12
+  skillDamageMultiplier: 5
