@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 515ba1c77ff34a945a878e734c074a7b, type: 3}
-  m_Name: Ice
+  m_Name: Sand
   m_EditorClassIdentifier: 
-  unitName: Ice
+  unitName: Sand
   grade: 1
   damage: 400
   attackRange: 3
   attackSpeed: 1.5
-  unitSprite: {fileID: 5729762790436766625, guid: e681673df05575c469a60f3d419abba3, type: 3}
+  unitSprite: {fileID: -3876642855385991229, guid: c6d67ac1dd25432448bd7b71ab9048bc, type: 3}
   projectilePrefab: {fileID: 0}
   skillProjectilePrefab: {fileID: 0}
-  skillChance: 0.1
-  skillDamageMultiplier: 8
+  skillChance: 0.18
+  skillDamageMultiplier: 0

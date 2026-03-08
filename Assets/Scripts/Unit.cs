@@ -17,11 +17,6 @@ public class Unit : MonoBehaviour
     [Header("판매 설정")]
     public GameObject sellButton;
 
-    [Header("드래그 & 합성 설정")]
-    private Vector3 originalPos;       // 드래그 시작 전 원래 위치
-    private Transform originalTile;    // 원래 배치되어 있던 타일(부모)
-    private bool isDragging = false;
-
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -148,6 +143,7 @@ public class Unit : MonoBehaviour
         foreach (var hit in hits)
         {
             if (count >= 3) break;
+            if (hit == null || hit.gameObject == null) continue;
             GameObject projObj = Instantiate(data.skillProjectilePrefab, transform.position, Quaternion.identity);
             projObj.GetComponent<Projectile>().Setup(hit.transform, data.damage * data.skillDamageMultiplier, ProjectileType.Normal);
             count++;
@@ -235,48 +231,6 @@ public class Unit : MonoBehaviour
             case UnitGrade.Legend: auraRenderer.color = Color.yellow; break;
             case UnitGrade.Myth: auraRenderer.color = Color.red; break;
         }
-    }
-
-    // 유닛 클릭 이벤트
-    private void OnMouseDown()
-    {
-        // 매니저에게 이 유닛이 클릭되었음을 알립니다.
-        InGameManager.instance.SelectUnit(this);
-        isDragging = true;
-        originalPos = transform.position;
-        originalTile = transform.parent;
-        StopAllCoroutines();
-        if (spriteRenderer != null) spriteRenderer.sortingOrder = 100;
-    }
-    private void OnMouseDrag()
-    {
-        if (!isDragging) return;
-
-        // 마우스 위치를 월드 좌표로 변환해서 유닛 위치에 적용
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePos.z = 0f; // 2D 뷰이므로 z축은 0으로 고정
-        transform.position = mousePos;
-    }
-
-    private void OnMouseUp()
-    {
-        isDragging = false;
-        if (spriteRenderer != null) spriteRenderer.sortingOrder = 0; // 순서 원상복구
-
-        // 1. 놓은 자리에 무엇이 있는지 레이캐스트로 검사
-        Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
-
-        // 임시 로직: 일단 무조건 제자리로 돌아가게 해둡니다. (다음 단계에서 여기에 이동/합성 로직을 넣을 겁니다)
-        ReturnToOriginalPosition();
-
-        StartCoroutine(AttackRoutine());
-    }
-
-    public void ReturnToOriginalPosition()
-    {
-        transform.position = originalPos;
-        transform.SetParent(originalTile);
     }
 
     // 사거리를 켜는 함수 (매니저가 호출)

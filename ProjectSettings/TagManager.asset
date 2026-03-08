@@ -10,11 +10,11 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - BuildTile
   - Water
   - UI
   - Enemy
-  - 
+  - Unit
   - 
   - 
   - 

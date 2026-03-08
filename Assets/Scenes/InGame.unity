@@ -366,7 +366,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e6e8048fbf706f040888158cae9f946a, type: 2}
   - {fileID: 11400000, guid: c7bb61ceabf2a904b8783417f81032ad, type: 2}
   MiddlePool:
+  - {fileID: 11400000, guid: bdb28fadd941fa544adc9cdcfbb1fb06, type: 2}
+  - {fileID: 11400000, guid: a7910a0bd7530b44aa641715db10fc47, type: 2}
   - {fileID: 11400000, guid: c698911be470e834685cd0a9e688575d, type: 2}
+  - {fileID: 11400000, guid: a75ffe4a83d52b9429b949008fdfde9b, type: 2}
+  - {fileID: 11400000, guid: f90fc41c57f2cbd45b31db0bada4d104, type: 2}
+  - {fileID: 11400000, guid: 6e70d06d3b0b2464c866e13dc9cdeada, type: 2}
   HighPool:
   - {fileID: 11400000, guid: 70f143d7038f3ff4c9f5600f956c4e68, type: 2}
   mapManager: {fileID: 1740998909}
@@ -374,6 +379,21 @@ MonoBehaviour:
   - materialA: {fileID: 11400000, guid: 34ec37b417beca94eb23da5ac5419cd8, type: 2}
     materialB: {fileID: 11400000, guid: c7bb61ceabf2a904b8783417f81032ad, type: 2}
     result: {fileID: 11400000, guid: c698911be470e834685cd0a9e688575d, type: 2}
+  - materialA: {fileID: 11400000, guid: 34ec37b417beca94eb23da5ac5419cd8, type: 2}
+    materialB: {fileID: 11400000, guid: e6e8048fbf706f040888158cae9f946a, type: 2}
+    result: {fileID: 11400000, guid: bdb28fadd941fa544adc9cdcfbb1fb06, type: 2}
+  - materialA: {fileID: 11400000, guid: 34ec37b417beca94eb23da5ac5419cd8, type: 2}
+    materialB: {fileID: 11400000, guid: eda787465d8b24f40ac44a77a92d8e05, type: 2}
+    result: {fileID: 11400000, guid: a7910a0bd7530b44aa641715db10fc47, type: 2}
+  - materialA: {fileID: 11400000, guid: e6e8048fbf706f040888158cae9f946a, type: 2}
+    materialB: {fileID: 11400000, guid: eda787465d8b24f40ac44a77a92d8e05, type: 2}
+    result: {fileID: 11400000, guid: a75ffe4a83d52b9429b949008fdfde9b, type: 2}
+  - materialA: {fileID: 11400000, guid: e6e8048fbf706f040888158cae9f946a, type: 2}
+    materialB: {fileID: 11400000, guid: c7bb61ceabf2a904b8783417f81032ad, type: 2}
+    result: {fileID: 11400000, guid: f90fc41c57f2cbd45b31db0bada4d104, type: 2}
+  - materialA: {fileID: 11400000, guid: eda787465d8b24f40ac44a77a92d8e05, type: 2}
+    materialB: {fileID: 11400000, guid: c7bb61ceabf2a904b8783417f81032ad, type: 2}
+    result: {fileID: 11400000, guid: 6e70d06d3b0b2464c866e13dc9cdeada, type: 2}
 --- !u!4 &637075829
 Transform:
   m_ObjectHideFlags: 0
