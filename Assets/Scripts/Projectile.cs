@@ -1,108 +1,103 @@
 using UnityEngine;
 
-public enum ProjectileType { Normal, Area, Penetrate }
+public enum ProjectileType { Normal, Skill, Penetrate }
 
-public class Projectile : MonoBehaviour //네모들이 공통으로 사용할 스크립트
+public class Projectile : MonoBehaviour
 {
     private Transform target;
     private float damage;
-    private ProjectileType type;
-    private float speed = 10f;
+    public ProjectileType type;
+    private float speed = 12f;
+    private float explosionRadius;
+    public SkillEffect skillEffect;
 
-    // 물네모(범위), 땅네모용 설정
-    private float areaRadius;
-    private float slowPercent;
-    private float stunDuration;
-
-    // 발사체 초기화 (불네모, 공기네모 등에서 부름)
+    // 셋업 함수 (유닛에서 호출)
     public void Setup(Transform _target, float _damage, ProjectileType _type)
     {
         target = _target;
         damage = _damage;
         type = _type;
 
-        // 공기네모(관통)라면 타겟 방향으로 일단 회전
-        if (type == ProjectileType.Penetrate && target != null)
+        if (type == ProjectileType.Penetrate)
         {
-            Vector3 dir = (target.position - transform.position).normalized;
-            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-            Destroy(gameObject, 3f); // 관통탄은 3초뒤 자동 소멸
+            // 관통탄은 목표 방향으로 회전 후 직진
+            if (target != null)
+            {
+                Vector3 dir = (target.position - transform.position).normalized;
+                float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+            }
+            Destroy(gameObject, 3f);
         }
-    }
-
-    // 물네모 전용 초기화
-    public void SetupArea(Transform _target, float _damage, float _radius, float _slow)
-    {
-        Setup(_target, _damage, ProjectileType.Area);
-        areaRadius = _radius;
-        slowPercent = _slow;
     }
 
     void Update()
     {
         if (type == ProjectileType.Penetrate)
         {
-            // 공기네모: 앞으로 쭉 전진
             transform.Translate(Vector3.right * speed * Time.deltaTime);
         }
         else if (target != null)
         {
-            // 불, 물네모: 적을 추적
             transform.position = Vector3.MoveTowards(transform.position, target.position, speed * Time.deltaTime);
-            if (Vector3.Distance(transform.position, target.position) < 0.2f)
+            if (Vector3.Distance(transform.position, target.position) < 0.1f)
             {
-                Explode();
+                HitTarget(target.GetComponent<Monster>());
             }
         }
-        else if (type != ProjectileType.Penetrate)
+        else
         {
-            // 타겟이 죽으면 발사체도 소멸
-            Destroy(gameObject);
+            if (type != ProjectileType.Penetrate) Destroy(gameObject);
         }
     }
-
-    void Explode()
+    public void SetupArea(Transform _target, float _damage, float _radius, SkillEffect _effect)
     {
-        if (target == null && type != ProjectileType.Area)
+        Setup(_target, _damage, ProjectileType.Skill);
+        explosionRadius = _radius;
+        skillEffect = _effect;
+    }
+
+    void HitTarget(Monster m)
+    {
+        // 범위 공격(Area)인 경우
+        if (explosionRadius > 0)
         {
-            Destroy(gameObject);
-            return;
-        }
-        if (type == ProjectileType.Normal) // 일반/불네모 등
-        {
-            if (target != null)
-            {
-                Monster m = target.GetComponent<Monster>();
-                if (m != null)
-                {
-                    m.TakeDamage(damage);
-                }
-            }
-        }
-        else if (type == ProjectileType.Area) // 물네모/범위형
-        {
-            // 내 위치를 기준으로 원형 범위 안의 모든 적 감지
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, areaRadius, LayerMask.GetMask("Enemy"));
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, explosionRadius, LayerMask.GetMask("Enemy"));
             foreach (var hit in hits)
             {
-                Monster m = hit.GetComponent<Monster>();
-                if (m != null)
+                Monster targetMonster = hit.GetComponent<Monster>();
+                if (targetMonster != null)
                 {
-                    m.TakeDamage(damage);
-                    if (slowPercent > 0) m.ApplySlow(slowPercent, 3f);
+                    targetMonster.TakeDamage(damage);
+
+                    // 슬로우 효과가 붙어있다면 적용 (물네모의 경우)
+                    if (skillEffect.effectType == SkillEffectType.Slow)
+                    {
+                        targetMonster.ApplySlow(skillEffect.value, skillEffect.duration);
+                    }
                 }
             }
         }
-        Destroy(gameObject);
+        else if (m != null) // 단일 공격인 경우
+        {
+            m.TakeDamage(damage);
+        }
+
+        if (type != ProjectileType.Penetrate)
+        {
+            Destroy(gameObject);
+        }
     }
 
-    // 공기네모 관통 처리
+
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (type == ProjectileType.Penetrate && collision.CompareTag("Enemy"))
         {
-            collision.GetComponent<Monster>().TakeDamage(damage);
+            Monster m = collision.GetComponent<Monster>();
+            if (m != null) HitTarget(m);
         }
     }
+
 }

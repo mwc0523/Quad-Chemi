@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 515ba1c77ff34a945a878e734c074a7b, type: 3}
+  m_Name: 1. Sprout
+  m_EditorClassIdentifier: 
+  unitName: Sprout
+  grade: 1
+  damage: 350
+  attackRange: 2
+  attackSpeed: 1.3
+  unitSprite: {fileID: -7819105193722758094, guid: 192ea9e7e9396594ea931d10d99820f1, type: 3}
+  projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
+  skills:
+  - skillName: Sprout Tie
+    trigger: 0
+    triggerChance: 0.12
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 5
+      value: 4
+      duration: 2
+      count: 0
+      effectPrefab: {fileID: 0}
+    - effectType: 3
+      value: 0
+      duration: 2
+      count: 0
+      effectPrefab: {fileID: 0}
+    - effectType: 0
+      value: 0
+      duration: 2
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: a8e7730b679753244adf8ea437efe0e4, type: 3}

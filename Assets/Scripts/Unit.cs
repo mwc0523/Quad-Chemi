@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEditor.Experimental.GraphView;
 
 public class Unit : MonoBehaviour
 {
@@ -56,7 +57,7 @@ public class Unit : MonoBehaviour
     void FindTarget()
     {
         // 사거리 내의 모든 'Enemy' 레이어 오브젝트 찾기
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, data.attackRange, LayerMask.GetMask("Enemy"));
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, data.attackRange/2, LayerMask.GetMask("Enemy"));
 
         if (hits.Length > 0)
         {
@@ -86,14 +87,31 @@ public class Unit : MonoBehaviour
     {
         if (data == null || target == null) return;
 
-        // 1. 확률 체크 (스킬 발동 여부)
-        if (data.skillProjectilePrefab != null && Random.value < data.skillChance)
+        bool basicAttackReplaced = false;
+        bool skillFired = false;
+
+        // 1. OnAttack 트리거를 가진 스킬들 검사
+        foreach (var skill in data.skills)
         {
-            ExecuteSkill(); //스킬 발사
+            if (skill.trigger == SkillTrigger.OnAttack) //기본공격 존재
+            {
+                float finalChance = skill.triggerChance; // 확률 계산!
+
+                if (Random.value < finalChance)
+                {
+                    ExecuteSkill(skill);
+                    skillFired = true;
+                }
+            }
+            else if (skill.trigger == SkillTrigger.ReplaceBasicAttack) //기본공격 대체
+            {
+                ExecuteSkill(skill);
+                basicAttackReplaced = true;
+            }
         }
-        else
+        if (!skillFired && !basicAttackReplaced) //스킬 안나갔으면 평타
         {
-            ExecuteBasicAttack(); //기본 공격
+            ExecuteBasicAttack();
         }
     }
 
@@ -106,75 +124,164 @@ public class Unit : MonoBehaviour
         if (proj != null) proj.Setup(target, data.damage, ProjectileType.Normal);
     }
 
-    // [스킬 실행] 원소별 분기
-    void ExecuteSkill()
+    // 스킬 효과 조립기 (부품들을 순서대로 실행)
+    void ExecuteSkill(SkillInfo skill)
     {
-        switch (data.unitName)
+        foreach (var effect in skill.effects)
         {
-            case "Fire": // 불네모: 3마리 타겟 공격
-                StartCoroutine(FireSkillRoutine());
-                break;
-
-            case "Water": // 물네모: 범위 감속 공격
-                GameObject waterObj = Instantiate(data.skillProjectilePrefab, transform.position, Quaternion.identity);
-                Projectile waterProj = waterObj.GetComponent<Projectile>();
-                if (waterProj != null)
-                    waterProj.SetupArea(target, data.damage * data.skillDamageMultiplier, 2f, 0.2f); // 반지름 2, 20% 감속
-                break;
-
-            case "Earth": // 땅네모: 즉시 주변 기절 (발사체 없음)
-                ExecuteEarthSkill();
-                break;
-
-            case "Air": // 공기네모: 직선 관통
-                GameObject airObj = Instantiate(data.skillProjectilePrefab, transform.position, Quaternion.identity);
-                Projectile airProj = airObj.GetComponent<Projectile>();
-                if (airProj != null)
-                    airProj.Setup(target, data.damage * data.skillDamageMultiplier, ProjectileType.Penetrate);
-                break;
+            switch (effect.effectType)
+            {
+                case SkillEffectType.DamageArea:
+                    FireAreaProjectile(skill, effect);
+                    break;
+                case SkillEffectType.DamageProjectile:
+                    StartCoroutine(FireProjectileRoutine(skill, effect));
+                    break;
+                case SkillEffectType.Stun:
+                    ApplyStun(skill, effect);
+                    break;
+                case SkillEffectType.Slow:
+                    ApplySlow(skill, effect);
+                    break;
+                case SkillEffectType.DOT:
+                    ApplyDOT(skill, effect);
+                    break;
+                case SkillEffectType.ChainLightning:
+                    ExecuteChainLightning(skill, effect);
+                    break;
+            }
         }
     }
 
-    IEnumerator FireSkillRoutine()
+    // 1. 범위 데미지 (물, 땅, 용암 등)
+    void FireAreaProjectile(SkillInfo skill, SkillEffect effect)
     {
-        // 사거리 내 적 최대 3명 찾기
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, data.attackRange, LayerMask.GetMask("Enemy"));
-        int count = 0;
-        foreach (var hit in hits)
-        {
-            if (count >= 3) break;
-            if (hit == null || hit.gameObject == null) continue;
-            GameObject projObj = Instantiate(data.skillProjectilePrefab, transform.position, Quaternion.identity);
-            projObj.GetComponent<Projectile>().Setup(hit.transform, data.damage * data.skillDamageMultiplier, ProjectileType.Normal);
-            count++;
-            yield return new WaitForSeconds(0.05f); // 아주 짧은 간격으로 발사
-        }
-    }
+        if (target == null || effect.effectPrefab == null) return;
 
-    void ExecuteEarthSkill()
-    {
-        if (data.skillProjectilePrefab != null)
-        {
-            GameObject effect = Instantiate(data.skillProjectilePrefab, transform.position, Quaternion.identity);
-            
-            // 이펙트 크기를 사거리에 맞춰서 키우고 싶다면 (선택사항)
-            float effectScale = (float)1.27*data.attackRange;
-            effect.transform.localScale = new Vector3(effectScale, effectScale, 1);
-            Destroy(effect, 1.0f);
-        }
-        // 2. 실제 데미지 및 기절 로직 (기존과 동일)
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, data.attackRange, LayerMask.GetMask("Enemy"));
+        // 1. 타겟 위치(또는 유닛 위치)에 이펙트 생성
+        Vector3 spawnPos = (skill.range > 0) ? target.position : transform.position;
+        GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+
+        float effectScale = data.attackRange * 1.3f;
+        fx.transform.localScale = new Vector3(effectScale, effectScale, 1f);
+        float lifeTime = effect.duration > 0 ? effect.duration : 1.0f;
+        Destroy(fx, lifeTime);
+
+        // 3. 실제 데미지 처리 (OverlapCircle 사용)
+        float damageRange = data.attackRange / 2;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(spawnPos, damageRange, LayerMask.GetMask("Enemy"));
 
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
             if (m != null)
             {
-                m.TakeDamage(data.damage * data.skillDamageMultiplier);
-                m.ApplyStun(1.0f); // 1초 기절
+                m.TakeDamage(data.damage * effect.value);
             }
         }
     }
+
+    // 2. 발사체 스킬 (불네모 3발, 공기네모 관통풍 등)
+    IEnumerator FireProjectileRoutine(SkillInfo skill, SkillEffect effect)
+    {
+        int shotCount = effect.count > 0 ? effect.count : 1;
+
+        // 주변 적 다수 타겟팅 (불네모용)
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, data.attackRange/2, LayerMask.GetMask("Enemy"));
+        int currentShot = 0;
+
+        foreach (var hit in hits)
+        {
+            if (currentShot >= shotCount) break;
+            if (hit == null || hit.gameObject == null) continue;
+
+            if (effect.effectPrefab != null)
+            {
+                GameObject projObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+                Projectile proj = projObj.GetComponent<Projectile>();
+                // 투사체 데미지는 기본공격력 * 배율
+                if (proj != null) proj.Setup(hit.transform, data.damage * effect.value, proj.type);
+            }
+            currentShot++;
+            yield return new WaitForSeconds(0.05f); // 다발 사격 시 약간의 딜레이
+        }
+    }
+
+    // 3. 기절 (땅네모, 새싹네모 등)
+    void ApplyStun(SkillInfo skill, SkillEffect effect)
+    {
+        float checkRange = skill.range > 0 ? skill.range/2 : data.attackRange/2;
+        Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null) m.ApplyStun(effect.duration);
+        }
+    }
+
+    // 4. 슬로우 (물풍선, 얼음, 모래폭풍)
+    void ApplySlow(SkillInfo skill, SkillEffect effect)
+    {
+        float checkRange = skill.range > 0 ? skill.range / 2 : data.attackRange / 2;
+        Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null) m.ApplySlow(effect.value, effect.duration); // value: 감속량 (0.2 = 20%)
+        }
+    }
+
+    // 5. 지속 데미지 (새싹네모 DOT)
+    void ApplyDOT(SkillInfo skill, SkillEffect effect)
+    {
+        float checkRange = skill.range > 0 ? skill.range / 2 : data.attackRange / 2;
+        Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            // value: 초당 데미지 배율 (400% = 4)
+            if (m != null) m.ApplyDOT(data.damage * effect.value, effect.duration);
+        }
+    }
+
+    // 6. 체인 라이트닝 (전기네모)
+    void ExecuteChainLightning(SkillInfo skill, SkillEffect effect)
+    {
+        if (target != null && effect.effectPrefab != null)
+        {
+            GameObject chainObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+            ChainLightning chain = chainObj.GetComponent<ChainLightning>();
+            if (chain != null)
+            {
+                // 시작타겟, 데미지, 튕기는 횟수, 튕기는 사거리
+                chain.Setup(target, data.damage * effect.value, effect.count, 3f);
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public void SellUnit()
     {

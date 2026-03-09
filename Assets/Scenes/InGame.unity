@@ -328,6 +328,7 @@ GameObject:
   m_Component:
   - component: {fileID: 637075829}
   - component: {fileID: 637075828}
+  - component: {fileID: 637075830}
   m_Layer: 0
   m_Name: InGameManager
   m_TagString: Untagged
@@ -373,7 +374,30 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f90fc41c57f2cbd45b31db0bada4d104, type: 2}
   - {fileID: 11400000, guid: 6e70d06d3b0b2464c866e13dc9cdeada, type: 2}
   HighPool:
-  - {fileID: 11400000, guid: 70f143d7038f3ff4c9f5600f956c4e68, type: 2}
+  - {fileID: 11400000, guid: 7b611c3ed8b72b944be20390f7b82e17, type: 2}
+  - {fileID: 11400000, guid: 5905c92c9add2214d8b542ca23ce577c, type: 2}
+  - {fileID: 11400000, guid: 2404cfb7dd2be2941b34ba5afa756b61, type: 2}
+  - {fileID: 11400000, guid: fb59a863818b5f847b73118044d6e09b, type: 2}
+  - {fileID: 11400000, guid: 916cfaa6146c55e4283a5d387883a15a, type: 2}
+  - {fileID: 11400000, guid: e92a55ef5d5a900499c5215a1afe16ea, type: 2}
+  EpicPool:
+  - {fileID: 11400000, guid: 85e2daff6d119774da20b1414703ac68, type: 2}
+  - {fileID: 11400000, guid: eae1b87b838caca4e88ad8fec6c6a495, type: 2}
+  - {fileID: 11400000, guid: 9fe5bba556307b04dbdd6ff703732535, type: 2}
+  - {fileID: 11400000, guid: dbda6a029b1b06c449c679ced942b251, type: 2}
+  - {fileID: 11400000, guid: 62d989a8e126e9d458135843ffd40ac5, type: 2}
+  - {fileID: 11400000, guid: 027fb427b6da65d4587f76670fac47e6, type: 2}
+  LegendPool:
+  - {fileID: 11400000, guid: 2ec5b82e8d41955488dee7d0b5d027ff, type: 2}
+  - {fileID: 11400000, guid: 213ad922c414ad04dbc1b9131644a2f4, type: 2}
+  - {fileID: 11400000, guid: b6595e54c5e0e5943af0c16872f4dfc5, type: 2}
+  - {fileID: 11400000, guid: c77cf6948458cc941828ba8c01cb5b52, type: 2}
+  - {fileID: 11400000, guid: 907366b81dfad8a458e7609076042c9e, type: 2}
+  - {fileID: 11400000, guid: 2943621dd708a59488a7a216dfbb0427, type: 2}
+  MythPool:
+  - {fileID: 11400000, guid: 2455f7a5b3d89d145861498eab256562, type: 2}
+  - {fileID: 11400000, guid: 18d89778ffaab9642847fd0464cbb534, type: 2}
+  - {fileID: 11400000, guid: 6f3de9987b5f7bc4bab394defdfde2ca, type: 2}
   mapManager: {fileID: 1740998909}
   recipes:
   - materialA: {fileID: 11400000, guid: 34ec37b417beca94eb23da5ac5419cd8, type: 2}
@@ -409,6 +433,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &637075830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 637075827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af14acc6c50041944a9d7deeb454acb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speedText: {fileID: 1623117714}
 --- !u!1 &699869048
 GameObject:
   m_ObjectHideFlags: 0
@@ -1167,7 +1204,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 438.74377, y: 871.3069}
+  m_AnchoredPosition: {x: 384, y: -783}
   m_SizeDelta: {x: 121.1941, y: 96.8702}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1493954451
@@ -1214,9 +1251,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 637075828}
-        m_TargetAssemblyTypeName: InGameManager, Assembly-CSharp
-        m_MethodName: GoToLobby
+      - m_Target: {fileID: 637075830}
+        m_TargetAssemblyTypeName: SpeedControl, Assembly-CSharp
+        m_MethodName: ChangeSpeed
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1321,7 +1358,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: L
+  m_text: x1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 564fd6aa706fcca4fbed240ddadeb4aa, type: 2}
   m_sharedMaterial: {fileID: -6891292513193512576, guid: 564fd6aa706fcca4fbed240ddadeb4aa, type: 2}

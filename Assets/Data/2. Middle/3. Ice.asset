@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 515ba1c77ff34a945a878e734c074a7b, type: 3}
+  m_Name: 3. Ice
+  m_EditorClassIdentifier: 
+  unitName: Ice
+  grade: 1
+  damage: 400
+  attackRange: 3
+  attackSpeed: 1.5
+  unitSprite: {fileID: -7032048543236042483, guid: d0a0d20319c10624da7d24d8850a14e8, type: 3}
+  projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
+  skills:
+  - skillName: 
+    trigger: 0
+    triggerChance: 0.1
+    triggerCount: 0
+    range: 1.5
+    effects:
+    - effectType: 0
+      value: 8
+      duration: 0
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: 9b9ed14495e73e54baf14730e5e05923, type: 3}
+    - effectType: 4
+      value: 0.1
+      duration: 3
+      count: 0
+      effectPrefab: {fileID: 0}

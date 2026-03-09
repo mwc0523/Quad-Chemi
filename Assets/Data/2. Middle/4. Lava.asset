@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 515ba1c77ff34a945a878e734c074a7b, type: 3}
+  m_Name: 4. Lava
+  m_EditorClassIdentifier: 
+  unitName: Lava
+  grade: 1
+  damage: 600
+  attackRange: 2.5
+  attackSpeed: 1.7
+  unitSprite: {fileID: -4905497237766447136, guid: c83c7cd0d56ca4f479b3ac313be74990, type: 3}
+  projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
+  skills:
+  - skillName: Lava Burn
+    trigger: 0
+    triggerChance: 0.08
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 0
+      value: 7
+      duration: 0
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: 8d2072a71202e584ca1cfbbd95fbcf58, type: 3}

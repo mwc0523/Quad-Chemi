@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 515ba1c77ff34a945a878e734c074a7b, type: 3}
+  m_Name: 1. Typhoon
+  m_EditorClassIdentifier: 
+  unitName: Typhoon
+  grade: 2
+  damage: 700
+  attackRange: 3
+  attackSpeed: 1.5
+  unitSprite: {fileID: -843336127028825789, guid: 83fc04721ec1ea647b7bfe0f071b6efb, type: 3}
+  projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
+  skills: []

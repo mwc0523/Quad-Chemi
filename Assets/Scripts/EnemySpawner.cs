@@ -19,11 +19,13 @@ public class EnemySpawner : MonoBehaviour
 
     IEnumerator SpawnRoutine()
     {
+        int currentRound = InGameManager.instance.currentRound; // 매니저에서 현재 라운드 참조
+
         while (spawnedCount < monstersPerRound)
         {
             GameObject monsterObj = Instantiate(monsterPrefab, pathManager.waypoints[0].position, Quaternion.identity);
             // List를 Array로 변환해서 전달
-            monsterObj.GetComponent<Monster>().Setup(pathManager.waypoints.ToArray());
+            monsterObj.GetComponent<Monster>().Setup(pathManager.waypoints.ToArray(), currentRound);
 
             InGameManager.instance.OnMonsterSpawned();
             spawnedCount++;

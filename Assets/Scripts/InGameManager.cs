@@ -44,6 +44,9 @@ public class InGameManager : MonoBehaviour
     public UnitData[] LowPool;    // 하급 유닛 도감 리스트
     public UnitData[] MiddlePool;      // 중급 유닛 도감 리스트
     public UnitData[] HighPool;    // 상급 유닛 도감 리스트
+    public UnitData[] EpicPool;    // 서사급 유닛 도감 리스트
+    public UnitData[] LegendPool;    // 전설급 유닛 도감 리스트
+    public UnitData[] MythPool;    // 신화급 유닛 도감 리스트
     public MapManager mapManager;
 
     [Header("합성 레시피 (조합표)")]
@@ -62,7 +65,7 @@ public class InGameManager : MonoBehaviour
         // 게임 시작 시 초기화
         currentRound = 1;
         currentTime = roundDuration;
-        currentCoin = 2000; // 코인 20개로 시작
+        currentCoin = 100; // 코인 20개로 시작
         UpdateUI();
         spawner.StartSpawn();
     }
