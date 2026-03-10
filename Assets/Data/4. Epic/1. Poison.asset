@@ -17,6 +17,21 @@ MonoBehaviour:
   damage: 1200
   attackRange: 2.5
   attackSpeed: 1.5
-  unitSprite: {fileID: 6054085642701565390, guid: 15616240f6da678499211bd772e0a8b0, type: 3}
+  unitSprite: {fileID: 3598661496677939965, guid: 0c464451269435548bcec4c6f4ccdb83, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uB9F9\uB3C5\uBCD1"
+    description: "10% \uD655\uB960\uB85C \uB9F9\uB3C5\uBCD1\uC744 \uB358\uC838 5\uCD08\uAC04
+      \uD0C0\uC77C 3\uCE78 \uBC94\uC704\uB85C \uC9C0\uC18D\uB418\uB294 \uB3C5\uC7A5\uD310\uC744
+      \uB0A8\uACA8 \uADF8 \uC704\uC758 \uC801\uB4E4\uC740 \uCD08\uB2F9 300%\uC758
+      \uB370\uBBF8\uC9C0\uB97C \uBC1B\uC2B5\uB2C8\uB2E4."
+    trigger: 0
+    triggerChance: 0.1
+    triggerCount: 0
+    range: 3
+    effects:
+    - effectType: 0
+      value: 3
+      duration: 5
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: a8e7730b679753244adf8ea437efe0e4, type: 3}

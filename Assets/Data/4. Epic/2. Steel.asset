@@ -14,9 +14,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: Steel
   grade: 3
-  damage: 400
-  attackRange: 3
-  attackSpeed: 1.5
-  unitSprite: {fileID: -7032048543236042483, guid: d0a0d20319c10624da7d24d8850a14e8, type: 3}
+  damage: 1000
+  attackRange: 2
+  attackSpeed: 1.2
+  unitSprite: {fileID: -4265811895631429640, guid: 2ea50bed89dde4541b6aedf44ef4f541, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uAC15\uCCA0\uBCBD"
+    description: "15% \uD655\uB960\uB85C \uACF5\uACA9\uBC94\uC704\uB0B4 \uC801\uC744
+      4\uCD08\uAC04 \uAE30\uC808\uC2DC\uD0A4\uB294 \uAC15\uCCA0\uBCBD\uC744 \uC18C\uD658\uD558\uACE0
+      \uADF8\uB3D9\uC548 \uBC1B\uB294 \uBAA8\uB4E0 \uCD5C\uC885 \uD53C\uD574\uB97C
+      18% \uC99D\uAC00\uC2DC\uD0B5\uB2C8\uB2E4. "
+    trigger: 0
+    triggerChance: 0.15
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 3
+      value: 0
+      duration: 4
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: 78dd8b0d7a569114192f9faa0294029f, type: 3}
+    - effectType: 7
+      value: 0.18
+      duration: 4
+      count: 0
+      effectPrefab: {fileID: 0}

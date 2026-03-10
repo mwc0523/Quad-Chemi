@@ -15,8 +15,23 @@ MonoBehaviour:
   unitName: Meteor
   grade: 2
   damage: 900
-  attackRange: 2
+  attackRange: 2.5
   attackSpeed: 1
-  unitSprite: {fileID: -7032048543236042483, guid: d0a0d20319c10624da7d24d8850a14e8, type: 3}
+  unitSprite: {fileID: -5397702730684140974, guid: 7a525d3c5c8be2745ab27fcd228b988d, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uBA54\uD14C\uC624 \uC18C\uD658"
+    description: "13% \uD655\uB960\uB85C \uBC94\uC704\uB0B4\uC758 \uB79C\uB364 \uC801\uC758
+      \uBA38\uB9AC \uC704\uC5D0\uC11C \uAC01 \uD0C0\uC77C 1\uCE78\uD06C\uAE30, \uCD1D
+      3\uBC1C\uC758 \uBA54\uD14C\uC624\uB97C \uB5A8\uAD6C\uACE0 \uBC94\uC704 \uB0B4
+      \uC801\uC5D0\uAC8C 1300%\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4."
+    trigger: 0
+    triggerChance: 0.13
+    triggerCount: 0
+    range: 1
+    effects:
+    - effectType: 0
+      value: 13
+      duration: 0
+      count: 3
+      effectPrefab: {fileID: 6094360297785955000, guid: 8d2072a71202e584ca1cfbbd95fbcf58, type: 3}

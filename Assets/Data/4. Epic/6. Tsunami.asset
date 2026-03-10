@@ -14,9 +14,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: Tsunami
   grade: 3
-  damage: 450
-  attackRange: 3.5
-  attackSpeed: 2
-  unitSprite: {fileID: -843336127028825789, guid: 83fc04721ec1ea647b7bfe0f071b6efb, type: 3}
+  damage: 1250
+  attackRange: 3
+  attackSpeed: 1.3
+  unitSprite: {fileID: -7074161198926668033, guid: 49831fb8b32c7274bb8fdbe7d8abfc40, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uC4F0\uB098\uBBF8"
+    description: "10%\uD655\uB960\uB85C 3\uCD08\uAC04 \uBAAC\uC2A4\uD130\uC758 \uC774\uB3D9\uACBD\uB85C\uB97C
+      \uC5ED\uC8FC\uD589\uD558\uBA70 \uB2FF\uB294 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C
+      1000%\uB370\uBBF8\uC9C0\uB97C \uC8FC\uB294 \uD574\uC77C\uC744 \uBC1C\uC0AC\uD569\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 1
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 0
+      value: 10
+      duration: 3
+      count: 0
+      effectPrefab: {fileID: 0}

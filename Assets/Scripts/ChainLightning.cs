@@ -9,6 +9,7 @@ public class ChainLightning : MonoBehaviour
     private int remainingBounces;
     private float bounceRange;
     private List<Transform> hitTargets = new List<Transform>();
+    private Unit owner;
 
     void Awake()
     {
@@ -18,11 +19,12 @@ public class ChainLightning : MonoBehaviour
         line.useWorldSpace = true;
     }
 
-    public void Setup(Transform firstTarget, float _damage, int bounces, float range)
+    public void Setup(Transform firstTarget, float _damage, int bounces, float range, Unit own)
     {
         damage = _damage;
         remainingBounces = bounces;
         bounceRange = range == 0 ? 3f : range; // 범위가 0이면 기본 3으로 설정
+        owner = own;
 
         if (firstTarget != null)
         {
@@ -50,7 +52,7 @@ public class ChainLightning : MonoBehaviour
         // 1. 현재 타겟 정보 저장 (위치값으로 저장해야 안전함)
         Vector3 targetPos = target.position;
         Monster m = target.GetComponent<Monster>();
-        if (m != null) m.TakeDamage(damage);
+        if (m != null) m.TakeDamage(damage, owner);
         hitTargets.Add(target);
 
         // 2. 라인 그리기

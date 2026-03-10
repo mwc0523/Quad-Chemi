@@ -20,7 +20,10 @@ MonoBehaviour:
   unitSprite: {fileID: -4905497237766447136, guid: c83c7cd0d56ca4f479b3ac313be74990, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
   skills:
-  - skillName: Lava Burn
+  - skillName: "\uBD88\uD0DC\uC6B0\uAE30"
+    description: "8% \uD655\uB960\uB85C \uACF5\uACA9\uBC94\uC704\uB0B4 \uC801\uC744
+      \uC804\uBD80 \uBD88\uD0DC\uC6B0\uB294 \uC6D0\uD615 \uD654\uC5FC\uC744 \uB0A0\uB824
+      700%\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4"
     trigger: 0
     triggerChance: 0.08
     triggerCount: 0

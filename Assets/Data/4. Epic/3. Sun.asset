@@ -14,9 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: Sun
   grade: 3
-  damage: 450
-  attackRange: 3
-  attackSpeed: 3
-  unitSprite: {fileID: -1427659260725400314, guid: 4d0971234928a3a43a4b618e847f151a, type: 3}
+  damage: 1300
+  attackRange: 2.5
+  attackSpeed: 1.3
+  unitSprite: {fileID: 7730919170010904756, guid: 76ad5298699de6b4d862a0575edcd90e, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uC791\uC740 \uD0DC\uC591"
+    description: "8% \uD655\uB960\uB85C 10\uCD08\uAC04 \uD0DC\uC591\uB124\uBAA8 \uC8FC\uBCC0\uC744
+      \uC6D0\uD615\uC73C\uB85C \uB3C4\uB294 \uC791\uC740 \uD0DC\uC591\uC744 1\uAC1C
+      \uC18C\uD658\uD569\uB2C8\uB2E4(\uAD00\uD1B5). \uC791\uC740 \uD0DC\uC591\uC5D0
+      \uB2FF\uC740 \uC801\uC740 400%\uC758 \uB370\uBBF8\uC9C0\uB97C \uBC1B\uC2B5\uB2C8\uB2E4.
+      \uC791\uC740 \uD0DC\uC591\uC774 \uD55C\uBC14\uD034\uB97C \uB3CC\uC544\uC624\uAC70\uB098,
+      \uB2E4\uB978 \uC791\uC740 \uD0DC\uC591\uC5D0 \uB2FF\uC744 \uACBD\uC6B0 \uB370\uBBF8\uC9C0\uB97C
+      \uB610 \uBC1B\uC2B5\uB2C8\uB2E4."
+    trigger: 0
+    triggerChance: 0.08
+    triggerCount: 0
+    range: 1
+    effects:
+    - effectType: 0
+      value: 4
+      duration: 10
+      count: 0
+      effectPrefab: {fileID: 1050481007815087936, guid: 6afb206e4d9136b41b9eff3b2f6d2531, type: 3}

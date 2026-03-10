@@ -18,11 +18,13 @@ public class InGameManager : MonoBehaviour
     Unit draggingUnit;
     Transform originalTile;
     bool isDragging = false;
+    int summonFee = 20;
 
     [Header("UI 연결")]
     public TextMeshProUGUI roundText;
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI coinText;
+    public TextMeshProUGUI T_summonButton;
 
     [Header("게임 설정")]
     public int maxRound = 100;
@@ -65,7 +67,7 @@ public class InGameManager : MonoBehaviour
         // 게임 시작 시 초기화
         currentRound = 1;
         currentTime = roundDuration;
-        currentCoin = 100; // 코인 20개로 시작
+        currentCoin = 10000; // 코인 20개로 시작
         UpdateUI();
         spawner.StartSpawn();
     }
@@ -223,7 +225,7 @@ public class InGameManager : MonoBehaviour
 
     public void OnClickSummonButton()
     {
-        if (currentCoin >= 20)
+        if (currentCoin >= summonFee)
         {
             Transform targetTile = null;
 
@@ -240,7 +242,8 @@ public class InGameManager : MonoBehaviour
 
             if (targetTile != null)
             {
-                currentCoin -= 20;
+                currentCoin -= summonFee;
+                summonFee += 5;
                 UpdateUI();
                 SpawnRandomUnit(targetTile);
             }
@@ -332,7 +335,8 @@ public class InGameManager : MonoBehaviour
     void UpdateUI()
     {
         roundText.text = "Round " + currentRound;
-        coinText.text = currentCoin + "c";
+        coinText.text = currentCoin + " C";
+        T_summonButton.text = "네모 소환\n" + summonFee.ToString() + " C";
     }
 
     // 유닛이 클릭되었을 때 호출되는 함수
@@ -347,6 +351,7 @@ public class InGameManager : MonoBehaviour
         // 새로운 유닛을 선택하고 사거리를 켭니다.
         selectedUnit = unit;
         selectedUnit.ShowRange(true);
+        InGameUIManager.instance.ShowUnitInfo(unit.data);
     }
 
     // 선택 해제 함수
@@ -357,6 +362,7 @@ public class InGameManager : MonoBehaviour
             selectedUnit.ShowRange(false);
             selectedUnit = null;
         }
+        InGameUIManager.instance.HideUnitInfo();
     }
 
     //테스트용 버튼

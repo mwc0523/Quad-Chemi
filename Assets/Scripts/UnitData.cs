@@ -42,6 +42,7 @@ public struct SkillEffect
 public struct SkillInfo
 {
     public string skillName;
+    public string description;
     public SkillTrigger trigger;
     [Range(0f, 1f)] public float triggerChance; // OnAttack 등에서 발동 확률
     public int triggerCount;        // OnAttackCount용 (예: 20회 공격마다)
@@ -76,3 +77,10 @@ public class UnitData : ScriptableObject
     public List<SkillInfo> skills;
 }
 
+
+//딜미터기 관련 데이터 저장소
+public class UnitStatistics
+{
+    public float totalDamage = 0; // 누적 데미지
+    public int killCount = 0;    // 처치 수
+}

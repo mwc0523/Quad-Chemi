@@ -20,14 +20,16 @@ MonoBehaviour:
   unitSprite: {fileID: -843336127028825789, guid: 83fc04721ec1ea647b7bfe0f071b6efb, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
   skills:
-  - skillName: "\uB77C\uC774\uD2B8\uB2DD\uBCFC\uD2B8"
+  - skillName: "\uC5F0\uC1C4 \uC804\uAE30"
+    description: "8% \uD655\uB960\uB85C \uC8FC\uBCC0 \uC801\uC5D0\uAC8C \uCD5C\uB300
+      3\uBC88 \uD295\uAE30\uBA70 \uAC01 500%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
     trigger: 0
-    triggerChance: 0.1
+    triggerChance: 0.08
     triggerCount: 0
     range: 0
     effects:
     - effectType: 2
-      value: 10
+      value: 5
       duration: 0
-      count: 5
+      count: 3
       effectPrefab: {fileID: 8258347084358460233, guid: 108325feec85203439d9a16f94051448, type: 3}

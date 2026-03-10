@@ -10,13 +10,15 @@ public class Projectile : MonoBehaviour
     private float speed = 12f;
     private float explosionRadius;
     public SkillEffect skillEffect;
+    private Unit owner;
 
     // 셋업 함수 (유닛에서 호출)
-    public void Setup(Transform _target, float _damage, ProjectileType _type)
+    public void Setup(Transform _target, float _damage, ProjectileType _type, Unit _owner)
     {
         target = _target;
         damage = _damage;
         type = _type;
+        owner = _owner;
 
         if (type == ProjectileType.Penetrate)
         {
@@ -50,12 +52,6 @@ public class Projectile : MonoBehaviour
             if (type != ProjectileType.Penetrate) Destroy(gameObject);
         }
     }
-    public void SetupArea(Transform _target, float _damage, float _radius, SkillEffect _effect)
-    {
-        Setup(_target, _damage, ProjectileType.Skill);
-        explosionRadius = _radius;
-        skillEffect = _effect;
-    }
 
     void HitTarget(Monster m)
     {
@@ -68,7 +64,7 @@ public class Projectile : MonoBehaviour
                 Monster targetMonster = hit.GetComponent<Monster>();
                 if (targetMonster != null)
                 {
-                    targetMonster.TakeDamage(damage);
+                    targetMonster.TakeDamage(damage, owner);
 
                     // 슬로우 효과가 붙어있다면 적용 (물네모의 경우)
                     if (skillEffect.effectType == SkillEffectType.Slow)
@@ -80,7 +76,7 @@ public class Projectile : MonoBehaviour
         }
         else if (m != null) // 단일 공격인 경우
         {
-            m.TakeDamage(damage);
+            m.TakeDamage(damage, owner);
         }
 
         if (type != ProjectileType.Penetrate)

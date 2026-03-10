@@ -100,3 +100,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49e91197f49c03447aab76277bda9ee9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  type: 0
+  skillEffect:
+    effectType: 0
+    value: 0
+    duration: 0
+    count: 0
+    effectPrefab: {fileID: 0}

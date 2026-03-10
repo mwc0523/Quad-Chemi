@@ -12,6 +12,7 @@ public class Monster : MonoBehaviour
     public float hp;
     public float baseSpeed = 1f;
     private float currentSpeed;
+    public float defense;
 
     [Header("UI 연결")]
     public Slider hpSlider;
@@ -19,6 +20,9 @@ public class Monster : MonoBehaviour
     [Header("상태")]
     public bool isStunned = false;
     private bool isDead = false;
+
+    private float damageMultiplier = 1f;
+    private Coroutine debuffCoroutine;
 
     private SpriteRenderer spriteRenderer;
     private Coroutine slowCoroutine;
@@ -68,6 +72,12 @@ public class Monster : MonoBehaviour
             }
         }*/
 
+        //속도 설정
+        currentSpeed = baseSpeed + (currentRound * 0.01f); // 라운드당 속도 미세 증가
+
+        //방어력 설정
+        defense = currentRound;
+
         hp = maxhp;
         waypoints = path;
 
@@ -76,7 +86,6 @@ public class Monster : MonoBehaviour
             hpSlider.maxValue = maxhp;
             hpSlider.value = hp;
         }
-        currentSpeed = baseSpeed + (currentRound * 0.01f); // 라운드당 속도 미세 증가
     }
 
     void Update()
@@ -93,15 +102,30 @@ public class Monster : MonoBehaviour
             if (currentIndex >= waypoints.Length) currentIndex = 0;
         }
     }
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, Unit attacker)
     {
         if (isDead) return;
-        hp -= damage;
-        if (hpSlider != null)
+
+        float reductionPercent = defense / (defense + 100f); //방어력 계산
+
+        float finalDamage = damage * (1f - reductionPercent) * damageMultiplier; //실제 받는 데미지 계산
+        finalDamage = Mathf.Round(finalDamage);
+
+        finalDamage = Mathf.Max(1f, finalDamage); //최소 1은 들어가게 함
+
+        if (attacker != null)
         {
-            hpSlider.value = hp;
+            if(hp < finalDamage) attacker.stats.totalDamage += hp;
+            else attacker.stats.totalDamage += damage; // 데미지 기록
         }
-        if (hp <= 0) Die();
+        hp -= finalDamage;
+
+        if (hpSlider != null) hpSlider.value = hp;
+        if (hp <= 0)
+        {
+            attacker.stats.killCount++;
+            Die();
+        }
     }
 
     // ㅡㅡㅡ 상태이상 구현부 ㅡㅡㅡ
@@ -130,6 +154,23 @@ public class Monster : MonoBehaviour
         slowCoroutine = null;
     }
 
+    public void ApplyDamageAmp(float ampValue, float duration)
+    {
+        if (debuffCoroutine != null) StopCoroutine(debuffCoroutine);
+        debuffCoroutine = StartCoroutine(DamageAmpRoutine(ampValue, duration));
+    }
+
+    IEnumerator DamageAmpRoutine(float ampValue, float duration)
+    {
+        // 바위네모 스킬이 10% 증가라면 ampValue는 0.1
+        damageMultiplier = 1f + ampValue;
+
+        yield return new WaitForSeconds(duration);
+
+        damageMultiplier = 1f; // 원래대로 복구
+        debuffCoroutine = null;
+    }
+
     // 기절 효과
     public void ApplyStun(float duration)
     {
@@ -153,20 +194,34 @@ public class Monster : MonoBehaviour
         stunCoroutine = null;
     }
 
-    public void ApplyDOT(float damagePerSecond, float duration)
+    public void ApplyDOT(float damagePerSecond, float duration, Unit attacker)
     {
-        StartCoroutine(DOTRoutine(damagePerSecond, duration));
+        StartCoroutine(DOTRoutine(damagePerSecond, duration, attacker));
     }
 
-    IEnumerator DOTRoutine(float dps, float duration)
+    IEnumerator DOTRoutine(float dps, float duration, Unit attacker)
     {
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            TakeDamage(dps * 0.5f); // 0.5초마다 데미지
+            TakeDamage(dps * 0.5f, attacker); // 0.5초마다 데미지
             elapsed += 0.5f;
             yield return new WaitForSeconds(0.5f);
         }
+    }
+
+    public void AddVisualEffect(GameObject prefab, float duration)
+    {
+        if (prefab == null) return;
+
+        // 몬스터를 부모로 설정하여 생성 (따라다니게 됨)
+        GameObject visual = Instantiate(prefab, transform.position, Quaternion.identity, transform);
+
+        // 위치는 몬스터 중앙, 크기는 1:1 (이미지는 몬스터 크기에 맞춰짐)
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localScale = Vector3.one;
+
+        Destroy(visual, duration);
     }
 
     void Die()
