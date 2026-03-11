@@ -339,6 +339,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   data: {fileID: 11400000, guid: eda787465d8b24f40ac44a77a92d8e05, type: 2}
+  skillChanceBonus: 0
   auraRenderer: {fileID: 5184019441439614}
   rangeCircle: {fileID: 7932112952598016715}
   basicProjectilePrefab: {fileID: 4113111827210690632, guid: 2fc285519df487e4f942b3d2be2eaf44, type: 3}
@@ -464,7 +465,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -806949339
   m_SortingLayer: 2
-  m_SortingOrder: 2
+  m_SortingOrder: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
   m_Color: {r: 0.7264151, g: 0.7264151, b: 0.7264151, a: 0.0627451}
   m_FlipX: 0
