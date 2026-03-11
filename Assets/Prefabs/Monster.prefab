@@ -105,6 +105,7 @@ MonoBehaviour:
   maxhp: 1000
   hp: 1000
   baseSpeed: 1
+  defense: 0
   hpSlider: {fileID: 4203473391487837134}
   isStunned: 0
 --- !u!58 &2165439407180679608

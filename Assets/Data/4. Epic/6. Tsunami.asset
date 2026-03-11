@@ -21,11 +21,24 @@ MonoBehaviour:
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
   skills:
   - skillName: "\uC4F0\uB098\uBBF8"
-    description: "10%\uD655\uB960\uB85C 3\uCD08\uAC04 \uBAAC\uC2A4\uD130\uC758 \uC774\uB3D9\uACBD\uB85C\uB97C
+    description: "10% \uD655\uB960\uB85C 3\uCD08\uAC04 \uBAAC\uC2A4\uD130\uC758 \uC774\uB3D9\uACBD\uB85C\uB97C
       \uC5ED\uC8FC\uD589\uD558\uBA70 \uB2FF\uB294 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C
-      1000%\uB370\uBBF8\uC9C0\uB97C \uC8FC\uB294 \uD574\uC77C\uC744 \uBC1C\uC0AC\uD569\uB2C8\uB2E4"
+      800%\uB370\uBBF8\uC9C0\uB97C \uC8FC\uB294 \uD574\uC77C\uC744 \uBC1C\uC0AC\uD569\uB2C8\uB2E4"
     trigger: 0
-    triggerChance: 1
+    triggerChance: 0.1
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 11
+      value: 8
+      duration: 3
+      count: 0
+      effectPrefab: {fileID: 5802527559198752737, guid: a244b220e95a8d9439f0867a8b811d4b, type: 3}
+  - skillName: "\uC11C\uC0AC\uAE09 \uC804\uC6A9 \uD328\uC2DC\uBE0C"
+    description: "\uD544\uB4DC\uC5D0 \uC874\uC7AC\uD558\uB294 \uD574\uC77C\uB124\uBAA8
+      \uD558\uB098\uB2F9 \uC2A4\uD0AC1\uC758 \uB370\uBBF8\uC9C0\uAC00 100% \uC0C1\uC2B9\uD569\uB2C8\uB2E4"
+    trigger: 1
+    triggerChance: 0
     triggerCount: 0
     range: 0
     effects:

@@ -25,7 +25,7 @@ public enum SkillEffectType
     Execution,          // 처형 (블랙홀, 심연)
     PermanentStatIncrease, // 영구 능력치 상승 (종말 스킬1)
     SpawnEntity,        // 독립적인 개체 소환 (태양, 강철벽, 해일 등)
-    CountBasedBuff      // 필드 위 동족 수 비례 버프 (서사 등급 공통)
+    TsunamiLauncher     //쓰나미
 }
 
 [System.Serializable]

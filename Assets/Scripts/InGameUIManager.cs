@@ -54,7 +54,7 @@ public class InGameUIManager : MonoBehaviour
             {
                 int index = i; // 클로저 방지
                 GameObject btnObj = Instantiate(skillButtonPrefab, skillButtonParent);
-                btnObj.GetComponentInChildren<TMP_Text>().text = "Skill " + (i + 1).ToString();
+                btnObj.GetComponentInChildren<TMP_Text>().text = "스킬 " + (i + 1).ToString();
 
                 // 버튼을 누르면 해당 인덱스의 스킬 프리팹을 띄움
                 btnObj.GetComponent<Button>().onClick.AddListener(() => DisplaySkillByIndex(index));

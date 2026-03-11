@@ -40,3 +40,22 @@ MonoBehaviour:
       duration: 4
       count: 0
       effectPrefab: {fileID: 0}
+  - skillName: "\uC11C\uC0AC\uAE09 \uC804\uC6A9 \uD328\uC2DC\uBE0C"
+    description: "\uD544\uB4DC\uC5D0 \uC874\uC7AC\uD558\uB294 \uAC15\uCCA0\uB124\uBAA8
+      \uD558\uB098\uB2F9 \uC2A4\uD0AC1\uC758 \uD6A8\uACFC\uB85C \uC801\uC774 \uBC1B\uB294
+      \uD53C\uD574\uAC00 2% \uC99D\uAC00\uD569\uB2C8\uB2E4(\uC790\uC2E0\uB3C4 \uCE74\uC6B4\uD2B8)"
+    trigger: 1
+    triggerChance: 0
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 3
+      value: 0
+      duration: 4
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: 78dd8b0d7a569114192f9faa0294029f, type: 3}
+    - effectType: 7
+      value: 0.18
+      duration: 4
+      count: 0
+      effectPrefab: {fileID: 0}

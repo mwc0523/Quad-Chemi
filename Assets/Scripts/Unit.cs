@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
+using NUnit.Framework.Internal;
 
 public class Unit : MonoBehaviour
 {
@@ -9,6 +10,9 @@ public class Unit : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private List<GameObject> activeSuns = new List<GameObject>(); //살아있는 작은태양 리스트
     public UnitStatistics stats = new UnitStatistics();
+    public float skillChanceBonus = 0f; //코일의 스킬 사용 확률 증가량
+    private bool isCoilBuffActive = false;
+    private Coroutine coilBuffCoroutine;
 
 
     [Header("시각적 효과")]
@@ -30,6 +34,21 @@ public class Unit : MonoBehaviour
     {
         // 게임 시작 시 혹은 소환 시 공격 루틴 시작
         StartCoroutine(AttackRoutine());
+    }
+    
+
+    public IEnumerator ApplySkillChanceBuff(float amount, float duration)
+    {
+        isCoilBuffActive = true;
+        skillChanceBonus = amount; // += 가 아니라 = 로 설정하여 중첩 원천 봉쇄
+        Debug.Log($"버프 갱신: 현재 확률 보너스 {skillChanceBonus}");
+        // 
+        yield return new WaitForSeconds(duration);
+
+        // 버프 종료
+        skillChanceBonus = 0f;
+        isCoilBuffActive = false;
+        coilBuffCoroutine = null;
     }
 
     // --- 공격 로직 시작 ---
@@ -99,7 +118,7 @@ public class Unit : MonoBehaviour
         {
             if (skill.trigger == SkillTrigger.OnAttack) //기본공격 존재
             {
-                float finalChance = skill.triggerChance; // 확률 계산!
+                float finalChance = skill.triggerChance + skillChanceBonus; // 확률 계산!
 
                 if (Random.value < finalChance)
                 {
@@ -135,18 +154,60 @@ public class Unit : MonoBehaviour
         {
             switch (effect.effectType)
             {
-                case SkillEffectType.DamageArea: StartCoroutine(FireAreaRoutine(skill, effect)); break;
-                case SkillEffectType.DamageProjectile: StartCoroutine(FireProjectileRoutine(skill, effect)); break;
+                case SkillEffectType.DamageArea:
+                    if (data.unitName == "Poison") StartCoroutine(PoisonSkillRoutine(skill, effect));
+                    else StartCoroutine(FireAreaRoutine(skill, effect));
+                    break;
+                case SkillEffectType.DamageProjectile:
+                    if (data.unitName == "Blizzard")
+                    {
+                        // 1. 필드 위의 블리자드네모 개수 카운트
+                        int blizzardCount = GetUnitCount("Blizzard");
+
+                        // 2. 최종 데미지 배율 계산
+                        // 기본 1800%(18.0f) + (개수 * 200%(2.0f))
+                        // 예: 1마리일 때 20배(2000%), 2마리일 때 22배(2200%)
+                        float finalDamageMultiplier = effect.value + (blizzardCount * 2.0f);
+
+                        // 3. 계산된 데미지로 투사체 발사 루틴 실행
+                        StartCoroutine(FireBlizzardRoutine(skill, effect, finalDamageMultiplier));
+                    }
+                    else
+                    {
+                        StartCoroutine(FireProjectileRoutine(skill, effect));
+                    }
+                    break;
                 case SkillEffectType.Stun: ApplyStun(skill, effect); break;
                 case SkillEffectType.Slow: ApplySlow(skill, effect); break;
                 case SkillEffectType.DOT: ApplyDOT(skill, effect); break;
                 case SkillEffectType.ChainLightning: ExecuteChainLightning(skill, effect); break;
-                case SkillEffectType.DebuffEnemy: ApplyDebuff(skill, effect); break;
+                case SkillEffectType.BuffAlly: StartCoroutine(CoilBuffRoutine(skill, effect)); break;
+                case SkillEffectType.DebuffEnemy:
+                    if (data.unitName == "Steel")
+                    {
+                        // 1. 필드 위의 강철네모 개수 카운트
+                        int steelCount = GetUnitCount("Steel");
+
+                        // 2. 최종 피해 증가량 계산
+                        // 기본 18%(0.18f) + (개수 * 2%(0.02f))
+                        float finalDamageAmp = effect.value + (steelCount * 0.02f);
+
+                        // 3. 계산된 값을 들고 디버프 실행
+                        ApplySteelDebuff(skill, effect, finalDamageAmp);
+                    }
+                    else
+                    {
+                        ApplyDebuff(skill, effect);
+                    }
+                    break;
                 case SkillEffectType.Execution: ApplyExecution(skill, effect); break;
                 case SkillEffectType.SpawnEntity: ExecuteSpawnEntity(skill, effect); break;
+                case SkillEffectType.TsunamiLauncher: TsunamiSkill(skill, effect); break;
             }
         }
     }
+    
+    //필드에 존재하는 동일 유닛 검색
     public static int GetUnitCount(string unitName)
     {
         int count = 0;
@@ -171,7 +232,6 @@ public class Unit : MonoBehaviour
                     if (sun == null) continue;
                     sun.GetComponent<SunOrbit>().RefreshDuration(effect.duration);
                 }
-                Debug.Log("태양 지속시간 연장!");
                 yield break;
             }
 
@@ -291,6 +351,23 @@ public class Unit : MonoBehaviour
             yield return new WaitForSeconds(0.05f); // 다발 사격 시 약간의 딜레이
         }
     }
+    IEnumerator FireBlizzardRoutine(SkillInfo skill, SkillEffect effect, float multiplier)
+    {
+        if (target == null || effect.effectPrefab == null) yield break;
+
+        // 블리자드는 '일자로 긴 거리'를 가야 하므로 
+        // 프리팹 내부 Projectile 스크립트의 Type이 'Penetrate'로 설정되어 있어야 합니다.
+        GameObject projObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+        Projectile proj = projObj.GetComponent<Projectile>();
+
+        if (proj != null)
+        {
+            // 계산된 배율(multiplier)을 적용한 최종 데미지 전달
+            proj.Setup(target, data.damage * multiplier, ProjectileType.Penetrate, this);
+        }
+
+        yield return null;
+    }
     void SpawnSkillEffect(SkillInfo skill, SkillEffect effect, Vector3 targetPos) //이펙트 생성기
     {
         if (effect.effectPrefab == null) return;
@@ -299,7 +376,7 @@ public class Unit : MonoBehaviour
         GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
 
         // 사거리에 맞게 이펙트 크기 조절
-        float scale = skill.range > 0 ? skill.range : data.attackRange;
+        float scale = skill.range > 0 ? skill.range/2 : data.attackRange/2;
         fx.transform.localScale = new Vector3(scale, scale, 1f);
 
         // 지속시간이 끝나면 이펙트 삭제
@@ -403,6 +480,37 @@ public class Unit : MonoBehaviour
         }
     }
 
+    void ApplySteelDebuff(SkillInfo skill, SkillEffect effect, float calculatedValue)
+    {
+        // 강철벽 소환 위치 (본인 중심, 사거리만큼)
+        Vector3 checkPos = transform.position;
+        float checkRadius = data.attackRange / 2f;
+
+        // 시각 효과 (강철벽 프리팹 소환)
+        if (effect.effectPrefab != null)
+        {
+            GameObject fx = Instantiate(effect.effectPrefab, checkPos, Quaternion.identity);
+            fx.transform.localScale = new Vector3(data.attackRange, data.attackRange, 1f);
+            Destroy(fx, effect.duration);
+        }
+
+        // 범위 내 적 스캔
+        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRadius, LayerMask.GetMask("Enemy"));
+
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null)
+            {
+                // [스킬1] 4초간 기절 (duration은 4로 설정되어 있어야 함)
+                m.ApplyStun(effect.duration);
+
+                // [스킬1 + 스킬2] 최종 피해 증가 적용
+                m.ApplyDamageAmp(calculatedValue, effect.duration);
+            }
+        }
+    }
+
     // 8. 처형 (체력이 특정 퍼센트 이하인 적 즉사)
     void ApplyExecution(SkillInfo skill, SkillEffect effect)
     {
@@ -432,6 +540,109 @@ public class Unit : MonoBehaviour
         Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
     }
 
+    // 10. 코일 스킬
+    IEnumerator CoilBuffRoutine(SkillInfo skill, SkillEffect effect)
+    {
+        // 1. 필드 위의 코일 수 계산
+        int coilCount = GetUnitCount("Coil");
+
+        // 2. 최종 증가량 계산: 기본 10% + (코일 당 5%)
+        // 예: 코일이 2마리면 10 + (2 * 5) = 20% 증가
+        float finalBuffValue = effect.value + (coilCount * 0.05f);
+
+        // 3. 범위 내 아군 찾기 (사거리/2)
+        float buffRange = skill.range > 0 ? skill.range / 2f : data.attackRange / 2f;
+        Collider2D[] allies = Physics2D.OverlapCircleAll(transform.position, buffRange, LayerMask.GetMask("Unit"));
+
+        foreach (var ally in allies)
+        {
+            Unit unit = ally.GetComponent<Unit>();
+            if (unit != null)
+            {
+                if (unit.data != null && unit.data.unitName == "Coil") continue;
+                unit.AddCoilBuff(finalBuffValue, effect.duration);
+            }
+        }
+
+        // 시각 효과 (있다면)
+        if (effect.effectPrefab != null)
+        {
+            GameObject fx = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+            Destroy(fx, effect.duration);
+        }
+        yield return null;
+    }
+
+    // 11. 해일 스킬
+    void TsunamiSkill(SkillInfo skill, SkillEffect effect)
+    {
+        int tsunamiCount = GetUnitCount("Tsunami");
+        float finalTsunamiDamage = data.damage * (effect.value + (tsunamiCount * 1.0f));
+
+        // 3. 해일 생성
+        if (effect.effectPrefab != null)
+        {
+            GameObject tsunamiObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+            TsunamiEntity tsunami = tsunamiObj.GetComponent<TsunamiEntity>();
+
+            if (tsunami != null)
+            {
+                // 데미지와 지속시간(3초) 전달
+                tsunami.Setup(finalTsunamiDamage, effect.duration > 0 ? effect.duration : 3f, this);
+            }
+        }
+    }
+
+    // 12. 맹독 전용 스킬 루틴
+    IEnumerator PoisonSkillRoutine(SkillInfo skill, SkillEffect effect)
+    {
+        if (target == null) yield break;
+
+        // 1. 필드에 존재하는 '맹독' 유닛 개수 파악 (자신 포함)
+        int poisonCount = GetUnitCount("Poison");
+
+        float finalDamageMultiplier = effect.value + (poisonCount * 2.0f);
+        float finalDamagePerSecond = data.damage * finalDamageMultiplier;
+
+        // 3. 독병 투척 이펙트 생성 (선택 사항: 투사체가 날아가는 연출이 없다면 바로 장판 생성)
+        Vector3 spawnPos = target.position;
+
+        if (effect.effectPrefab != null)
+        {
+            GameObject poisonZone = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+
+            // 스킬 범위 설정 (타일 3칸 범위 = skill.range 활용)
+            float zoneScale = skill.range > 0 ? skill.range : 3f;
+            poisonZone.transform.localScale = new Vector3(zoneScale, zoneScale, 1f);
+
+            // 4. 지속 데미지 로직 (장판 프리팹에 스크립트가 있다면 그쪽에 데미지를 넘겨주고, 
+            // 없다면 여기서 소환된 동안 반복 데미지를 주는 로직을 작성합니다.)
+
+            // 간단 구현: 장판 프리팹 자체가 틱 데미지를 주는 구조가 아니라면 
+            // 아래와 같이 코루틴에서 직접 처리 가능합니다.
+            float elapsed = 0f;
+            float duration = effect.duration > 0 ? effect.duration : 5f;
+
+            while (elapsed < duration)
+            {
+                // 매 초(1초 간격) 장판 위의 적들에게 데미지
+                Collider2D[] hits = Physics2D.OverlapCircleAll(spawnPos, zoneScale / 2f, LayerMask.GetMask("Enemy"));
+                foreach (var hit in hits)
+                {
+                    Monster m = hit.GetComponent<Monster>();
+                    if (m != null)
+                    {
+                        // 초당 데미지이므로 1초에 한 번씩 들어감 (틱을 더 쪼개려면 0.1f 등으로 수정)
+                        m.TakeDamage(finalDamagePerSecond, this);
+                    }
+                }
+                yield return new WaitForSeconds(1f);
+                elapsed += 1f;
+            }
+
+            Destroy(poisonZone);
+        }
+    }
 
 
 
@@ -441,12 +652,30 @@ public class Unit : MonoBehaviour
 
 
 
+    public void AddCoilBuff(float amount, float duration)
+    {
+        // 1. 이미 버프 코루틴이 돌고 있다면 강제 종료
+        if (coilBuffCoroutine != null)
+        {
+            StopCoroutine(coilBuffCoroutine);
+            coilBuffCoroutine = null;
 
+            // [중요] 중첩 방지: 기존에 적용되어 있던 버프 수치를 먼저 완전히 제거
+            // 이전에 적용된 수치가 얼마였든 현재 보너스에서 0으로 리셋하거나 
+            // isActive 체크를 통해 정확히 빼줘야 합니다.
+            if (isCoilBuffActive)
+            {
+                // 현재 amount를 빼는 게 아니라, 보너스 자체를 0으로 밀거나 
+                // 마지막에 적용했던 값을 저장해뒀다 빼야 안전합니다.
+                // 여기선 가장 확실한 방법인 '0으로 초기화'를 사용하거나 
+                // 아래 코루틴 구조로 개선합니다.
+                skillChanceBonus = 0f;
+            }
+        }
 
-
-
-
-
+        // 2. 새로운 버프 코루틴 시작
+        coilBuffCoroutine = StartCoroutine(ApplySkillChanceBuff(amount, duration));
+    }
 
     public void SellUnit()
     {
