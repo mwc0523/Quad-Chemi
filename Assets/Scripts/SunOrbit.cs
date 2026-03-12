@@ -6,7 +6,7 @@ public class SunOrbit : MonoBehaviour
     private float radius;
     private float damage;
     private float angle;
-    private float speed = 100f; // È¸Àü ¼Óµµ
+    private float speed = 100f; // íšŒì „ ì†ë„
     private float remainingTime;
     private Unit owner;
 
@@ -21,7 +21,7 @@ public class SunOrbit : MonoBehaviour
     }
     public void RefreshDuration(float newDuration)
     {
-        remainingTime = newDuration; // ½Ã°£À» ´Ù½Ã 10ÃÊ·Î ¸®¼Â
+        remainingTime = newDuration; // ì‹œê°„ì„ ë‹¤ì‹œ 10ì´ˆë¡œ ë¦¬ì…‹
     }
 
     void Update()
@@ -35,7 +35,7 @@ public class SunOrbit : MonoBehaviour
             return;
         }
 
-        // ¹İ½Ã°è ¹æÇâ È¸Àü °è»ê
+        // ë°˜ì‹œê³„ ë°©í–¥ íšŒì „ ê³„ì‚°
         angle += speed * Time.deltaTime;
         float x = Mathf.Cos(angle * Mathf.Deg2Rad) * radius;
         float y = Mathf.Sin(angle * Mathf.Deg2Rad) * radius;

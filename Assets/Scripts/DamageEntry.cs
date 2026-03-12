@@ -15,7 +15,7 @@ public class DamageEntry : MonoBehaviour
     {
         nameText.text = name;
         unitIcon.sprite = icon;
-        damageText.text = damage.ToString("N0"); // 콤마 포함 숫자
+        damageText.text = damage.ToString("N0"); 
         killText.text = $"{kills}";
 
         ratioText.text = (ratio * 100f).ToString("F1") + "%";

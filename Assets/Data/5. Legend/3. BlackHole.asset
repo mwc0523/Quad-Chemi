@@ -14,9 +14,52 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: BlackHole
   grade: 4
-  damage: 450
+  damage: 2000
   attackRange: 3
-  attackSpeed: 3
-  unitSprite: {fileID: -1427659260725400314, guid: 4d0971234928a3a43a4b618e847f151a, type: 3}
+  attackSpeed: 1.8
+  unitSprite: {fileID: -1980871016750384115, guid: 396bb5ac1907ddd48b4f8bb082362110, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uC0AC\uAC74\uC758 \uC9C0\uD3C9\uC120"
+    description: "15% \uD655\uB960\uB85C \uC9C0\uD3C9\uC120\uC744 \uBFCC\uB824 \uBC94\uC704\uB0B4
+      \uC801\uC758 \uCCB4\uB825\uC774 5% \uC774\uD558\uB77C\uBA74 \uCC98\uD615\uD569\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0.15
+    triggerCount: 0
+    range: 2
+    effects:
+    - effectType: 8
+      value: 0.05
+      duration: 0
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: a5dcca3e554cdc14c82374d0b61c0b11, type: 3}
+  - skillName: "\uD2B9\uC774\uC810 \uBD95\uAD34"
+    description: "10% \uD655\uB960\uB85C 3\uCE78 \uD06C\uAE30\uC758 \uBE14\uB799\uD640\uC744
+      \uC18C\uD658\uD574 7\uCD08\uAC04 \uC801\uC744 \uC911\uC2EC\uBD80\uB85C \uB04C\uC5B4\uB2F9\uAE30\uBA70
+      \uCD08\uB2F9 300%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0.1
+    triggerCount: 0
+    range: 3
+    effects:
+    - effectType: 10
+      value: 3
+      duration: 7
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: 9c77fe30fc6dd3e42af7162cea7b88b2, type: 3}
+  - skillName: "\uC554\uD751 \uBB3C\uC9C8"
+    description: "15% \uD655\uB960\uB85C \uAC80\uC740 \uAD6C\uCCB4\uB97C \uBC1C\uC0AC\uD574
+      \uCC98\uC74C \uB2FF\uC740 \uC801\uC5D0\uAC8C 2000%\uC758 \uB370\uBBF8\uC9C0\uB97C
+      \uC90D\uB2C8\uB2E4. \uAD6C\uCCB4\uB294 \uC801\uC5D0\uAC8C \uB2FF\uC73C\uBA74
+      \uD3ED\uBC1C\uD558\uC5EC 2\uCE78 \uBC94\uC704\uC758 \uC801\uC5D0\uAC8C 500%\uC758
+      \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0.15
+    triggerCount: 0
+    range: 2
+    effects:
+    - effectType: 1
+      value: 20
+      duration: 0
+      count: 1
+      effectPrefab: {fileID: 6094360297785955000, guid: 7273ebeea9343714b99d202f7ed7d8bb, type: 3}

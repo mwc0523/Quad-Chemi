@@ -17,7 +17,7 @@ public class RecipeSlot : MonoBehaviour
         if (unitIcon != null) unitIcon.sprite = data.unitSprite;
         if (nameText != null) nameText.text = data.unitName;
 
-        // µî±Ş ÅØ½ºÆ®¿Í »ö»ó ÀÔÈ÷±â (¼±ÅÃ »çÇ×)
+        // ë“±ê¸‰ í…ìŠ¤íŠ¸ì™€ ìƒ‰ìƒ ì…íˆê¸° (ì„ íƒ ì‚¬í•­)
         if (gradeText != null)
         {
             gradeText.text = data.grade.ToString();
@@ -30,9 +30,9 @@ public class RecipeSlot : MonoBehaviour
         switch (grade)
         {
             case UnitGrade.Low: text.color = Color.white; break;
-            case UnitGrade.Middle: text.color = new Color(0.5f, 1f, 0.5f); break; // ¿¬µÎ
+            case UnitGrade.Middle: text.color = new Color(0.5f, 1f, 0.5f); break; // ì—°ë‘
             case UnitGrade.High: text.color = Color.blue; break;
-            case UnitGrade.Epic: text.color = new Color(0.6f, 0f, 1f); break;   // º¸¶ó
+            case UnitGrade.Epic: text.color = new Color(0.6f, 0f, 1f); break;   // ë³´ë¼
             case UnitGrade.Legend: text.color = Color.yellow; break;
             case UnitGrade.Myth: text.color = Color.red; break;
         }
@@ -40,7 +40,7 @@ public class RecipeSlot : MonoBehaviour
 
     public void OnClick()
     {
-        // Å¬¸¯ ½Ã ¸Å´ÏÀú¿¡°Ô ³» Á¤º¸¸¦ Àü´ŞÇÏ¸ç »ó¼¼Ã¢À» ¶ç¿ì¶ó°í ÇÔ
+        // í´ë¦­ ì‹œ ë§¤ë‹ˆì €ì—ê²Œ ë‚´ ì •ë³´ë¥¼ ì „ë‹¬í•˜ë©° ìƒì„¸ì°½ì„ ë„ìš°ë¼ê³  í•¨
         FindObjectOfType<RecipeManager>().ShowRecipeDetail(data);
     }
 }

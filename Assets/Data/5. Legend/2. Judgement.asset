@@ -14,9 +14,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: Judgement
   grade: 4
-  damage: 400
+  damage: 2500
   attackRange: 3
-  attackSpeed: 1.5
-  unitSprite: {fileID: -7032048543236042483, guid: d0a0d20319c10624da7d24d8850a14e8, type: 3}
+  attackSpeed: 1
+  unitSprite: {fileID: 4177025365133314566, guid: 9f8290c6ea5345849bba9ea603ddcf1e, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uC2EC\uD310\uC758 \uB808\uC774\uC800"
+    description: "\uAE30\uBCF8\uACF5\uACA9\uC774 \uBCC0\uACBD\uB429\uB2C8\uB2E4.
+      \uB2E8\uC77C \uC801\uC744 \uB300\uC0C1\uC73C\uB85C \uB808\uC774\uC800\uB97C
+      \uBC1C\uC0AC\uD574 500%\uC5D0\uC11C \uC2DC\uB2E5\uD574\uC11C \uCD08\uB2F9 \uB370\uBBF8\uC9C0\uAC00
+      500%\uC529 \uC99D\uAC00\uD558\uB294 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4.
+      \uAE30\uBCF8\uACF5\uACA9\uC758 \uB300\uC0C1\uC774 \uC0AC\uB9DD\uD558\uAC70\uB098
+      \uC0AC\uAC70\uB9AC\uC5D0\uC11C \uBC97\uC5B4\uB098\uB294 \uB4F1 \uACF5\uACA9\uC774
+      \uB04A\uAE30\uBA74 \uB370\uBBF8\uC9C0 \uC0C1\uC2B9\uB7C9\uC774 \uCD08\uAE30\uD654\uB429\uB2C8\uB2E4."
+    trigger: 0
+    triggerChance: 0
+    triggerCount: 0
+    range: 0
+    effects: []
+  - skillName: "\uC2EC\uD310\uC758 \uBA54\uD14C\uC624"
+    description: "5% \uD655\uB960\uB85C 5\uCE78 \uBC94\uC704\uC5D0 \uBA54\uD14C\uC624\uB97C
+      \uB5A8\uAD88 2000%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0.05
+    triggerCount: 0
+    range: 5
+    effects:
+    - effectType: 0
+      value: 20
+      duration: 0.5
+      count: 1
+      effectPrefab: {fileID: 6094360297785955000, guid: 74e77af11516837428bd523a5a921079, type: 3}
+  - skillName: "\uC5C5\uBCF4"
+    description: "\uC801\uC744 \uC9C1\uC811 \uCC98\uCE58\uD558\uBA74 \uC801 20\uB9C8\uB9AC\uB2F9
+      \uBA54\uD14C\uC624 \uD558\uB098\uB97C \uB5A8\uAD7D\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 0
+      value: 20
+      duration: 0.5
+      count: 1
+      effectPrefab: {fileID: 6094360297785955000, guid: 74e77af11516837428bd523a5a921079, type: 3}

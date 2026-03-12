@@ -19,12 +19,12 @@ public class EnemySpawner : MonoBehaviour
 
     IEnumerator SpawnRoutine()
     {
-        int currentRound = InGameManager.instance.currentRound; // ¸Å´ÏÀú¿¡¼­ ÇöÀç ¶ó¿îµå ÂüÁ¶
+        int currentRound = InGameManager.instance.currentRound; // ë§¤ë‹ˆì €ì—ì„œ í˜„ì¬ ë¼ìš´ë“œ ì°¸ì¡°
 
         while (spawnedCount < monstersPerRound)
         {
             GameObject monsterObj = Instantiate(monsterPrefab, pathManager.waypoints[0].position, Quaternion.identity);
-            // List¸¦ Array·Î º¯È¯ÇØ¼­ Àü´Ş
+            // Listë¥¼ Arrayë¡œ ë³€í™˜í•´ì„œ ì „ë‹¬
             monsterObj.GetComponent<Monster>().Setup(pathManager.waypoints.ToArray(), currentRound);
 
             InGameManager.instance.OnMonsterSpawned();

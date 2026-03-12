@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 public class UIManager : MonoBehaviour
 {
     [Header("Page Panels")]
-    public GameObject[] pages; // 0:»óÁ¡, 1:À¯´Ö, 2:È¨, 3:°­È­, 4:Àü´É
+    public GameObject[] pages; // 0:ìƒì , 1:ìœ ë‹›, 2:í™ˆ, 3:ê°•í™”, 4:ì „ëŠ¥
 
     [Header("Top Bar Data")]
     public TextMeshProUGUI nicknameText;
@@ -16,12 +16,12 @@ public class UIManager : MonoBehaviour
 
 
 
-    void Start() //½ÃÀÛ½Ã
+    void Start() //ì‹œì‘ì‹œ
     {
-        OpenPage(2); //¸ŞÀÎÈ­¸é ¿ÀÇÂ
+        OpenPage(2); //ë©”ì¸í™”ë©´ ì˜¤í”ˆ
     }
 
-    public void OpenPage(int index) //ÇÏ´Ü ¹öÆ° Å¬¸¯½Ã ÆäÀÌÁö ¿­±â
+    public void OpenPage(int index) //í•˜ë‹¨ ë²„íŠ¼ í´ë¦­ì‹œ í˜ì´ì§€ ì—´ê¸°
     {
         for (int i = 0; i < pages.Length; i++)
         {
@@ -31,7 +31,7 @@ public class UIManager : MonoBehaviour
     }
 
     public void UpdateTopBar(string name, int ticket, 
-        int gem, int amethyst) //»ó´Ü ¹Ù ¾ÆÀÌÅÛ È¹µæ ¹İ¿µ
+        int gem, int amethyst) //ìƒë‹¨ ë°” ì•„ì´í…œ íšë“ ë°˜ì˜
     {
         nicknameText.text = name;
         ticketText.text = ticket.ToString();
@@ -39,7 +39,7 @@ public class UIManager : MonoBehaviour
         amethystText.text = amethyst.ToString();
     }
 
-    public void GoToInGame() //°ÔÀÓ ½ÃÀÛ ¹öÆ°
+    public void GoToInGame() //ê²Œì„ ì‹œì‘ ë²„íŠ¼
     {
         SceneManager.LoadScene("InGame");
     }

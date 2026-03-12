@@ -1,64 +1,136 @@
 using UnityEngine;
 using System.Collections;
-using UnityEditor.Experimental.GraphView;
 using System.Collections.Generic;
-using NUnit.Framework.Internal;
 
 public class Unit : MonoBehaviour
 {
-    public UnitData data; // À§¿¡¼­ ¸¸µç µ¥ÀÌÅÍ ÆÄÀÏÀÌ ¿©±â ²ÈÈü´Ï´Ù.
+    public UnitData data; // ìœ„ì—ì„œ ë§Œë“  ë°ì´í„° íŒŒì¼ì´ ì—¬ê¸° ê½‚í™ë‹ˆë‹¤.
     private SpriteRenderer spriteRenderer;
-    private List<GameObject> activeSuns = new List<GameObject>(); //»ì¾ÆÀÖ´Â ÀÛÀºÅÂ¾ç ¸®½ºÆ®
+
+    // ì‚´ì•„ìˆëŠ” ì‘ì€ íƒœì–‘ ë¦¬ìŠ¤íŠ¸
+    private readonly List<GameObject> activeSuns = new List<GameObject>();
+
+    // ë”œë¯¸í„°ê¸°ìš© í†µê³„
     public UnitStatistics stats = new UnitStatistics();
-    public float skillChanceBonus = 0f; //ÄÚÀÏÀÇ ½ºÅ³ »ç¿ë È®·ü Áõ°¡·®
+
+    // ì„±ì¥/ì „íˆ¬ ìŠ¤íƒ¯
+    public int level = 1;                      // ë‚˜ì¤‘ì— ë¡œë¹„ì—ì„œ ì •í•´ì¤„ ìœ ë‹› ë ˆë²¨
+    public UnitStats combatStats = new UnitStats(); // ì „íˆ¬ìš© ìŠ¤íƒ¯(ê³µê²©ë ¥, ì‚¬ê±°ë¦¬, ê³µì† ë“±)
+
+    // ì½”ì¼ ë²„í”„ ê´€ë ¨
+    public float skillChanceBonus = 0f; // ì½”ì¼ì˜ ìŠ¤í‚¬ ì‚¬ìš© í™•ë¥  ì¦ê°€ëŸ‰
     private bool isCoilBuffActive = false;
-    private Coroutine coilBuffCoroutine;
+    private Coroutine coilBuffCoroutine; //ì½”ì¼ ë²„í”„ ê°±ì‹ ìš©
+    private Coroutine worldTreeBuffCoroutine; //ì„¸ê³„ìˆ˜ ë²„í”„ ê°±ì‹ ìš©
+    private StatModifier worldTreeBuffModifier;
+    private Coroutine judgementLaserCoroutine; //ì‹¬íŒ ì „ìš© ìƒíƒœ
+    private float judgementCurrentMultiplier;
+    private int judgementKillCounter = 0;
+    public LineRenderer judgementLaserLine;
 
 
-    [Header("½Ã°¢Àû È¿°ú")]
-    public SpriteRenderer auraRenderer;  // ¹ß¹Ø ¿À¶ó (µî±Ş »ö»ó Ç¥Çö)
-    public GameObject rangeCircle;       // »ç°Å¸® Ç¥½Ã ¿ø
 
-    [Header("ÀüÅõ ¼³Á¤")]
-    private Transform target; // ÇöÀç Á¶ÁØ ÁßÀÎ Àû
-    public GameObject basicProjectilePrefab; // ±âº» ¹ß»çÃ¼ ÇÁ¸®ÆÕ
 
-    [Header("ÆÇ¸Å ¼³Á¤")]
+
+    [Header("ì‹œê°ì  íš¨ê³¼")]
+    public SpriteRenderer auraRenderer;  // ë°œë°‘ ì˜¤ë¼ (ë“±ê¸‰ ìƒ‰ìƒ í‘œí˜„)
+    public GameObject rangeCircle;       // ì‚¬ê±°ë¦¬ í‘œì‹œ ì›
+
+    [Header("ì „íˆ¬ ì„¤ì •")]
+    private Transform target;                  // í˜„ì¬ ì¡°ì¤€ ì¤‘ì¸ ì 
+    public GameObject basicProjectilePrefab;   // ê¸°ë³¸ ë°œì‚¬ì²´ í”„ë¦¬íŒ¹
+
+    [Header("íŒë§¤ ì„¤ì •")]
     public GameObject sellButton;
 
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
+
     void Start()
     {
-        // °ÔÀÓ ½ÃÀÛ ½Ã È¤Àº ¼ÒÈ¯ ½Ã °ø°İ ·çÆ¾ ½ÃÀÛ
+        // ê²Œì„ ì‹œì‘ ì‹œ í˜¹ì€ ì†Œí™˜ ì‹œ ê³µê²© ë£¨í‹´ ì‹œì‘
         StartCoroutine(AttackRoutine());
     }
-    
+
+    #region ì „íˆ¬ ìŠ¤íƒ¯ ì´ˆê¸°í™” & í—¬í¼
+
+    void InitStatsFromData()
+    {
+        if (data == null) return;
+
+        // ê¸°ë³¸ ê³µê²©ë ¥/ì‚¬ê±°ë¦¬/ê³µì†ì€ í˜„ì¬ UnitData ê°’ì„ ê·¸ëŒ€ë¡œ ì‚¬ìš©
+        combatStats.SetBase(StatType.Attack, data.damage);
+        combatStats.SetBase(StatType.AttackSpeed, data.attackSpeed);
+        combatStats.SetBase(StatType.Range, data.attackRange);
+
+        // ì¹˜ëª…íƒ€ ê´€ë ¨ ê¸°ë³¸ê°’ (ì›í•˜ë©´ ë‚˜ì¤‘ì— UnitDataë¡œ ì˜®ê¸¸ ìˆ˜ ìˆìŒ)
+        combatStats.SetBase(StatType.CritChance, 0f);
+        combatStats.SetBase(StatType.CritDamage, 1.5f); // ì˜ˆ: ê¸°ë³¸ ì¹˜ëª…íƒ€ 150%
+    }
+
+    float GetAttack()
+    {
+        float atk = combatStats.Get(StatType.Attack);
+        if (atk <= 0f && data != null) atk = data.damage;
+        return atk;
+    }
+
+    float GetRange()
+    {
+        float range = combatStats.Get(StatType.Range);
+        if (range <= 0f && data != null) range = data.attackRange;
+        return range;
+    }
+
+    #endregion
+
+    #region ì½”ì¼ ìŠ¤í‚¬ ë³´ì¡°
 
     public IEnumerator ApplySkillChanceBuff(float amount, float duration)
     {
         isCoilBuffActive = true;
-        skillChanceBonus = amount; // += °¡ ¾Æ´Ï¶ó = ·Î ¼³Á¤ÇÏ¿© ÁßÃ¸ ¿øÃµ ºÀ¼â
-        Debug.Log($"¹öÇÁ °»½Å: ÇöÀç È®·ü º¸³Ê½º {skillChanceBonus}");
-        // 
+        skillChanceBonus = amount; // += ê°€ ì•„ë‹ˆë¼ = ë¡œ ì„¤ì •í•˜ì—¬ ì¤‘ì²© ì›ì²œ ë´‰ì‡„
+        Debug.Log($"ë²„í”„ ê°±ì‹ : í˜„ì¬ í™•ë¥  ë³´ë„ˆìŠ¤ {skillChanceBonus}");
+
         yield return new WaitForSeconds(duration);
 
-        // ¹öÇÁ Á¾·á
+        // ë²„í”„ ì¢…ë£Œ
         skillChanceBonus = 0f;
         isCoilBuffActive = false;
         coilBuffCoroutine = null;
     }
 
-    // --- °ø°İ ·ÎÁ÷ ½ÃÀÛ ---
+    public void AddCoilBuff(float amount, float duration)
+    {
+        // 1. ì´ë¯¸ ë²„í”„ ì½”ë£¨í‹´ì´ ëŒê³  ìˆë‹¤ë©´ ê°•ì œ ì¢…ë£Œ
+        if (coilBuffCoroutine != null)
+        {
+            StopCoroutine(coilBuffCoroutine);
+            coilBuffCoroutine = null;
+
+            // ê¸°ì¡´ ë³´ë„ˆìŠ¤ ì´ˆê¸°í™”
+            if (isCoilBuffActive)
+            {
+                skillChanceBonus = 0f;
+            }
+        }
+
+        // 2. ìƒˆë¡œìš´ ë²„í”„ ì½”ë£¨í‹´ ì‹œì‘
+        coilBuffCoroutine = StartCoroutine(ApplySkillChanceBuff(amount, duration));
+    }
+
+    #endregion
+
+    #region ê³µê²© ë£¨í”„ & íƒ€ê²ŸíŒ…
+
     IEnumerator AttackRoutine()
     {
         while (true)
         {
             if (data != null)
             {
-                // 1. Å¸°ÙÀÌ ÆÄ±«µÇ¾ú°Å³ª(null), ºñÈ°¼ºÈ­µÇ¾ú´Ù¸é Å¸°ÙÀ» ºñ¿ó´Ï´Ù.
                 if (target == null)
                 {
                     target = null;
@@ -66,25 +138,31 @@ public class Unit : MonoBehaviour
 
                 FindTarget();
 
-                // 2. Å¸°ÙÀÌ È®½ÇÈ÷ ÀÖÀ» ¶§¸¸ °ø°İ
                 if (target != null)
                 {
                     Shoot();
-                    yield return new WaitForSeconds(1f / data.attackSpeed);
+
+                    float atkSpeed = combatStats.Get(StatType.AttackSpeed);
+                    if (atkSpeed <= 0f) atkSpeed = 0.1f;
+                    yield return new WaitForSeconds(1f / atkSpeed);
                 }
             }
+
             yield return new WaitForSeconds(0.1f);
         }
     }
 
     void FindTarget()
     {
-        // »ç°Å¸® ³»ÀÇ ¸ğµç 'Enemy' ·¹ÀÌ¾î ¿ÀºêÁ§Æ® Ã£±â
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, data.attackRange/2, LayerMask.GetMask("Enemy"));
+        float range = GetRange();
+        Collider2D[] hits = Physics2D.OverlapCircleAll(
+            transform.position,
+            range / 2f,
+            LayerMask.GetMask("Enemy")
+        );
 
         if (hits.Length > 0)
         {
-            // °¡Àå °¡±î¿î Àû Ã£±â
             float minDistance = Mathf.Infinity;
             Transform nearestEnemy = null;
 
@@ -98,6 +176,7 @@ public class Unit : MonoBehaviour
                     nearestEnemy = hit.transform;
                 }
             }
+
             target = nearestEnemy;
         }
         else
@@ -113,12 +192,12 @@ public class Unit : MonoBehaviour
         bool basicAttackReplaced = false;
         bool skillFired = false;
 
-        // 1. OnAttack Æ®¸®°Å¸¦ °¡Áø ½ºÅ³µé °Ë»ç
+        // 1. ëª¨ë“  ìœ ë‹› ê³µí†µ: OnAttack / ReplaceBasicAttack ìŠ¤í‚¬ ì²˜ë¦¬
         foreach (var skill in data.skills)
         {
-            if (skill.trigger == SkillTrigger.OnAttack) //±âº»°ø°İ Á¸Àç
+            if (skill.trigger == SkillTrigger.OnAttack)
             {
-                float finalChance = skill.triggerChance + skillChanceBonus; // È®·ü °è»ê!
+                float finalChance = skill.triggerChance + skillChanceBonus;
 
                 if (Random.value < finalChance)
                 {
@@ -126,28 +205,44 @@ public class Unit : MonoBehaviour
                     skillFired = true;
                 }
             }
-            else if (skill.trigger == SkillTrigger.ReplaceBasicAttack) //±âº»°ø°İ ´ëÃ¼
+            else if (skill.trigger == SkillTrigger.ReplaceBasicAttack)
             {
                 ExecuteSkill(skill);
                 basicAttackReplaced = true;
             }
         }
-        if (!skillFired && !basicAttackReplaced) //½ºÅ³ ¾È³ª°¬À¸¸é ÆòÅ¸
+
+        // 2. ì‹¬íŒ: ê¸°ë³¸ ê³µê²©ì€ í•­ìƒ ë ˆì´ì €ë¡œ êµì²´ (OnAttack ìŠ¤í‚¬ì€ ìœ„ì—ì„œ ì´ë¯¸ ì²˜ë¦¬ë¨)
+        if (data.unitName == "Judgement")
+        {
+            if (judgementLaserCoroutine == null)
+            {
+                judgementLaserCoroutine = StartCoroutine(JudgementLaserRoutine());
+            }
+            return; // í‰íƒ€ ë°œì‚¬ ê¸ˆì§€
+        }
+
+        // 3. ë‚˜ë¨¸ì§€ ìœ ë‹›: ìŠ¤í‚¬ ì•ˆ ë‚˜ê°”ê³  ê¸°ë³¸ê³µê²© ëŒ€ì²´ë„ ì—†ìœ¼ë©´ í‰íƒ€
+        if (!skillFired && !basicAttackReplaced)
         {
             ExecuteBasicAttack();
         }
     }
-
-    // [±âº» °ø°İ]
     void ExecuteBasicAttack()
     {
         if (data.projectilePrefab == null) return;
+
         GameObject projObj = Instantiate(data.projectilePrefab, transform.position, Quaternion.identity);
         Projectile proj = projObj.GetComponent<Projectile>();
-        if (proj != null) proj.Setup(target, data.damage, ProjectileType.Normal, this);
+
+        float attack = GetAttack();
+        if (proj != null) proj.Setup(target, attack, ProjectileType.Normal, this);
     }
 
-    // ½ºÅ³ È¿°ú Á¶¸³±â (ºÎÇ°µéÀ» ¼ø¼­´ë·Î ½ÇÇà)
+    #endregion
+
+    #region ìŠ¤í‚¬ ì‹¤í–‰
+
     void ExecuteSkill(SkillInfo skill)
     {
         foreach (var effect in skill.effects)
@@ -161,38 +256,54 @@ public class Unit : MonoBehaviour
                 case SkillEffectType.DamageProjectile:
                     if (data.unitName == "Blizzard")
                     {
-                        // 1. ÇÊµå À§ÀÇ ºí¸®ÀÚµå³×¸ğ °³¼ö Ä«¿îÆ®
                         int blizzardCount = GetUnitCount("Blizzard");
-
-                        // 2. ÃÖÁ¾ µ¥¹ÌÁö ¹èÀ² °è»ê
-                        // ±âº» 1800%(18.0f) + (°³¼ö * 200%(2.0f))
-                        // ¿¹: 1¸¶¸®ÀÏ ¶§ 20¹è(2000%), 2¸¶¸®ÀÏ ¶§ 22¹è(2200%)
                         float finalDamageMultiplier = effect.value + (blizzardCount * 2.0f);
-
-                        // 3. °è»êµÈ µ¥¹ÌÁö·Î Åõ»çÃ¼ ¹ß»ç ·çÆ¾ ½ÇÇà
                         StartCoroutine(FireBlizzardRoutine(skill, effect, finalDamageMultiplier));
+                    }
+                    else if (data.unitName == "BlackHole") // ë¸”ë™í™€ ìŠ¤í‚¬3 ì¶”ê°€
+                    {
+                        StartCoroutine(FireBlackSphereRoutine(skill, effect));
                     }
                     else
                     {
                         StartCoroutine(FireProjectileRoutine(skill, effect));
                     }
                     break;
-                case SkillEffectType.Stun: ApplyStun(skill, effect); break;
-                case SkillEffectType.Slow: ApplySlow(skill, effect); break;
-                case SkillEffectType.DOT: ApplyDOT(skill, effect); break;
-                case SkillEffectType.ChainLightning: ExecuteChainLightning(skill, effect); break;
-                case SkillEffectType.BuffAlly: StartCoroutine(CoilBuffRoutine(skill, effect)); break;
+                case SkillEffectType.Stun: // ì ˆëŒ€ì˜ë„ ìŠ¤í‚¬ 1 (ë¹™ê²°)
+                    if (data.unitName == "AbsoluteZero")
+                    {
+                        // ë¹™ê²°(ê¸°ì ˆ)ê³¼ ë°©ì–´ë ¥ ê°ì†Œë¥¼ ë™ì‹œì— ì²˜ë¦¬í•˜ëŠ” í•¨ìˆ˜ í˜¸ì¶œ
+                        ApplyFreezeAndDebuff(skill, effect);
+                    }
+                    else
+                    {
+                        ApplyStun(skill, effect);
+                    }
+                    break;
+                case SkillEffectType.Slow:
+                    ApplySlow(skill, effect);
+                    break;
+                case SkillEffectType.DOT:
+                    ApplyDOT(skill, effect);
+                    break;
+                case SkillEffectType.ChainLightning:
+                    ExecuteChainLightning(skill, effect);
+                    break;
+                case SkillEffectType.BuffAlly:
+                    if (data.unitName == "Coil")
+                    {
+                        StartCoroutine(CoilBuffRoutine(skill, effect));
+                    }
+                    else if (data.unitName == "WorldTree")
+                    {
+                        StartCoroutine(WorldTreeBuffRoutine(skill, effect));
+                    }
+                    break;
                 case SkillEffectType.DebuffEnemy:
                     if (data.unitName == "Steel")
                     {
-                        // 1. ÇÊµå À§ÀÇ °­Ã¶³×¸ğ °³¼ö Ä«¿îÆ®
                         int steelCount = GetUnitCount("Steel");
-
-                        // 2. ÃÖÁ¾ ÇÇÇØ Áõ°¡·® °è»ê
-                        // ±âº» 18%(0.18f) + (°³¼ö * 2%(0.02f))
                         float finalDamageAmp = effect.value + (steelCount * 0.02f);
-
-                        // 3. °è»êµÈ °ªÀ» µé°í µğ¹öÇÁ ½ÇÇà
                         ApplySteelDebuff(skill, effect, finalDamageAmp);
                     }
                     else
@@ -200,29 +311,45 @@ public class Unit : MonoBehaviour
                         ApplyDebuff(skill, effect);
                     }
                     break;
-                case SkillEffectType.Execution: ApplyExecution(skill, effect); break;
-                case SkillEffectType.SpawnEntity: ExecuteSpawnEntity(skill, effect); break;
-                case SkillEffectType.TsunamiLauncher: TsunamiSkill(skill, effect); break;
+                case SkillEffectType.Execution:
+                    ApplyExecution(skill, effect);
+                    break;
+                case SkillEffectType.SpawnEntity:
+                    if (data.unitName == "BlackHole") // â˜… ë¸”ë™í™€ ìŠ¤í‚¬2 ì¶”ê°€
+                    {
+                        SpawnBlackHole(skill, effect);
+                    }
+                    else
+                    {
+                        ExecuteSpawnEntity(skill, effect);
+                    }
+                    break;
+                case SkillEffectType.TsunamiLauncher:
+                    TsunamiSkill(skill, effect);
+                    break;
+                case SkillEffectType.SectorAttack:
+                    FireSectorIce(skill, effect);
+                    break;
             }
         }
     }
-    
-    //ÇÊµå¿¡ Á¸ÀçÇÏ´Â µ¿ÀÏ À¯´Ö °Ë»ö
+
     public static int GetUnitCount(string unitName)
     {
         int count = 0;
-        // ÇÊµå À§ÀÇ ¸ğµç À¯´ÖÀ» °Ë»ö (¼º´É ÃÖÀûÈ­°¡ ÇÊ¿äÇÏ´Ù¸é UnitManagerÀÇ List¸¦ ÂüÁ¶)
         Unit[] allUnits = Object.FindObjectsOfType<Unit>();
         foreach (var u in allUnits)
         {
-            if (u.data.unitName == unitName) count++;
+            if (u.data != null && u.data.unitName == unitName) count++;
         }
         return count;
     }
 
-    // 1. ¹üÀ§ µ¥¹ÌÁö (¹°, ¶¥, ¿ë¾Ï µî)
     IEnumerator FireAreaRoutine(SkillInfo skill, SkillEffect effect)
     {
+        float attack = GetAttack();
+        float range = GetRange();
+
         if (data.unitName == "Sun")
         {
             if (activeSuns.Count > 0 && activeSuns[0] != null)
@@ -235,77 +362,76 @@ public class Unit : MonoBehaviour
                 yield break;
             }
 
-            activeSuns.Clear(); //±âÁ¸¿¡ ÀÛÀº ÅÂ¾çÀÌ ¾ø´ø °æ¿ì
-            int unitCount = Unit.GetUnitCount(data.unitName);
+            activeSuns.Clear();
+            int unitCount = GetUnitCount(data.unitName);
 
             int totalOrbits = 1 + unitCount;
             float angleStep = 360f / totalOrbits;
 
-            // 2. ÀÛÀº ÅÂ¾çµé »ı¼º
             for (int i = 0; i < totalOrbits; i++)
             {
                 if (effect.effectPrefab != null)
                 {
                     GameObject sun = Instantiate(effect.effectPrefab);
-                    activeSuns.Add(sun); // ¸®½ºÆ®¿¡ Ãß°¡
+                    activeSuns.Add(sun);
 
                     SunOrbit orbit = sun.GetComponent<SunOrbit>();
-                    orbit.Init(transform, skill.range, data.damage * effect.value, i * angleStep, effect.duration, this);
+                    orbit.Init(transform, skill.range, attack * effect.value, i * angleStep, effect.duration, this);
                 }
             }
-            yield break; // ÅÂ¾çÀº ·çÇÁ ¹æ½ÄÀÌ ¾Æ´Ï¹Ç·Î Á¾·á
+            yield break;
         }
-
 
         int totalShots = effect.count > 0 ? effect.count : 1;
         float damageRadius;
-        if(data.unitName == "Meteor") damageRadius = skill.range > 0 ? skill.range / 2f : 0.5f;
-        else damageRadius = skill.range > 0 ? skill.range / 2f : data.attackRange / 2f;
-
+        if (data.unitName == "Meteor")
+            damageRadius = skill.range > 0 ? skill.range / 2f : 0.5f;
+        else
+            damageRadius = skill.range > 0 ? skill.range / 2f : range / 2f;
 
         for (int i = 0; i < totalShots; i++)
         {
-            // 1. Å¸°ÙÀÌ »ç¶óÁ³À» ¶§ÀÇ Ã³¸®
             if (target == null)
             {
-                // [¿¹¿Ü] ¸ŞÅ×¿À À¯´Ö¸¸ »ç°Å¸® ³» ´Ù¸¥ ÀûÀ» »õ·Î Ã£À½
                 if (data.unitName == "Meteor")
                 {
-                    float searchRange = data.attackRange / 2f;
-                    Collider2D[] potentialTargets = Physics2D.OverlapCircleAll(transform.position, searchRange, LayerMask.GetMask("Enemy"));
+                    float searchRange = range / 2f;
+                    Collider2D[] potentialTargets =
+                        Physics2D.OverlapCircleAll(transform.position, searchRange, LayerMask.GetMask("Enemy"));
 
                     if (potentialTargets.Length > 0)
                     {
-                        // °¡Àå °¡±î¿î ÀûÀ» »õ Å¸°ÙÀ¸·Î ÀÓ½Ã ¼³Á¤
                         Transform closest = null;
                         float minDistance = Mathf.Infinity;
                         foreach (var hit in potentialTargets)
                         {
                             float dist = Vector3.Distance(transform.position, hit.transform.position);
-                            if (dist < minDistance) { minDistance = dist; closest = hit.transform; }
+                            if (dist < minDistance)
+                            {
+                                minDistance = dist;
+                                closest = hit.transform;
+                            }
                         }
-                        // ÀÓ½Ã Å¸°Ù À§Ä¡¸¦ ±â¾ïÇÏ°Ô ÇÔ (target º¯¼ö¸¦ °Çµå¸®Áö ¾Ê°í Áö¿ª º¯¼ö·Î ÇØ°á)
                         target = closest;
                     }
-                    else { yield break; } // »ç°Å¸® ³» Á¤¸» ÀûÀÌ ¾øÀ¸¸é Á¾·á
+                    else
+                    {
+                        yield break;
+                    }
                 }
                 else
                 {
-                    // ÀÏ¹İ À¯´ÖµéÀº ±âÁ¸Ã³·³ Å¸°Ù ¾øÀ¸¸é ¹Ù·Î Á¾·á
                     yield break;
                 }
             }
 
-            // 2. ¹ß»ç À§Ä¡ È®Á¤
             Vector3 spawnPos = skill.range > 0 ? target.position : transform.position;
 
-            // 3. ÀÌÆåÆ® »ı¼º (±âÁ¸ ÄÚµå À¯Áö)
             if (effect.effectPrefab != null)
             {
                 GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
-                float effectScale = skill.range > 0 ? skill.range : data.attackRange;
+                float effectScale = skill.range > 0 ? skill.range : range;
 
-                // Water À¯´Ö µî ±âÁ¸ ½ºÄÉÀÏ ·ÎÁ÷ º¸Á¸
                 if (data.unitName == "Water")
                     fx.transform.localScale = new Vector3(effectScale, effectScale * 0.2f, 1f);
                 else
@@ -314,25 +440,27 @@ public class Unit : MonoBehaviour
                 Destroy(fx, effect.duration > 0 ? effect.duration : 1.0f);
             }
 
-            // 4. µ¥¹ÌÁö Ã³¸®
-            Collider2D[] damageHits = Physics2D.OverlapCircleAll(spawnPos, damageRadius, LayerMask.GetMask("Enemy"));
+            Collider2D[] damageHits =
+                Physics2D.OverlapCircleAll(spawnPos, damageRadius, LayerMask.GetMask("Enemy"));
             foreach (var hit in damageHits)
             {
                 Monster m = hit.GetComponent<Monster>();
-                if (m != null) m.TakeDamage(data.damage * effect.value, this);
+                if (m != null) m.TakeDamage(attack * effect.value, this);
             }
 
             if (i < totalShots - 1) yield return new WaitForSeconds(0.3f);
         }
     }
 
-    // 2. ¹ß»çÃ¼ ½ºÅ³ (ºÒ³×¸ğ 3¹ß, °ø±â³×¸ğ °üÅëÇ³ µî)
     IEnumerator FireProjectileRoutine(SkillInfo skill, SkillEffect effect)
     {
+        float attack = GetAttack();
+        float range = GetRange();
+
         int shotCount = effect.count > 0 ? effect.count : 1;
 
-        // ÁÖº¯ Àû ´Ù¼ö Å¸°ÙÆÃ (ºÒ³×¸ğ¿ë)
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, data.attackRange/2, LayerMask.GetMask("Enemy"));
+        Collider2D[] hits =
+            Physics2D.OverlapCircleAll(transform.position, range / 2f, LayerMask.GetMask("Enemy"));
         int currentShot = 0;
 
         foreach (var hit in hits)
@@ -344,53 +472,55 @@ public class Unit : MonoBehaviour
             {
                 GameObject projObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
                 Projectile proj = projObj.GetComponent<Projectile>();
-                // Åõ»çÃ¼ µ¥¹ÌÁö´Â ±âº»°ø°İ·Â * ¹èÀ²
-                if (proj != null) proj.Setup(hit.transform, data.damage * effect.value, proj.type, this);
+                if (proj != null) proj.Setup(hit.transform, attack * effect.value, proj.type, this);
             }
             currentShot++;
-            yield return new WaitForSeconds(0.05f); // ´Ù¹ß »ç°İ ½Ã ¾à°£ÀÇ µô·¹ÀÌ
+            yield return new WaitForSeconds(0.05f);
         }
     }
+
     IEnumerator FireBlizzardRoutine(SkillInfo skill, SkillEffect effect, float multiplier)
     {
         if (target == null || effect.effectPrefab == null) yield break;
 
-        // ºí¸®ÀÚµå´Â 'ÀÏÀÚ·Î ±ä °Å¸®'¸¦ °¡¾ß ÇÏ¹Ç·Î 
-        // ÇÁ¸®ÆÕ ³»ºÎ Projectile ½ºÅ©¸³Æ®ÀÇ TypeÀÌ 'Penetrate'·Î ¼³Á¤µÇ¾î ÀÖ¾î¾ß ÇÕ´Ï´Ù.
         GameObject projObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
         Projectile proj = projObj.GetComponent<Projectile>();
 
         if (proj != null)
         {
-            // °è»êµÈ ¹èÀ²(multiplier)À» Àû¿ëÇÑ ÃÖÁ¾ µ¥¹ÌÁö Àü´Ş
-            proj.Setup(target, data.damage * multiplier, ProjectileType.Penetrate, this);
+            float attack = GetAttack();
+            proj.Setup(target, attack * multiplier, ProjectileType.Penetrate, this);
         }
 
         yield return null;
     }
-    void SpawnSkillEffect(SkillInfo skill, SkillEffect effect, Vector3 targetPos) //ÀÌÆåÆ® »ı¼º±â
+
+    void SpawnSkillEffect(SkillInfo skill, SkillEffect effect, Vector3 targetPos)
     {
         if (effect.effectPrefab == null) return;
+
+        float range = GetRange();
 
         Vector3 spawnPos = skill.range > 0 ? targetPos : transform.position;
         GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
 
-        // »ç°Å¸®¿¡ ¸Â°Ô ÀÌÆåÆ® Å©±â Á¶Àı
-        float scale = skill.range > 0 ? skill.range/2 : data.attackRange/2;
+        float scale = skill.range > 0 ? skill.range / 2f : range / 2f;
         fx.transform.localScale = new Vector3(scale, scale, 1f);
 
-        // Áö¼Ó½Ã°£ÀÌ ³¡³ª¸é ÀÌÆåÆ® »èÁ¦
         float lifeTime = effect.duration > 0 ? effect.duration : 1.0f;
         Destroy(fx, lifeTime);
     }
 
-    // 3. ±âÀı (¶¥³×¸ğ, »õ½Ï³×¸ğ µî)
     void ApplyStun(SkillInfo skill, SkillEffect effect)
     {
-        float checkRange = skill.range > 0 ? skill.range/2 : data.attackRange/2;
+        float range = GetRange();
+        float checkRange = skill.range > 0 ? skill.range / 2f : range / 2f;
         Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
+
         SpawnSkillEffect(skill, effect, checkPos);
-        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+
+        Collider2D[] hits =
+            Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
@@ -398,35 +528,42 @@ public class Unit : MonoBehaviour
         }
     }
 
-    // 4. ½½·Î¿ì (¹°Ç³¼±, ¾óÀ½, ¸ğ·¡ÆøÇ³)
     void ApplySlow(SkillInfo skill, SkillEffect effect)
     {
-        float checkRange = skill.range > 0 ? skill.range / 2 : data.attackRange / 2;
+        float range = GetRange();
+        float checkRange = skill.range > 0 ? skill.range / 2f : range / 2f;
         Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
+
         SpawnSkillEffect(skill, effect, checkPos);
-        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+
+        Collider2D[] hits =
+            Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
-            if (m != null) m.ApplySlow(effect.value, effect.duration); // value: °¨¼Ó·® (0.2 = 20%)
+            if (m != null) m.ApplySlow(effect.value, effect.duration);
         }
     }
 
-    // 5. Áö¼Ó µ¥¹ÌÁö (»õ½Ï³×¸ğ DOT)
     void ApplyDOT(SkillInfo skill, SkillEffect effect)
     {
-        float checkRange = skill.range > 0 ? skill.range / 2 : data.attackRange / 2;
+        float attack = GetAttack();
+        float range = GetRange();
+
+        float checkRange = skill.range > 0 ? skill.range / 2f : range / 2f;
         Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
+
         SpawnSkillEffect(skill, effect, checkPos);
-        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+
+        Collider2D[] hits =
+            Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
-            if (m != null) m.ApplyDOT(data.damage * effect.value, effect.duration, this);
+            if (m != null) m.ApplyDOT(attack * effect.value, effect.duration, this);
         }
     }
 
-    // 6. Ã¼ÀÎ ¶óÀÌÆ®´× (Àü±â³×¸ğ)
     void ExecuteChainLightning(SkillInfo skill, SkillEffect effect)
     {
         if (target != null && effect.effectPrefab != null)
@@ -435,43 +572,41 @@ public class Unit : MonoBehaviour
             ChainLightning chain = chainObj.GetComponent<ChainLightning>();
             if (chain != null)
             {
-                // ½ÃÀÛÅ¸°Ù, µ¥¹ÌÁö, Æ¨±â´Â È½¼ö, Æ¨±â´Â »ç°Å¸®
-                chain.Setup(target, data.damage * effect.value, effect.count, 3f, this);
+                float attack = GetAttack();
+                chain.Setup(target, attack * effect.value, effect.count, 3f, this);
             }
         }
     }
 
-    // 7. Àû µğ¹öÇÁ
     void ApplyDebuff(SkillInfo skill, SkillEffect effect)
     {
+        float range = GetRange();
+
         Vector3 checkPos;
         float checkRadius;
+
         if (skill.range <= 0)
         {
-            // ±ÔÄ¢: 0 ÀÌÇÏÀÌ¸é À¯´Ö º»ÀÎ Áß½É, º»ÀÎÀÇ °ø°İ ¹üÀ§ ÀüÃ¼
             checkPos = transform.position;
-            checkRadius = data.attackRange / 2f;
+            checkRadius = range / 2f;
         }
         else
         {
-            // ±ÔÄ¢: 0º¸´Ù Å©¸é Å¸°Ù Áß½É, skill.range Å©±â¸¸Å­
-            if (target == null) return; 
+            if (target == null) return;
             checkPos = target.position;
             checkRadius = skill.range / 2f;
         }
 
-        // 2. ¹üÀ§ ³» ¸ğµç Àû ½ºÄµ
-        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRadius, LayerMask.GetMask("Enemy"));
+        Collider2D[] hits =
+            Physics2D.OverlapCircleAll(checkPos, checkRadius, LayerMask.GetMask("Enemy"));
 
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
             if (m != null)
             {
-                // ·ÎÁ÷: µ¥¹ÌÁö ÁõÆø µğ¹öÇÁ Àû¿ë
                 m.ApplyDamageAmp(effect.value, effect.duration);
 
-                // ½Ã°¢: ¸ó½ºÅÍ ¸ö¿¡ ¹ÙÀ§(¶Ç´Â µğ¹öÇÁ ¾ÆÀÌÄÜ) ºÎÂø
                 if (effect.effectPrefab != null)
                 {
                     m.AddVisualEffect(effect.effectPrefab, effect.duration);
@@ -482,77 +617,70 @@ public class Unit : MonoBehaviour
 
     void ApplySteelDebuff(SkillInfo skill, SkillEffect effect, float calculatedValue)
     {
-        // °­Ã¶º® ¼ÒÈ¯ À§Ä¡ (º»ÀÎ Áß½É, »ç°Å¸®¸¸Å­)
-        Vector3 checkPos = transform.position;
-        float checkRadius = data.attackRange / 2f;
+        float range = GetRange();
 
-        // ½Ã°¢ È¿°ú (°­Ã¶º® ÇÁ¸®ÆÕ ¼ÒÈ¯)
+        Vector3 checkPos = transform.position;
+        float checkRadius = range / 2f;
+
         if (effect.effectPrefab != null)
         {
             GameObject fx = Instantiate(effect.effectPrefab, checkPos, Quaternion.identity);
-            fx.transform.localScale = new Vector3(data.attackRange, data.attackRange, 1f);
+            fx.transform.localScale = new Vector3(range, range, 1f);
             Destroy(fx, effect.duration);
         }
 
-        // ¹üÀ§ ³» Àû ½ºÄµ
-        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRadius, LayerMask.GetMask("Enemy"));
+        Collider2D[] hits =
+            Physics2D.OverlapCircleAll(checkPos, checkRadius, LayerMask.GetMask("Enemy"));
 
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
             if (m != null)
             {
-                // [½ºÅ³1] 4ÃÊ°£ ±âÀı (durationÀº 4·Î ¼³Á¤µÇ¾î ÀÖ¾î¾ß ÇÔ)
                 m.ApplyStun(effect.duration);
-
-                // [½ºÅ³1 + ½ºÅ³2] ÃÖÁ¾ ÇÇÇØ Áõ°¡ Àû¿ë
                 m.ApplyDamageAmp(calculatedValue, effect.duration);
             }
         }
     }
 
-    // 8. Ã³Çü (Ã¼·ÂÀÌ Æ¯Á¤ ÆÛ¼¾Æ® ÀÌÇÏÀÎ Àû Áï»ç)
     void ApplyExecution(SkillInfo skill, SkillEffect effect)
     {
-        float checkRange = skill.range > 0 ? skill.range / 2 : data.attackRange / 2;
+        float range = GetRange();
+        float checkRange = skill.range > 0 ? skill.range / 2f : range / 2f;
         Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
 
         SpawnSkillEffect(skill, effect, checkPos);
 
-        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+        Collider2D[] hits =
+            Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
-            // effect.value°¡ 0.1ÀÌ¶ó¸é ÃÖ´ë Ã¼·ÂÀÇ 10% ÀÌÇÏÀÏ ¶§ Áï»ç
             if (m != null && (m.hp / m.maxhp) <= effect.value)
             {
-                m.TakeDamage(9999999f, this); // Áï»ç µ¥¹ÌÁö
+                m.TakeDamage(9999999f, this);
+                Debug.Log($"{m.name} ì²˜í˜• ì„±ê³µ!");
             }
         }
     }
 
-    // 9. µ¶¸³ °³Ã¼ ¼ÒÈ¯ (ÇØÀÏ, °­Ã¶º® µî)
     void ExecuteSpawnEntity(SkillInfo skill, SkillEffect effect)
     {
         if (effect.effectPrefab == null) return;
-        // ³» À§Ä¡³ª Å¸°Ù À§Ä¡¿¡ ±×³É ÇÁ¸®ÆÕÀ» ¼ÒÈ¯ÇÏ°í ³¡³À´Ï´Ù. (·ÎÁ÷Àº ¼ÒÈ¯µÈ ÇÁ¸®ÆÕ ½ºÅ©¸³Æ®°¡ ¾Ë¾Æ¼­ ÇÔ)
+
         Vector3 spawnPos = skill.range > 0 && target != null ? target.position : transform.position;
         Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
     }
 
-    // 10. ÄÚÀÏ ½ºÅ³
     IEnumerator CoilBuffRoutine(SkillInfo skill, SkillEffect effect)
     {
-        // 1. ÇÊµå À§ÀÇ ÄÚÀÏ ¼ö °è»ê
         int coilCount = GetUnitCount("Coil");
-
-        // 2. ÃÖÁ¾ Áõ°¡·® °è»ê: ±âº» 10% + (ÄÚÀÏ ´ç 5%)
-        // ¿¹: ÄÚÀÏÀÌ 2¸¶¸®¸é 10 + (2 * 5) = 20% Áõ°¡
         float finalBuffValue = effect.value + (coilCount * 0.05f);
 
-        // 3. ¹üÀ§ ³» ¾Æ±º Ã£±â (»ç°Å¸®/2)
-        float buffRange = skill.range > 0 ? skill.range / 2f : data.attackRange / 2f;
-        Collider2D[] allies = Physics2D.OverlapCircleAll(transform.position, buffRange, LayerMask.GetMask("Unit"));
+        float range = GetRange();
+        float buffRange = skill.range > 0 ? skill.range / 2f : range / 2f;
+        Collider2D[] allies =
+            Physics2D.OverlapCircleAll(transform.position, buffRange, LayerMask.GetMask("Unit"));
 
         foreach (var ally in allies)
         {
@@ -564,7 +692,6 @@ public class Unit : MonoBehaviour
             }
         }
 
-        // ½Ã°¢ È¿°ú (ÀÖ´Ù¸é)
         if (effect.effectPrefab != null)
         {
             GameObject fx = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
@@ -573,13 +700,12 @@ public class Unit : MonoBehaviour
         yield return null;
     }
 
-    // 11. ÇØÀÏ ½ºÅ³
     void TsunamiSkill(SkillInfo skill, SkillEffect effect)
     {
         int tsunamiCount = GetUnitCount("Tsunami");
-        float finalTsunamiDamage = data.damage * (effect.value + (tsunamiCount * 1.0f));
+        float attack = GetAttack();
+        float finalTsunamiDamage = attack * (effect.value + (tsunamiCount * 1.0f));
 
-        // 3. ÇØÀÏ »ı¼º
         if (effect.effectPrefab != null)
         {
             GameObject tsunamiObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
@@ -587,52 +713,42 @@ public class Unit : MonoBehaviour
 
             if (tsunami != null)
             {
-                // µ¥¹ÌÁö¿Í Áö¼Ó½Ã°£(3ÃÊ) Àü´Ş
                 tsunami.Setup(finalTsunamiDamage, effect.duration > 0 ? effect.duration : 3f, this);
             }
         }
     }
 
-    // 12. ¸Íµ¶ Àü¿ë ½ºÅ³ ·çÆ¾
     IEnumerator PoisonSkillRoutine(SkillInfo skill, SkillEffect effect)
     {
         if (target == null) yield break;
 
-        // 1. ÇÊµå¿¡ Á¸ÀçÇÏ´Â '¸Íµ¶' À¯´Ö °³¼ö ÆÄ¾Ç (ÀÚ½Å Æ÷ÇÔ)
         int poisonCount = GetUnitCount("Poison");
 
+        float attack = GetAttack();
         float finalDamageMultiplier = effect.value + (poisonCount * 2.0f);
-        float finalDamagePerSecond = data.damage * finalDamageMultiplier;
+        float finalDamagePerSecond = attack * finalDamageMultiplier;
 
-        // 3. µ¶º´ ÅõÃ´ ÀÌÆåÆ® »ı¼º (¼±ÅÃ »çÇ×: Åõ»çÃ¼°¡ ³¯¾Æ°¡´Â ¿¬ÃâÀÌ ¾ø´Ù¸é ¹Ù·Î ÀåÆÇ »ı¼º)
         Vector3 spawnPos = target.position;
 
         if (effect.effectPrefab != null)
         {
             GameObject poisonZone = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
 
-            // ½ºÅ³ ¹üÀ§ ¼³Á¤ (Å¸ÀÏ 3Ä­ ¹üÀ§ = skill.range È°¿ë)
             float zoneScale = skill.range > 0 ? skill.range : 3f;
             poisonZone.transform.localScale = new Vector3(zoneScale, zoneScale, 1f);
 
-            // 4. Áö¼Ó µ¥¹ÌÁö ·ÎÁ÷ (ÀåÆÇ ÇÁ¸®ÆÕ¿¡ ½ºÅ©¸³Æ®°¡ ÀÖ´Ù¸é ±×ÂÊ¿¡ µ¥¹ÌÁö¸¦ ³Ñ°ÜÁÖ°í, 
-            // ¾ø´Ù¸é ¿©±â¼­ ¼ÒÈ¯µÈ µ¿¾È ¹İº¹ µ¥¹ÌÁö¸¦ ÁÖ´Â ·ÎÁ÷À» ÀÛ¼ºÇÕ´Ï´Ù.)
-
-            // °£´Ü ±¸Çö: ÀåÆÇ ÇÁ¸®ÆÕ ÀÚÃ¼°¡ Æ½ µ¥¹ÌÁö¸¦ ÁÖ´Â ±¸Á¶°¡ ¾Æ´Ï¶ó¸é 
-            // ¾Æ·¡¿Í °°ÀÌ ÄÚ·çÆ¾¿¡¼­ Á÷Á¢ Ã³¸® °¡´ÉÇÕ´Ï´Ù.
             float elapsed = 0f;
             float duration = effect.duration > 0 ? effect.duration : 5f;
 
             while (elapsed < duration)
             {
-                // ¸Å ÃÊ(1ÃÊ °£°İ) ÀåÆÇ À§ÀÇ Àûµé¿¡°Ô µ¥¹ÌÁö
-                Collider2D[] hits = Physics2D.OverlapCircleAll(spawnPos, zoneScale / 2f, LayerMask.GetMask("Enemy"));
+                Collider2D[] hits =
+                    Physics2D.OverlapCircleAll(spawnPos, zoneScale / 2f, LayerMask.GetMask("Enemy"));
                 foreach (var hit in hits)
                 {
                     Monster m = hit.GetComponent<Monster>();
                     if (m != null)
                     {
-                        // ÃÊ´ç µ¥¹ÌÁöÀÌ¹Ç·Î 1ÃÊ¿¡ ÇÑ ¹ø¾¿ µé¾î°¨ (Æ½À» ´õ ÂÉ°³·Á¸é 0.1f µîÀ¸·Î ¼öÁ¤)
                         m.TakeDamage(finalDamagePerSecond, this);
                     }
                 }
@@ -644,38 +760,292 @@ public class Unit : MonoBehaviour
         }
     }
 
-
-
-
-
-
-
-
-
-    public void AddCoilBuff(float amount, float duration)
+    // ì„¸ê³„ìˆ˜ ë²„í”„ 1ê°œë§Œ ê´€ë¦¬í•˜ëŠ” í•¨ìˆ˜
+    public void ApplyWorldTreeBuff(float amount, float duration)
     {
-        // 1. ÀÌ¹Ì ¹öÇÁ ÄÚ·çÆ¾ÀÌ µ¹°í ÀÖ´Ù¸é °­Á¦ Á¾·á
-        if (coilBuffCoroutine != null)
+        // 1) ì´ë¯¸ ë²„í”„ê°€ ê±¸ë ¤ ìˆë‹¤ë©´ : ì½”ë£¨í‹´ë§Œ ë©ˆì¶”ê³ , ë²„í”„ ìˆ˜ì¹˜ëŠ” ê·¸ëŒ€ë¡œ ë‘ê³ , íƒ€ì´ë¨¸ë§Œ ìƒˆë¡œ ì‹œì‘
+        if (worldTreeBuffCoroutine != null)
         {
-            StopCoroutine(coilBuffCoroutine);
-            coilBuffCoroutine = null;
+            StopCoroutine(worldTreeBuffCoroutine);
+            worldTreeBuffCoroutine = null;
+        }
 
-            // [Áß¿ä] ÁßÃ¸ ¹æÁö: ±âÁ¸¿¡ Àû¿ëµÇ¾î ÀÖ´ø ¹öÇÁ ¼öÄ¡¸¦ ¸ÕÀú ¿ÏÀüÈ÷ Á¦°Å
-            // ÀÌÀü¿¡ Àû¿ëµÈ ¼öÄ¡°¡ ¾ó¸¶¿´µç ÇöÀç º¸³Ê½º¿¡¼­ 0À¸·Î ¸®¼ÂÇÏ°Å³ª 
-            // isActive Ã¼Å©¸¦ ÅëÇØ Á¤È®È÷ »©Áà¾ß ÇÕ´Ï´Ù.
-            if (isCoilBuffActive)
+        // 2) ì•„ì§ ë²„í”„ê°€ í•œ ë²ˆë„ ì•ˆ ê±¸ë¦° ìœ ë‹›ì´ë¼ë©´ : StatModifierë¥¼ ìƒˆë¡œ ë§Œë“¤ì–´ì„œ í•œ ì¥ë§Œ ë¶™ì—¬ë‘ 
+        if (worldTreeBuffModifier == null)
+        {
+            worldTreeBuffModifier = new StatModifier(
+                StatType.AttackSpeed,
+                amount,                        // ì˜ˆ: 0.5 => +50%
+                StatModifierType.PercentAdd,   // % ê°€ì‚° ë²„í”„
+                source: "WorldTreeBuff"
+            );
+            combatStats.AddModifier(worldTreeBuffModifier);
+        }
+
+        // 3) ìƒˆ ì§€ì†ì‹œê°„ìœ¼ë¡œ íƒ€ì´ë¨¸ ì‹œì‘
+        worldTreeBuffCoroutine = StartCoroutine(WorldTreeBuffTimer(duration));
+    }
+
+    // ë‚´ë¶€ìš© íƒ€ì´ë¨¸ ì½”ë£¨í‹´
+    IEnumerator WorldTreeBuffTimer(float duration)
+    {
+        float dur = duration > 0f ? duration : 4f;
+        yield return new WaitForSeconds(dur);
+
+        // ì‹œê°„ì´ ëë‚˜ë©´ ë²„í”„ 1ì¥ì„ ë–¼ê³  ìƒíƒœ ì´ˆê¸°í™”
+        if (worldTreeBuffModifier != null)
+        {
+            combatStats.RemoveModifier(worldTreeBuffModifier);
+            worldTreeBuffModifier = null;
+        }
+        worldTreeBuffCoroutine = null;
+    }
+    // ì„¸ê³„ìˆ˜ ìŠ¤í‚¬1: ì£¼ë³€ ì•„êµ° ê³µê²©ì†ë„ ë²„í”„
+    IEnumerator WorldTreeBuffRoutine(SkillInfo skill, SkillEffect effect)
+    {
+        // 1. ë²„í”„ ë²”ìœ„ ê³„ì‚° (skill.rangeê°€ 0ì´ë©´ ìì‹ ì˜ ê³µê²©ë²”ìœ„ ì‚¬ìš©)
+        float range = GetRange();
+        float buffRange = skill.range > 0 ? skill.range / 2f : range / 2f;
+
+        // 2. ë²”ìœ„ ë‚´ ì•„êµ° ìœ ë‹› ì°¾ê¸°
+        Collider2D[] allies = Physics2D.OverlapCircleAll(
+            transform.position,
+            buffRange,
+            LayerMask.GetMask("Unit")
+        );
+
+        float amount = effect.value;                    // ì˜ˆ: 0.5f
+        float duration = effect.duration > 0 ? effect.duration : 4f;
+
+        foreach (var allyCol in allies)
+        {
+            Unit ally = allyCol.GetComponent<Unit>();
+            if (ally == null) continue;
+
+            // (1) ì„¸ê³„ìˆ˜ë¼ë¦¬ëŠ” ë²„í”„ ê¸ˆì§€ (ë³¸ì¸ í¬í•¨)
+            if (ally.data != null && ally.data.unitName == "WorldTree")
+                continue;
+
+            // (2) ê° ìœ ë‹›ì´ ìê¸° ë²„í”„ë¥¼ ì•Œì•„ì„œ ê´€ë¦¬ (ì¤‘ì²© X, ì‹œê°„ë§Œ ê°±ì‹ )
+            ally.ApplyWorldTreeBuff(amount, duration);
+        }
+
+        // ì„ íƒ: ì‹œê° íš¨ê³¼ (ì„¸ê³„ìˆ˜ ë³¸ì¸ ë°œë°‘ì—ë§Œ í•œë²ˆ)
+        if (effect.effectPrefab != null)
+        {
+            GameObject fx = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+            Destroy(fx, duration);
+        }
+
+        yield return null;
+    }
+
+    // ì‹¬íŒ ë ˆì´ì € ê¸°ë³¸ ê³µê²©
+    IEnumerator JudgementLaserRoutine()
+    {
+        judgementCurrentMultiplier = 5f; // 500%ë¶€í„° ì‹œì‘
+
+        // â˜… ì„  í™œì„±í™”
+        if (judgementLaserLine != null) {
+            judgementLaserLine.enabled = true;
+            judgementLaserLine.useWorldSpace = true;
+            judgementLaserLine.positionCount = 2;
+        }
+        while (true)
+        {
+            if (target == null || data == null)
+                break;
+
+            float range = GetRange();
+            if (Vector3.Distance(transform.position, target.position) > range)
+                break;
+
+            Monster m = target.GetComponent<Monster>();
+            if (m == null)
+                break;
+
+            float attack = GetAttack();
+
+            if (judgementLaserLine != null)
             {
-                // ÇöÀç amount¸¦ »©´Â °Ô ¾Æ´Ï¶ó, º¸³Ê½º ÀÚÃ¼¸¦ 0À¸·Î ¹Ğ°Å³ª 
-                // ¸¶Áö¸·¿¡ Àû¿ëÇß´ø °ªÀ» ÀúÀåÇØµ×´Ù »©¾ß ¾ÈÀüÇÕ´Ï´Ù.
-                // ¿©±â¼± °¡Àå È®½ÇÇÑ ¹æ¹ıÀÎ '0À¸·Î ÃÊ±âÈ­'¸¦ »ç¿ëÇÏ°Å³ª 
-                // ¾Æ·¡ ÄÚ·çÆ¾ ±¸Á¶·Î °³¼±ÇÕ´Ï´Ù.
-                skillChanceBonus = 0f;
+                Debug.Log($"ë ˆì´ì €ì¶œë ¥");
+                // Zê°’ì„ -1 ì •ë„ë¡œ ì•ìœ¼ë¡œ ë‹¹ê²¨ì„œ ë‹¤ë¥¸ UIë‚˜ ë°°ê²½ë³´ë‹¤ ì•ì— ì˜¤ê²Œ í•©ë‹ˆë‹¤.
+                Vector3 startPos = transform.position;
+                startPos.z = -1f;
+
+                Vector3 endPos = target.position;
+                endPos.z = -1f;
+
+                judgementLaserLine.SetPosition(0, startPos);
+                judgementLaserLine.SetPosition(1, endPos);
+            }
+
+            // 1/ê³µê²©ì†ë„ë§ˆë‹¤ ë°ë¯¸ì§€
+            m.TakeDamage(attack * judgementCurrentMultiplier, this);
+            judgementCurrentMultiplier += 5f;
+
+            float atkSpeed = combatStats.Get(StatType.AttackSpeed);
+            if (atkSpeed <= 0f) atkSpeed = 0.1f;
+            yield return new WaitForSeconds(1f / atkSpeed);
+        }
+
+        // ëŠê¸°ë©´ ì´ˆê¸°í™”
+        if (judgementLaserLine != null)
+            judgementLaserLine.enabled = false;
+
+        judgementLaserCoroutine = null;
+        judgementCurrentMultiplier = 5f;
+    }
+    // ëª¬ìŠ¤í„°ê°€ ì´ ìœ ë‹›ì—ê²Œ ì§ì ‘ ì²˜ì¹˜ëì„ ë•Œ í˜¸ì¶œ
+    public void OnMonsterKilled(Monster victim)
+    {
+        if (data == null || data.unitName != "Judgement") return;
+
+        judgementKillCounter++;
+        if (judgementKillCounter >= 20)
+        {
+            judgementKillCounter = 0;
+            TriggerJudgementBonusMeteor();
+        }
+    }
+    // 20í‚¬ë§ˆë‹¤ ì¶”ê°€ ë©”í…Œì˜¤ ë°œë™
+    void TriggerJudgementBonusMeteor()
+    {
+        if (data == null || data.skills == null) return;
+
+        // UnitDataì—ì„œ "ì‹¬íŒì˜ ë©”í…Œì˜¤" ìŠ¤í‚¬ì„ ì°¾ì•„ì„œ ê·¸ëŒ€ë¡œ ì‹¤í–‰
+        SkillInfo meteorSkill = default;
+        bool found = false;
+
+        foreach (var skill in data.skills)
+        {
+            if (skill.skillName == "ì‹¬íŒì˜ ë©”í…Œì˜¤")
+            {
+                meteorSkill = skill;
+                found = true;
+                break;
             }
         }
 
-        // 2. »õ·Î¿î ¹öÇÁ ÄÚ·çÆ¾ ½ÃÀÛ
-        coilBuffCoroutine = StartCoroutine(ApplySkillChanceBuff(amount, duration));
+        if (!found) return;
+
+        // í˜„ì¬ íƒ€ê²Ÿì´ ì—†ìœ¼ë©´ êµ³ì´ ë°œë™í•˜ì§€ ì•ŠìŒ (ì›í•˜ë©´ ìê¸° ìœ„ì¹˜ ê¸°ì¤€ìœ¼ë¡œ ë°”ê¿€ ìˆ˜ ìˆìŒ)
+        if (target == null) return;
+
+        ExecuteSkill(meteorSkill);
     }
+    
+    // ë¸”ë™í™€ë„¤ëª¨ ìŠ¤í‚¬2: ë¸”ë™í™€ ì†Œí™˜ í•¨ìˆ˜
+    void SpawnBlackHole(SkillInfo skill, SkillEffect effect)
+    {
+        if (effect.effectPrefab == null || target == null) return;
+
+        // íƒ€ê²Ÿ ìœ„ì¹˜ì— ë¸”ë™í™€ ìƒì„±
+        Vector3 spawnPos = target.position;
+        GameObject bhObj = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+
+        BlackHoleEntity bh = bhObj.GetComponent<BlackHoleEntity>();
+        if (bh != null)
+        {
+            float attack = GetAttack();
+            // ë°ë¯¸ì§€, ìœ ì§€ì‹œê°„, ë‹¹ê¸°ëŠ” ë°˜ê²½(range/2), ì£¼ì¸ ìœ ë‹›
+            bh.Setup(attack * effect.value, effect.duration, skill.range / 2f, this);
+        }
+    }
+
+    // â˜… ë¸”ë™í™€ë„¤ëª¨ ìŠ¤í‚¬3: ê²€ì€ êµ¬ì²´ ë°œì‚¬ í•¨ìˆ˜
+    IEnumerator FireBlackSphereRoutine(SkillInfo skill, SkillEffect effect)
+    {
+        if (target == null || effect.effectPrefab == null) yield break;
+
+        GameObject projObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+        BlackSphereProjectile proj = projObj.GetComponent<BlackSphereProjectile>();
+
+        if (proj != null)
+        {
+            float attack = GetAttack();
+            // ì²«íƒ€ 2000%(value), í­ë°œ 500%(ê³ ì •), í­ë°œë°˜ê²½(range/2)
+            proj.Setup(target, attack * effect.value, attack * 5f, skill.range / 2f, this);
+        }
+
+        yield return null;
+    }
+
+    // ì ˆëŒ€ì˜ë„ ìŠ¤í‚¬1: ì˜êµ¬ ë™í†  (Permafrost)
+    void ApplyFreezeAndDebuff(SkillInfo skill, SkillEffect effect)
+    {
+        // 1ì¹¸ íƒ€ì¼ ë²”ìœ„ (ìœ ë‹ˆí‹° ë‹¨ìœ„ ì•½ 1.2f~1.5f)
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 1.5f, LayerMask.GetMask("Enemy"));
+
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null)
+            {
+                // 1. ë¹™ê²° (ê¸°ì¡´ ê¸°ì ˆ í•¨ìˆ˜ í™œìš©)
+                m.ApplyStun(2f);
+
+                // 2. ë°©ì–´ë ¥ 30% ê°ì†Œ (ìœ„ì—ì„œ ë§Œë“  í•¨ìˆ˜ í˜¸ì¶œ)
+                // effect.valueê°€ 0.3ìœ¼ë¡œ ì…‹íŒ…ë˜ì–´ ìˆë‹¤ê³  ê°€ì •
+                m.ApplyArmorReduction(effect.value, 2f);
+                SpawnSkillEffect(skill, effect, m.transform.position);
+            }
+        }
+    }
+
+    //ì ˆëŒ€ì˜ë„ë„¤ëª¨ ë¶€ì±„ê¼´ ê³µê²©
+    void FireSectorIce(SkillInfo skill, SkillEffect effect)
+    {
+        float sectorAngle = 60f;
+        float sectorRange = skill.range;
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, sectorRange, LayerMask.GetMask("Enemy"));
+
+        // ì ˆëŒ€ì˜ë„ê°€ ë°”ë¼ë³´ëŠ” ë°©í–¥ ê²°ì •
+        Vector3 lookDir = target != null ? (target.position - transform.position).normalized : transform.right;
+
+        // --- ì´í™íŠ¸ ìƒì„± ë¡œì§ ì¶”ê°€/ìˆ˜ì • ---
+        if (effect.effectPrefab != null)
+        {
+            // 1. ì´í™íŠ¸ ìœ„ì¹˜: ìœ ë‹› ìœ„ì¹˜ì—ì„œ ì  ë°©í–¥ìœ¼ë¡œ 0.5~1.0 unit ì •ë„ ì•ìœ¼ë¡œ ë°€ì–´ì¤Œ (Offset)
+            Vector3 spawnPos = transform.position + (lookDir * 0.8f);
+
+            // 2. ì´í™íŠ¸ íšŒì „: lookDir ë°©í–¥ì„ ë°”ë¼ë³´ë„ë¡ ì¿¼í„°ë‹ˆì–¸ ê³„ì‚°
+            float angleDeg = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg;
+            Quaternion spawnRot = Quaternion.Euler(0, 0, angleDeg-90f);
+
+            // 3. ìƒì„±
+            GameObject eff = Instantiate(effect.effectPrefab, spawnPos, spawnRot);
+            Destroy(eff, 1.0f); // ìˆ˜ë™ ìƒì„± ì‹œ íŒŒê´´ ì˜ˆì•½ í•„ìˆ˜
+        }
+
+        // ë°ë¯¸ì§€ íŒì • ë¡œì§ (ê¸°ì¡´ê³¼ ë™ì¼)
+        foreach (var hit in hits)
+        {
+            Vector3 dirToEnemy = (hit.transform.position - transform.position).normalized;
+            float angle = Vector3.Angle(lookDir, dirToEnemy);
+
+            if (angle <= sectorAngle * 0.5f)
+            {
+                Monster m = hit.GetComponent<Monster>();
+                if (m != null)
+                {
+                    float damage = combatStats.Get(StatType.Attack) * effect.value;
+                    m.TakeDamage(damage, this);
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+
+    #endregion
+
+    #region íŒë§¤ & UI
 
     public void SellUnit()
     {
@@ -687,10 +1057,8 @@ public class Unit : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // µî±Ş¿¡ µû¸¥ ÆÇ¸Å °¡°İ °è»ê
     int GetSellPrice()
     {
-        // ±âº» °¡°İ ¼³Á¤
         switch (data.grade)
         {
             case UnitGrade.Low: return 5;
@@ -703,16 +1071,16 @@ public class Unit : MonoBehaviour
         }
     }
 
-    // µ¥ÀÌÅÍ¸¦ ¹Ş¾Æ¼­ À¯´ÖÀ» ÃÊ±âÈ­ÇÏ´Â ÇÔ¼ö
     public void SetUnit(UnitData newData)
     {
         data = newData;
 
-        // 1. À¯´Ö ¿ÜÇü ¼³Á¤
+        level = 1;          // ì§€ê¸ˆì€ 1 ê³ ì •, ë‚˜ì¤‘ì— ë¡œë¹„ì—ì„œ ë°›ì•„ì˜¤ë©´ ë¨
+        InitStatsFromData();
+
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = data.unitSprite;
 
-        // 2. µî±Şº° ¿À¶ó »ö»ó ¼³Á¤
         SetGradeVisual();
 
         if (rangeCircle != null) rangeCircle.SetActive(false);
@@ -722,37 +1090,37 @@ public class Unit : MonoBehaviour
     {
         if (auraRenderer == null) return;
 
-        // ¿äÃ»ÇÏ½Å µî±Şº° »ö»ó Á¤ÀÇ
         switch (data.grade)
         {
             case UnitGrade.Low: auraRenderer.color = Color.white; break;
-            case UnitGrade.Middle: auraRenderer.color = new Color(0.5f, 1f, 0.5f); break; // ¿¬µÎ
+            case UnitGrade.Middle: auraRenderer.color = new Color(0.5f, 1f, 0.5f); break;
             case UnitGrade.High: auraRenderer.color = Color.blue; break;
-            case UnitGrade.Epic: auraRenderer.color = new Color(0.6f, 0f, 1f); break;   // º¸¶ó
+            case UnitGrade.Epic: auraRenderer.color = new Color(0.6f, 0f, 1f); break;
             case UnitGrade.Legend: auraRenderer.color = Color.yellow; break;
             case UnitGrade.Myth: auraRenderer.color = Color.red; break;
         }
     }
 
-    // »ç°Å¸®¸¦ ÄÑ´Â ÇÔ¼ö (¸Å´ÏÀú°¡ È£Ãâ)
     public void ShowRange(bool x)
     {
         if (data == null) return;
 
-        // »ç°Å¸® Ç¥½Ã
         if (rangeCircle != null)
         {
             rangeCircle.SetActive(x);
             if (x)
             {
-                float scale = data.attackRange * 2f;
+                float range = GetRange();
+                float scale = range * 2f;
                 rangeCircle.transform.localScale = new Vector3(scale, scale, 1);
             }
         }
-        // ÆÇ¸Å ¹öÆ° Ç¥½Ã
+
         if (sellButton != null)
         {
             sellButton.SetActive(x);
         }
     }
+
+    #endregion
 }

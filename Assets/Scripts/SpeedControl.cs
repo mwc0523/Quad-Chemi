@@ -5,14 +5,14 @@ using TMPro;
 public class SpeedControl : MonoBehaviour
 {
     private float fast = 1f;
-    public TMP_Text speedText; // ¹öÆ°ÀÇ ÅØ½ºÆ® ¿¬°á
+    public TMP_Text speedText; // Â¹Ã¶Ã†Â°Ã€Ã‡ Ã…Ã˜Â½ÂºÃ†Â® Â¿Â¬Â°Ã¡
 
     public void ChangeSpeed()
     {
         if (fast != 3f) fast++;
         else fast = 1f;
 
-        Time.timeScale = fast; // 2¹è¼Ó
+        Time.timeScale = fast; // 2Â¹Ã¨Â¼Ã“
         if (speedText != null) speedText.text = "x" + fast.ToString("F0");
 
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
