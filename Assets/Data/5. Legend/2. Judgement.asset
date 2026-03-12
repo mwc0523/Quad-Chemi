@@ -17,6 +17,6 @@ MonoBehaviour:
   damage: 400
   attackRange: 3
   attackSpeed: 1.5
-  unitSprite: {fileID: 4177025365133314566, guid: 9f8290c6ea5345849bba9ea603ddcf1e, type: 3}
+  unitSprite: {fileID: -7032048543236042483, guid: d0a0d20319c10624da7d24d8850a14e8, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
   skills: []
