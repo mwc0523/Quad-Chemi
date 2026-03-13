@@ -27,7 +27,8 @@ public class Unit : MonoBehaviour
     private float judgementCurrentMultiplier;
     private int judgementKillCounter = 0;
     public LineRenderer judgementLaserLine;
-
+    private StatModifier atlasAttackModifier; // 현재 적용 중인 아틀라스 버프 저장용
+    private Coroutine atlasBuffCoroutine;
 
 
 
@@ -52,6 +53,10 @@ public class Unit : MonoBehaviour
     {
         // 게임 시작 시 혹은 소환 시 공격 루틴 시작
         StartCoroutine(AttackRoutine());
+        if (data.unitName == "Atlas")
+        {
+            StartCoroutine(AtlasAuraRoutine());
+        }
     }
 
     #region 전투 스탯 초기화 & 헬퍼
@@ -86,7 +91,7 @@ public class Unit : MonoBehaviour
 
     #endregion
 
-    #region 코일 스킬 보조
+    #region 버프 스킬 보조
 
     public IEnumerator ApplySkillChanceBuff(float amount, float duration)
     {
@@ -119,6 +124,34 @@ public class Unit : MonoBehaviour
 
         // 2. 새로운 버프 코루틴 시작
         coilBuffCoroutine = StartCoroutine(ApplySkillChanceBuff(amount, duration));
+    }
+
+    public void AddAtlasBuff(float amount, float duration)
+    {
+        // 1. 기존 버프 코루틴 및 모디파이어 제거 (중첩 방지 및 갱신)
+        if (atlasBuffCoroutine != null)
+        {
+            StopCoroutine(atlasBuffCoroutine);
+            combatStats.RemoveModifier(atlasAttackModifier);
+            atlasAttackModifier = null;
+        }
+
+        // 2. 새로운 버프 시작
+        atlasBuffCoroutine = StartCoroutine(ApplyAtlasAttackBuff(amount, duration));
+    }
+
+    IEnumerator ApplyAtlasAttackBuff(float amount, float duration)
+    {
+        // 공격력 20% 증가 모디파이어 생성 및 추가
+        atlasAttackModifier = new StatModifier(StatType.Attack, amount, StatModifierType.PercentAdd, "AtlasBuff");
+        combatStats.AddModifier(atlasAttackModifier);
+
+        yield return new WaitForSeconds(duration);
+
+        // 지속 시간 종료 후 제거
+        combatStats.RemoveModifier(atlasAttackModifier);
+        atlasAttackModifier = null;
+        atlasBuffCoroutine = null;
     }
 
     #endregion
@@ -290,14 +323,8 @@ public class Unit : MonoBehaviour
                     ExecuteChainLightning(skill, effect);
                     break;
                 case SkillEffectType.BuffAlly:
-                    if (data.unitName == "Coil")
-                    {
-                        StartCoroutine(CoilBuffRoutine(skill, effect));
-                    }
-                    else if (data.unitName == "WorldTree")
-                    {
-                        StartCoroutine(WorldTreeBuffRoutine(skill, effect));
-                    }
+                    if (data.unitName == "Coil") StartCoroutine(CoilBuffRoutine(skill, effect));
+                    else if (data.unitName == "WorldTree") StartCoroutine(WorldTreeBuffRoutine(skill, effect));
                     break;
                 case SkillEffectType.DebuffEnemy:
                     if (data.unitName == "Steel")
@@ -615,6 +642,7 @@ public class Unit : MonoBehaviour
         }
     }
 
+    //강철의 디버프
     void ApplySteelDebuff(SkillInfo skill, SkillEffect effect, float calculatedValue)
     {
         float range = GetRange();
@@ -643,6 +671,7 @@ public class Unit : MonoBehaviour
         }
     }
 
+    //처형
     void ApplyExecution(SkillInfo skill, SkillEffect effect)
     {
         float range = GetRange();
@@ -717,7 +746,6 @@ public class Unit : MonoBehaviour
             }
         }
     }
-
     IEnumerator PoisonSkillRoutine(SkillInfo skill, SkillEffect effect)
     {
         if (target == null) yield break;
@@ -868,8 +896,6 @@ public class Unit : MonoBehaviour
 
             if (judgementLaserLine != null)
             {
-                Debug.Log($"레이저출력");
-                // Z값을 -1 정도로 앞으로 당겨서 다른 UI나 배경보다 앞에 오게 합니다.
                 Vector3 startPos = transform.position;
                 startPos.z = -1f;
 
@@ -899,40 +925,54 @@ public class Unit : MonoBehaviour
     // 몬스터가 이 유닛에게 직접 처치됐을 때 호출
     public void OnMonsterKilled(Monster victim)
     {
-        if (data == null || data.unitName != "Judgement") return;
-
-        judgementKillCounter++;
-        if (judgementKillCounter >= 20)
-        {
-            judgementKillCounter = 0;
-            TriggerJudgementBonusMeteor();
-        }
-    }
-    // 20킬마다 추가 메테오 발동
-    void TriggerJudgementBonusMeteor()
-    {
-        if (data == null || data.skills == null) return;
-
-        // UnitData에서 "심판의 메테오" 스킬을 찾아서 그대로 실행
-        SkillInfo meteorSkill = default;
-        bool found = false;
-
-        foreach (var skill in data.skills)
-        {
-            if (skill.skillName == "심판의 메테오")
+        if (data == null || (data.unitName != "Judgement" && data.unitName != "Thunderbolt")) return;
+        if (data.unitName == "Judgement") {
+            judgementKillCounter++;
+            if (judgementKillCounter >= 20)
             {
-                meteorSkill = skill;
-                found = true;
-                break;
+                judgementKillCounter = 0;
+                SkillInfo meteorSkill = default;
+                bool found = false;
+
+                foreach (var skill in data.skills)
+                {
+                    if (skill.skillName == "심판의 메테오")
+                    {
+                        meteorSkill = skill;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) return;
+
+                // 현재 타겟이 없으면 굳이 발동하지 않음 (원하면 자기 위치 기준으로 바꿀 수 있음)
+                if (target == null) return;
+
+                ExecuteSkill(meteorSkill);
             }
         }
+        else if (data.unitName == "Thunderbolt") {
+            SkillInfo explodeSkill = default;
+            bool found = false;
 
-        if (!found) return;
+            foreach (var skill in data.skills)
+            {
+                // 인스펙터에 설정하신 스킬 이름과 일치해야 합니다.
+                if (skill.skillName == "뇌력폭파")
+                {
+                    explodeSkill = skill;
+                    found = true;
+                    break;
+                }
+            }
 
-        // 현재 타겟이 없으면 굳이 발동하지 않음 (원하면 자기 위치 기준으로 바꿀 수 있음)
-        if (target == null) return;
+            if (!found) return;
 
-        ExecuteSkill(meteorSkill);
+            // 2. 죽은 몬스터의 위치에서 즉시 폭발 로직 실행
+            // 'victim' 객체가 파괴(Destroy)되기 직전이므로 위치 값을 가져올 수 있습니다.
+            ExecuteExplosion(explodeSkill, victim.transform.position);
+        }
     }
     
     // 블랙홀네모 스킬2: 블랙홀 소환 함수
@@ -1036,6 +1076,71 @@ public class Unit : MonoBehaviour
             }
         }
     }
+    //뇌전의 폭발
+    void ExecuteExplosion(SkillInfo skill, Vector3 explosionPos)
+    {
+        // 스킬 데이터의 첫 번째 효과(폭발 데미지 500%)를 가져옵니다.
+        if (skill.effects == null || skill.effects.Count == 0) return;
+        SkillEffect effect = skill.effects[0];
+
+        // 0.5칸 범위 내 적들을 감지 (유니티 단위에 따라 0.5f ~ 0.7f 조절)
+        float explosionRange = 0.5f;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(explosionPos, explosionRange, LayerMask.GetMask("Enemy"));
+
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null)
+            {
+                // 500% 데미지 계산 (Value에 5가 들어있다고 가정)
+                float damage = combatStats.Get(StatType.Attack) * effect.value;
+                m.TakeDamage(damage, this);
+            }
+        }
+
+        // 폭발 이펙트 생성 (폭발 위치에)
+        if (effect.effectPrefab != null)
+        {
+            GameObject eff = Instantiate(effect.effectPrefab, explosionPos, Quaternion.identity);
+            float effectScale = explosionRange * 2.0f;
+            eff.transform.localScale = new Vector3(effectScale, effectScale, 1.0f);
+            Destroy(eff, 1.0f);
+        }
+    }
+    //아틀라스 버프
+    IEnumerator AtlasAuraRoutine()
+    {
+        // 유닛이 파괴될 때까지 무한 반복
+        while (true)
+        {
+            // 1초마다 주변 아군을 탐색하여 버프를 줍니다.
+            float auraRange = 1f; // 주변 1칸
+            float buffDuration = 1.5f; // 다음 탐색(1초)보다 길게 설정해서 버프가 끊기지 않게 함
+
+            Collider2D[] allies = Physics2D.OverlapCircleAll(transform.position, auraRange, LayerMask.GetMask("Unit"));
+
+            foreach (var ally in allies)
+            {
+                Unit unit = ally.GetComponent<Unit>();
+                if (unit != null && unit != this)
+                {
+                    if(unit.data.unitName != "Atlas")
+                        unit.AddAtlasBuff(0.2f, buffDuration);
+                }
+            }
+
+            // 매 프레임 체크하면 무거우므로 1초 간격으로 체크
+            yield return new WaitForSeconds(1.0f);
+        }
+    }
+
+
+
+
+
+
+
+
 
 
 

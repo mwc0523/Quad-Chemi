@@ -19,4 +19,50 @@ MonoBehaviour:
   attackSpeed: 0.8
   unitSprite: {fileID: 8851437633051352030, guid: 58a2fe92835e0c34190f6fa9baad9a53, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uAC70\uC778\uC758 \uBC1C\uAD6C\uB974\uAE30"
+    description: "20% \uD655\uB960\uB85C 3\uCE78 \uBC94\uC704\uC758 \uC9C0\uBA74\uC744
+      \uB0B4\uB9AC\uCCD0 1200%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC8FC\uACE0 2\uCD08
+      \uAE30\uC808\uC2DC\uD0B5\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0.2
+    triggerCount: 0
+    range: 3
+    effects:
+    - effectType: 0
+      value: 12
+      duration: 0.5
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: 78dd8b0d7a569114192f9faa0294029f, type: 3}
+    - effectType: 3
+      value: 0
+      duration: 2
+      count: 0
+      effectPrefab: {fileID: 0}
+  - skillName: "\uB300\uC9C0\uB97C \uAC00\uB974\uB294 \uBC14\uC704"
+    description: "15% \uD655\uB960\uB85C \uAE38\uAC8C \uAD74\uB7EC\uAC00\uB294 \uAC70\uB300\uD55C
+      \uBC14\uC704\uB97C \uAD74\uB824 \uAD00\uD1B5\uD558\uB294 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C
+      2000%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0.15
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 1
+      value: 12
+      duration: 0
+      count: 0
+      effectPrefab: {fileID: 5197069651202396189, guid: fbc9fed2adf5e7c49ac16b0f28270ee7, type: 3}
+  - skillName: "\uAC70\uC778\uC758 \uAC00\uD638"
+    description: "\uC8FC\uBCC0 1\uCE78 \uC774\uB0B4\uC758 \uC544\uAD70 \uB124\uBAA8\uC758
+      \uAE30\uBCF8 \uACF5\uACA9\uB825\uC744 20% \uC99D\uAC00\uC2DC\uD0B5\uB2C8\uB2E4(\uC911\uCCA9\uAC00\uB2A5)"
+    trigger: 1
+    triggerChance: 0
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 6
+      value: 0.2
+      duration: 0
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: 78dd8b0d7a569114192f9faa0294029f, type: 3}

@@ -36,8 +36,8 @@ MonoBehaviour:
       effectPrefab: {fileID: 6094360297785955000, guid: 9b9ed14495e73e54baf14730e5e05923, type: 3}
   - skillName: "\uD654\uC774\uD2B8\uC544\uC6C3"
     description: "10% \uD655\uB960\uB85C \uB9F5 \uC804\uCCB4\uC5D0 \uC11C\uB9AC\uB97C
-      \uB0B4\uB824 8\uCD08\uAC04 \uBAA8\uB4E0 \uC801\uC758 \uC774\uB3D9\uC18D\uB3C4\uB97C
-      40% \uAC10\uC18C\uC2DC\uD0B5\uB2C8\uB2E4"
+      \uB0B4\uB824 8\uCD08\uAC04 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uCD08\uB2F9 300%\uC758
+      \uB370\uBBF8\uC9C0\uB97C \uC8FC\uACE0 \uC774\uB3D9\uC18D\uB3C4\uB97C 40% \uAC10\uC18C\uC2DC\uD0B5\uB2C8\uB2E4"
     trigger: 0
     triggerChance: 0.1
     triggerCount: 0
@@ -48,6 +48,11 @@ MonoBehaviour:
       duration: 8
       count: 0
       effectPrefab: {fileID: 6094360297785955000, guid: 9b9ed14495e73e54baf14730e5e05923, type: 3}
+    - effectType: 5
+      value: 3
+      duration: 8
+      count: 0
+      effectPrefab: {fileID: 0}
   - skillName: "\uADF9\uD55C\uC758 \uC77C\uACA9"
     description: "12%\uC758 \uD655\uB960\uB85C \uBD80\uCC44\uAF34 \uD615\uD0DC\uC758
       \uC11C\uB9AC\uB97C \uBFCC\uB824 2000%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"

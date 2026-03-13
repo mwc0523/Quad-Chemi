@@ -21,11 +21,11 @@ MonoBehaviour:
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
   skills:
   - skillName: "\uC5F0\uC1C4 \uB1CC\uC804"
-    description: "60% \uD655\uB960\uB85C \uCD5C\uB300 10\uBA85\uC758 \uC801\uC5D0\uAC8C
+    description: "40% \uD655\uB960\uB85C \uCD5C\uB300 10\uBA85\uC758 \uC801\uC5D0\uAC8C
       \uD295\uAE30\uBA70 300%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC8FC\uB294 \uBC88\uAC1C\uB97C
       \uBC1C\uC0AC\uD569\uB2C8\uB2E4. "
     trigger: 0
-    triggerChance: 0.6
+    triggerChance: 0.4
     triggerCount: 0
     range: 0
     effects:
@@ -51,5 +51,20 @@ MonoBehaviour:
     - effectType: 3
       value: 0
       duration: 1
+      count: 0
+      effectPrefab: {fileID: 0}
+  - skillName: "\uB1CC\uB825\uD3ED\uD30C"
+    description: "\uB1CC\uC804\uC758 \uACF5\uACA9\uC73C\uB85C \uC778\uD574 \uC801\uC774
+      \uC0AC\uB9DD\uD560 \uACBD\uC6B0, \uADF8 \uC790\uB9AC\uC5D0\uC11C \uD3ED\uBC1C\uC774
+      \uC77C\uC5B4\uB098 \uD0C0\uC77C 0.5\uCE78 \uBC94\uC704\uC5D0 500%\uC758 \uB370\uBBF8\uC9C0\uB97C
+      \uC90D\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0
+    triggerCount: 0
+    range: 0.5
+    effects:
+    - effectType: 0
+      value: 5
+      duration: 0
       count: 0
       effectPrefab: {fileID: 6094360297785955000, guid: eff64a6aba7359343857ae0b8fc9f9d3, type: 3}
