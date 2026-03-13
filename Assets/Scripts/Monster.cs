@@ -1,9 +1,11 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+public enum MonsterType { Normal, MiniBoss, Boss }
 
 public class Monster : MonoBehaviour
 {
+    public MonsterType monsterType = MonsterType.Normal; //기본값
     private Transform[] waypoints;
     private int currentIndex = 0;
 
@@ -37,48 +39,37 @@ public class Monster : MonoBehaviour
         baseColor = spriteRenderer.color;
     }
 
-    public void Setup(Transform[] path, int currentRound)
+    public void Setup(Transform[] path, int currentRound, MonsterType type)
     {
 
-        // 1. 일반 몬스터 체력 계산 (10라운드마다 증가량 상승)
-        float baseHp = 0f;
-        float cumulativeHp = baseHp;
+        this.monsterType = type;
 
+        // 1. 기초 체력 계산 (기존 로직 유지)
+        float cumulativeHp = 0f;
         for (int i = 1; i <= currentRound; i++)
         {
-            // 10라운드마다 증가 수치를 높임 (단계별 가속 등차수열)
-            // 1~10렙: +500, 11~20렙: +1000 ... 91~100렙: +5000
             float increaseStep = Mathf.CeilToInt(i / 10f) * 500f;
             cumulativeHp += increaseStep;
         }
-
-        maxhp = cumulativeHp;
-
-        /*// 2. 미니보스 & 보스 체력 보정 (아직 프리팹은 없지만 로직만 선언)
-        // 5라운드마다 미니보스 (10, 20... 포함되므로 조건 확인)
-        if (currentRound % 5 == 0)
+        currentSpeed = baseSpeed + (currentRound * 0.01f);
+        // 2. 타입별 체력/방어력 승수 적용
+        switch (monsterType)
         {
-            if (currentRound % 10 == 0)
-            {
-                // 10라운드 단위 진보스: 일반몹의  라운드/10배
-                
-                maxhp *= currentRound/10f;
-
-                // 100라운드 최종 보스: 특별히 더 강력하게 (약 600만~700만 HP)
-                if (currentRound == 100) maxhp *= 1.5f;
-            }
-            else
-            {
-                // 5, 15, 25... 미니보스: 일반몹의 4배
-                maxhp *= 4f;
-            }
-        }*/
-
-        //속도 설정
-        currentSpeed = baseSpeed + (currentRound * 0.01f); // 라운드당 속도 미세 증가
-
-        //방어력 설정
-        defense = currentRound;
+            case MonsterType.MiniBoss:
+                maxhp = cumulativeHp * (currentRound / 30f);
+                defense = currentRound * 1.5f;   // 방어력도 더 높게
+                currentSpeed *= 0.8f;               // 보스는 조금 느리게 (묵직함)
+                break;
+            case MonsterType.Boss:
+                maxhp = cumulativeHp * (currentRound / 10f);
+                defense = currentRound * 2f;
+                currentSpeed *= 0.6f;
+                break;
+            default:
+                maxhp = cumulativeHp;
+                defense = currentRound;
+                break;
+        }
 
         hp = maxhp;
         waypoints = path;
@@ -255,24 +246,28 @@ public class Monster : MonoBehaviour
         if (isDead) return;
         isDead = true;
 
-        int reward = 1; // 기본 코인
-
-        
-        // 라운드 정보를 알고 있다면 보너스 지급
-        int currentRound = InGameManager.instance.currentRound;
-        /*
-        if (currentRound % 10 == 0)
-            reward = 50; // 보스 보상
-        else if (currentRound % 5 == 0)
-            reward = 20; // 미니보스 보상
-        */
-        InGameManager.instance.OnMonsterDestroyed();
-        InGameManager.instance.AddCoin(reward);
-
-        // 100라운드 보스 처치 시 게임 승리 팝업 호출 (예시)
-        if (currentRound == 100)
+        // 재화 지급 로직
+        if (InGameManager.instance != null)
         {
-            // InGameManager.instance.ShowVictoryUI(); 
+            if (monsterType == MonsterType.MiniBoss)
+            {
+                int elementStoneReward = 2; // 1개 지급
+                InGameManager.instance.AddElementStone(elementStoneReward);
+
+                // 코인도 보너스로 더 줄 수 있습니다.
+                InGameManager.instance.AddCoin(50);
+            }
+            else if (monsterType == MonsterType.Boss)
+            {
+                InGameManager.instance.AddElementStone(5); // 보스는 더 많이!
+                InGameManager.instance.AddCoin(200);
+            }
+            else
+            {
+                InGameManager.instance.AddCoin(1); // 일반 몹
+            }
+
+            InGameManager.instance.OnMonsterDestroyed();
         }
 
         Destroy(gameObject);

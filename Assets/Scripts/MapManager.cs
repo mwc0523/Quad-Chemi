@@ -12,6 +12,7 @@ public class MapManager : MonoBehaviour
     public float tileSize = 0.9f; // 타일 사이의 간격.
 
     public List<Transform> buildTiles = new List<Transform>(); // 유닛을 배치 가능한 타일들
+    public List<Vector2> allTilePositions = new List<Vector2>();
 
     // 기획해주신 6x7 맵 구조 (0: 길, 1: 배치칸)
     private int[,] mapData = new int[7, 6] {
@@ -31,6 +32,7 @@ public class MapManager : MonoBehaviour
 
     void GenerateMap()
     {
+        allTilePositions.Clear();
         buildTiles.Clear();
         // 맵이 화면 중앙에 예쁘게 오도록 시작점(좌상단) 좌표를 잡아줍니다.
         float startX = -2.5f * tileSize;
@@ -49,6 +51,7 @@ public class MapManager : MonoBehaviour
                 if (mapData[y, x] == 0) //길칸
                 {
                     spawnedTile = Instantiate(pathTilePrefab, position, Quaternion.identity, transform);
+                    allTilePositions.Add(position);
                 }
                 else if (mapData[y, x] == 1) //배치칸
                 {

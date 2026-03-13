@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 579770482611320767}
   - component: {fileID: 936826211646191182}
   - component: {fileID: 1134491476802304955}
-  - component: {fileID: 5530101743955100067}
   - component: {fileID: 5925182056550675441}
+  - component: {fileID: -6183634358674396460}
   m_Layer: 0
-  m_Name: "\uC791\uC740 \uD0DC\uC591"
+  m_Name: "\uAD81\uB2C8\uB974\uC758 \uCC3D"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -79,7 +79,7 @@ SpriteRenderer:
   m_SortingLayerID: -944659849
   m_SortingLayer: 1
   m_SortingOrder: 0
-  m_Sprite: {fileID: -7526754524622416973, guid: 19eba2f190bc0194e8406553eb6ed009, type: 3}
+  m_Sprite: {fileID: -7284038535122585352, guid: 295e58d118bba9742bde9d9c86573a7f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -126,18 +126,6 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.795
---- !u!114 &5530101743955100067
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1050481007815087936}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1520b588552f61d4facd40e4fc0b980d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!50 &5925182056550675441
 Rigidbody2D:
   serializedVersion: 5
@@ -165,3 +153,15 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &-6183634358674396460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1050481007815087936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43c99ea7f5f696647a40a8a09ef7af22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

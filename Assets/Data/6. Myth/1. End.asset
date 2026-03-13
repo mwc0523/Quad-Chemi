@@ -14,9 +14,45 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: End
   grade: 5
-  damage: 350
-  attackRange: 2
-  attackSpeed: 1.3
+  damage: 3000
+  attackRange: 4
+  attackSpeed: 1.8
   unitSprite: {fileID: -4816704110592764195, guid: 13830939e0ac1ef4bb2d5ab53791cdbb, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uC885\uB9D0\uC758 \uD3EC\uC2DD"
+    description: "\uC801\uC744 \uC9C1\uC811 \uCC98\uCE58\uD560 \uACBD\uC6B0, \uAE30\uBCF8\uACF5\uACA9\uB825\uC774
+      5\uC529 \uC0C1\uC2B9\uD569\uB2C8\uB2E4"
+    trigger: 2
+    triggerChance: 0
+    triggerCount: 0
+    range: 0
+    effects: []
+  - skillName: "\uCC9C\uCCB4\uBD95\uAD34"
+    description: "15% \uD655\uB960\uB85C \uB9F5 \uC804\uCCB4\uC758 \uB79C\uB364 \uD0C0\uC77C
+      5\uAC1C\uC5D0 \uAC70\uB300\uD55C \uC6B4\uC11D\uC744 \uB5A8\uAD88 4000%\uC758
+      \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 0
+      value: 40
+      duration: 0
+      count: 5
+      effectPrefab: {fileID: 6094360297785955000, guid: 632b54950ee181841afe4f5e0ecd6f7e, type: 3}
+  - skillName: "\uCC28\uC6D0\uB2E8\uC808"
+    description: "12% \uD655\uB960\uB85C \uACF5\uACA9\uBC94\uC704 \uD06C\uAE30\uC758
+      \uC6D0\uD615 \uC885\uB9D0\uC744 \uD718\uB458\uB7EC 3000%\uC758 \uB370\uBBF8\uC9C0\uB97C
+      \uC90D\uB2C8\uB2E4 "
+    trigger: 0
+    triggerChance: 0.2
+    triggerCount: 0
+    range: 4
+    effects:
+    - effectType: 12
+      value: 30
+      duration: 0
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: 5c6876a7f3813924cb7f4725629098ba, type: 3}

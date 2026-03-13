@@ -14,9 +14,59 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitName: Ragnarok
   grade: 5
-  damage: 450
-  attackRange: 3.5
-  attackSpeed: 2
+  damage: 4500
+  attackRange: 8
+  attackSpeed: 2.5
   unitSprite: {fileID: 5215477674666544679, guid: 1b4ea24c33c63d444a88d5764d99f79a, type: 3}
   projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
-  skills: []
+  skills:
+  - skillName: "\uBC88\uAC1C\uC758 \uC794\uC601"
+    description: "20% \uD655\uB960\uB85C \uCD5C\uB300 30\uBA85\uC758 \uC801\uC5D0\uAC8C
+      \uD295\uAE30\uBA70 500%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC8FC\uB294 \uBC88\uAC1C\uB97C
+      \uBC1C\uC0AC\uD569\uB2C8\uB2E4"
+    trigger: 0
+    triggerChance: 0.2
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 2
+      value: 5
+      duration: 0
+      count: 30
+      effectPrefab: {fileID: 8258347084358460233, guid: 108325feec85203439d9a16f94051448, type: 3}
+  - skillName: "\uC2E0\uBC8C\uC758 \uD3ED\uD48D"
+    description: "10% \uD655\uB960\uB85C \uACF5\uACA9\uBC94\uC704 \uC774\uB0B4\uC758
+      \uBAA8\uB4E0 \uC801\uC5D0\uAC8C 5\uCD08\uAC04 \uAE30\uC808\uC2DC\uD0A4\uACE0,
+      \uCD08\uB2F9 1\uD68C\uC529 \uBC88\uAC1C\uB97C \uB5A8\uAD88 1000%\uC758 \uB370\uBBF8\uC9C0\uB97C
+      \uC90D\uB2C8\uB2E4 "
+    trigger: 0
+    triggerChance: 0.1
+    triggerCount: 0
+    range: 0
+    effects:
+    - effectType: 5
+      value: 10
+      duration: 5
+      count: 0
+      effectPrefab: {fileID: 6094360297785955000, guid: eff64a6aba7359343857ae0b8fc9f9d3, type: 3}
+    - effectType: 3
+      value: 0
+      duration: 5
+      count: 0
+      effectPrefab: {fileID: 0}
+  - skillName: "\uAD81\uB2C8\uB974\uC758 \uAC15\uB9BC"
+    description: "20\uD68C \uAE30\uBCF8\uACF5\uACA9\uB9C8\uB2E4 1\uCE78 \uBC94\uC704\uC5D0
+      \uD558\uB298\uC5D0\uC11C \uAC70\uB300\uD55C \uBC88\uAC1C \uCC3D\uC774 \uB5A8\uC5B4\uC838
+      5000%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC785\uD788\uACE0, \uD574\uB2F9 \uC704\uCE58\uC5D0
+      10\uCD08\uAC04 \uC801\uC758 \uC774\uB3D9\uC744 \uB9C9\uB294 \uC804\uAE30\uBCBD\uC744
+      \uC0DD\uC131\uD569\uB2C8\uB2E4"
+    trigger: 3
+    triggerChance: 0
+    triggerCount: 20
+    range: 1
+    effects:
+    - effectType: 10
+      value: 50
+      duration: 10
+      count: 0
+      effectPrefab: {fileID: 1050481007815087936, guid: 019c48f7bed10f440b7c74a68a39b1b9, type: 3}

@@ -24,6 +24,7 @@ public class InGameManager : MonoBehaviour
     public TextMeshProUGUI roundText;
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI coinText;
+    public TextMeshProUGUI elementStoneText;
     public TextMeshProUGUI T_summonButton;
 
     [Header("게임 설정")]
@@ -34,6 +35,7 @@ public class InGameManager : MonoBehaviour
     public int currentRound = 1;
     public float currentTime = 0f;
     public int currentCoin = 0; // 로비로 돌아가면 0으로 초기화될 인게임 전용 재화
+    public int currentElementStone = 0; //원소석
 
     [Header("몬스터 관리")]
     public TextMeshProUGUI monsterCountText;
@@ -71,6 +73,7 @@ public class InGameManager : MonoBehaviour
         currentRound = 1;
         currentTime = roundDuration;
         currentCoin = 10000; // 코인 20개로 시작
+        currentElementStone = 0;
         UpdateUI();
         spawner.StartSpawn();
     }
@@ -333,12 +336,18 @@ public class InGameManager : MonoBehaviour
         currentCoin += amount;
         UpdateUI();
     }
+    public void AddElementStone(int amount)
+    {
+        currentElementStone += amount;
+        UpdateUI();
+    }
 
     // 화면의 글자들을 새로고침하는 함수
     void UpdateUI()
     {
         roundText.text = "Round " + currentRound;
         coinText.text = currentCoin + " C";
+        elementStoneText.text = currentElementStone + " E";
         T_summonButton.text = "네모 소환\n" + summonFee.ToString() + " C";
     }
 

@@ -29,7 +29,7 @@ public class Unit : MonoBehaviour
     public LineRenderer judgementLaserLine;
     private StatModifier atlasAttackModifier; // 현재 적용 중인 아틀라스 버프 저장용
     private Coroutine atlasBuffCoroutine;
-
+    private int attackCount = 0;
 
 
 
@@ -224,6 +224,7 @@ public class Unit : MonoBehaviour
 
         bool basicAttackReplaced = false;
         bool skillFired = false;
+        attackCount++;
 
         // 1. 모든 유닛 공통: OnAttack / ReplaceBasicAttack 스킬 처리
         foreach (var skill in data.skills)
@@ -242,6 +243,14 @@ public class Unit : MonoBehaviour
             {
                 ExecuteSkill(skill);
                 basicAttackReplaced = true;
+            }
+            else if (skill.trigger == SkillTrigger.OnAttackCount)
+            {
+                if (attackCount >= skill.triggerCount)
+                {
+                    ExecuteSkill(skill);
+                    attackCount = 0; // 발동 후 초기화
+                }
             }
         }
 
@@ -284,6 +293,8 @@ public class Unit : MonoBehaviour
             {
                 case SkillEffectType.DamageArea:
                     if (data.unitName == "Poison") StartCoroutine(PoisonSkillRoutine(skill, effect));
+                    else if (data.unitName == "End") StartCoroutine(EndMeteorRoutine(skill, effect));
+                    else if (data.unitName == "Abyss") ExecuteAbyssRift(skill, effect); // 스킬 2
                     else StartCoroutine(FireAreaRoutine(skill, effect));
                     break;
                 case SkillEffectType.DamageProjectile:
@@ -346,6 +357,10 @@ public class Unit : MonoBehaviour
                     {
                         SpawnBlackHole(skill, effect);
                     }
+                    else if (data.unitName == "Ragnarok")
+                    {
+                        SpawnElectricWall(skill, effect, target.position);
+                    }
                     else
                     {
                         ExecuteSpawnEntity(skill, effect);
@@ -355,7 +370,8 @@ public class Unit : MonoBehaviour
                     TsunamiSkill(skill, effect);
                     break;
                 case SkillEffectType.SectorAttack:
-                    FireSectorIce(skill, effect);
+                    if (data.unitName == "AbsoluteZero") FireSectorIce(skill, effect);
+                    else if (data.unitName == "End") ExecuteEndSlash(skill, effect);
                     break;
             }
         }
@@ -687,8 +703,7 @@ public class Unit : MonoBehaviour
             Monster m = hit.GetComponent<Monster>();
             if (m != null && (m.hp / m.maxhp) <= effect.value)
             {
-                m.TakeDamage(9999999f, this);
-                Debug.Log($"{m.name} 처형 성공!");
+                m.TakeDamage(9999999999f, this);
             }
         }
     }
@@ -925,7 +940,7 @@ public class Unit : MonoBehaviour
     // 몬스터가 이 유닛에게 직접 처치됐을 때 호출
     public void OnMonsterKilled(Monster victim)
     {
-        if (data == null || (data.unitName != "Judgement" && data.unitName != "Thunderbolt")) return;
+        if (data == null || (data.unitName != "Judgement" && data.unitName != "Thunderbolt" && data.unitName != "End")) return;
         if (data.unitName == "Judgement") {
             judgementKillCounter++;
             if (judgementKillCounter >= 20)
@@ -972,6 +987,12 @@ public class Unit : MonoBehaviour
             // 2. 죽은 몬스터의 위치에서 즉시 폭발 로직 실행
             // 'victim' 객체가 파괴(Destroy)되기 직전이므로 위치 값을 가져올 수 있습니다.
             ExecuteExplosion(explodeSkill, victim.transform.position);
+        }
+        else if (data.unitName == "End") // 종말의 경우
+        {
+            //data.damage += 5;
+            StatModifier harvestMod = new StatModifier(StatType.Attack, 5f, StatModifierType.Flat, this);
+            combatStats.AddModifier(harvestMod);
         }
     }
     
@@ -1133,11 +1154,154 @@ public class Unit : MonoBehaviour
             yield return new WaitForSeconds(1.0f);
         }
     }
+    //
+    IEnumerator EndMeteorRoutine(SkillInfo skill, SkillEffect effect)
+    {
+        MapManager map = FindObjectOfType<MapManager>();
+        if (map == null || map.allTilePositions.Count == 0) yield break;
 
+        // 1. 전체 타일 리스트를 복사한 뒤 셔플(섞기)해서 상위 5개를 뽑습니다.
+        List<Vector2> targets = new List<Vector2>(map.allTilePositions);
+        for (int i = 0; i < targets.Count; i++)
+        {
+            int rand = Random.Range(i, targets.Count);
+            Vector2 temp = targets[i];
+            targets[i] = targets[rand];
+            targets[rand] = temp;
+        }
 
+        // 2. 상위 5개 타일에 운석 투하
+        int count = Mathf.Min(5, targets.Count);
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 dropPos = targets[i];
+            // 개별 운석 낙하 처리 함수 호출
+            StartCoroutine(DropIndividualMeteor(dropPos, skill, effect));
+            // 약간의 시차를 두고 떨어지면 더 멋있습니다.
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
 
+    IEnumerator DropIndividualMeteor(Vector2 pos, SkillInfo skill, SkillEffect effect)
+    {
+        // 이펙트 생성 (하늘에서 떨어지는 연출은 프리팹 자체 애니메이션 추천)
+        if (effect.effectPrefab != null)
+        {
+            GameObject m = Instantiate(effect.effectPrefab, pos, Quaternion.identity);
+            Destroy(m, 2f);
+        }
 
+        // 실제 데미지 판정 (약간의 딜레이 후 땅에 닿았을 때)
+        yield return new WaitForSeconds(0.5f);
 
+        // 폭발 범위 내 적 감지 (운석이니까 1~1.5칸 정도 범위 추천)
+        Collider2D[] hits = Physics2D.OverlapCircleAll(pos, 1.2f, LayerMask.GetMask("Enemy"));
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null)
+            {
+                float damage = combatStats.Get(StatType.Attack) * effect.value; // 4000%
+                m.TakeDamage(damage, this);
+            }
+        }
+    }
+    void ExecuteEndSlash(SkillInfo skill, SkillEffect effect)
+    {
+        Debug.Log("휘두르기!!!");
+        // 1. 데미지 판정 (공격범위 크기의 원형)
+        float slashRange = skill.range; // 종말의 사거리인 4칸
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, slashRange, LayerMask.GetMask("Enemy"));
+
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null)
+            {
+                m.TakeDamage(combatStats.Get(StatType.Attack) * effect.value, this);
+            }
+        }
+
+        if (effect.effectPrefab != null)
+        {
+            GameObject slash = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+            Destroy(slash, 1.5f);
+        }
+    }
+    //심연 상시스킬
+    IEnumerator AbyssAuraRoutine()
+    {
+        while (true)
+        {
+            float auraRange = 5.0f;
+            Collider2D[] enemies = Physics2D.OverlapCircleAll(transform.position, auraRange, LayerMask.GetMask("Enemy"));
+
+            foreach (var enemy in enemies)
+            {
+                Monster m = enemy.GetComponent<Monster>();
+                if (m != null)
+                {
+                    m.ApplySlow(0.7f, 1.2f);
+                    if (m.hp > 0 && m.hp <= m.maxhp * 0.1f)
+                    {
+                        m.TakeDamage(9999999999f, this);
+                    }
+                }
+            }
+            yield return new WaitForSeconds(1.0f);
+        }
+    }
+    void ExecuteAbyssRift(SkillInfo skill, SkillEffect effect)
+    {
+        // 1. 타겟 주변 1칸 범위 적 감지
+        if (target == null) return;
+
+        float riftRange = 1.0f;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(target.position, riftRange, LayerMask.GetMask("Enemy"));
+
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null)
+            {
+                float percentDamage = m.maxhp * 0.05f;
+                m.TakeDamage(percentDamage, this);
+            }
+        }
+        if (effect.effectPrefab != null)
+        {
+            GameObject rift = Instantiate(effect.effectPrefab, target.position, Quaternion.identity);
+            Destroy(rift, 1.5f);
+        }
+    }
+    void SpawnElectricWall(SkillInfo skill, SkillEffect effect, Vector3 spawnPos)
+    {
+        // 1. 거대한 번개 창 낙하 데미지 (5000%)
+        float damageRange = 1.5f; // 창이 떨어질 때 주변 데미지 범위
+        Collider2D[] hits = Physics2D.OverlapCircleAll(spawnPos, damageRange, LayerMask.GetMask("Enemy"));
+
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null)
+            {
+                float damage = combatStats.Get(StatType.Attack) * effect.value; // 5000%
+                m.TakeDamage(damage, this);
+            }
+        }
+
+        // 2. 전기벽 생성 (10초간 유지)
+        if (effect.effectPrefab != null)
+        {
+            GameObject wallObj = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+            ElectricWall wallScript = wallObj.GetComponent<ElectricWall>();
+
+            if (wallScript == null) wallScript = wallObj.AddComponent<ElectricWall>();
+
+            // 스킬 정보에 설정된 지속시간(10)과 범위(1)를 전달
+            wallScript.Init(effect.duration, skill.range > 0 ? skill.range : 1.0f);
+        }
+    }
 
 
 
