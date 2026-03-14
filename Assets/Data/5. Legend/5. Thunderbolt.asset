@@ -18,7 +18,7 @@ MonoBehaviour:
   attackRange: 5
   attackSpeed: 2.2
   unitSprite: {fileID: 3145664287758196760, guid: edc91bc5d01174848adaec6d400e2d0b, type: 3}
-  projectilePrefab: {fileID: 6094360297785955000, guid: 6f837316c9c4d334c90ad3dbd7b66eab, type: 3}
+  projectilePrefab: {fileID: 6094360297785955000, guid: f65dfe1babc78904cb7292a528ed3253, type: 3}
   skills:
   - skillName: "\uC5F0\uC1C4 \uB1CC\uC804"
     description: "15% \uD655\uB960\uB85C \uCD5C\uB300 10\uBA85\uC758 \uC801\uC5D0\uAC8C

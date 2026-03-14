@@ -10,9 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3210157130648848288}
   - component: {fileID: 4430167378647976839}
-  - component: {fileID: 700130450339067006}
   m_Layer: 0
-  m_Name: Earth_basic
+  m_Name: Sprout_skill1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 6094360297785955000}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 735.1453, y: 1014.1545, z: 0}
-  m_LocalScale: {x: 0.125, y: 0.25, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.75, y: 0.75, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -77,8 +76,8 @@ SpriteRenderer:
   m_SortingLayerID: -806949339
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: -712631045867808456, guid: b670ab75dde984907b8570040daa08c5, type: 3}
-  m_Color: {r: 0.4056604, g: 0.19109207, b: 0.07845318, a: 1}
+  m_Sprite: {fileID: -7267126302173827019, guid: f0173bab748270a48aeab3ab8cf450d1, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.27450982}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -88,22 +87,3 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &700130450339067006
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6094360297785955000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49e91197f49c03447aab76277bda9ee9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: 1
-  skillEffect:
-    effectType: 0
-    value: 0
-    duration: 3
-    count: 0
-    effectPrefab: {fileID: 0}

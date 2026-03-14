@@ -102,6 +102,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b864fe07f09d8d468ca9f755308be73, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  monsterType: 0
   maxhp: 1000
   hp: 1000
   baseSpeed: 1

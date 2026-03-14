@@ -12,10 +12,8 @@ public class BlackHoleEntity : MonoBehaviour
         damagePerSecond = dps;
         pullRadius = radius;
         owner = unit;
-
         // 크기를 시각적으로 맞춰줌 (반경의 2배 = 지름)
-        transform.localScale = new Vector3(radius * 2, radius * 2, 1);
-
+        //transform.localScale = new Vector3(radius * 2, radius * 2, 1);
         Destroy(gameObject, duration);
         // 1초마다 데미지 틱 발생
         InvokeRepeating(nameof(DealDamageTick), 0f, 1f);

@@ -21,7 +21,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 6094360297785955000, guid: 36fe574e3f5895347b8e7d92d8ebbda5, type: 3}
   skills:
   - skillName: "\uBB3C\uD48D\uC120"
-    description: "10% \uD655\uB960\uB85C \uD0C0\uC77C 3\uCE78 \uBC94\uC704\uB0B4
+    description: "10% \uD655\uB960\uB85C \uD0C0\uC77C 1.5\uCE78 \uBC94\uC704\uB0B4
       \uC801\uC5D0\uAC8C \uBB3C\uD48D\uC120\uC744 \uB0A0\uB824 300%\uC758 \uB370\uBBF8\uC9C0\uB97C
       \uC8FC\uACE0 3\uCD08\uAC04 \uC774\uB3D9\uC18D\uB3C4\uB97C 20% \uAC10\uC18C\uC2DC\uD0B5\uB2C8\uB2E4"
     trigger: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
     effects:
     - effectType: 0
       value: 3
-      duration: 3
+      duration: 1
       count: 0
       effectPrefab: {fileID: 5802527559198752737, guid: 7228e7b3426a3534eb3b1edaa72128ed, type: 3}
     - effectType: 4

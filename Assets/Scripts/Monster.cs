@@ -236,7 +236,7 @@ public class Monster : MonoBehaviour
 
         // 위치는 몬스터 중앙, 크기는 1:1 (이미지는 몬스터 크기에 맞춰짐)
         visual.transform.localPosition = Vector3.zero;
-        visual.transform.localScale = Vector3.one;
+        //visual.transform.localScale = Vector3.one;
 
         Destroy(visual, duration);
     }

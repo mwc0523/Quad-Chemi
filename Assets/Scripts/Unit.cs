@@ -475,10 +475,10 @@ public class Unit : MonoBehaviour
                 GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
                 float effectScale = skill.range > 0 ? skill.range : range;
 
-                if (data.unitName == "Water")
+                /*if (data.unitName == "Water")
                     fx.transform.localScale = new Vector3(effectScale, effectScale * 0.2f, 1f);
                 else
-                    fx.transform.localScale = new Vector3(effectScale, effectScale, 1f);
+                    fx.transform.localScale = new Vector3(effectScale, effectScale, 1f); */
 
                 Destroy(fx, effect.duration > 0 ? effect.duration : 1.0f);
             }
@@ -548,7 +548,7 @@ public class Unit : MonoBehaviour
         GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
 
         float scale = skill.range > 0 ? skill.range / 2f : range / 2f;
-        fx.transform.localScale = new Vector3(scale, scale, 1f);
+        //fx.transform.localScale = new Vector3(scale, scale, 1f);
 
         float lifeTime = effect.duration > 0 ? effect.duration : 1.0f;
         Destroy(fx, lifeTime);
@@ -669,7 +669,7 @@ public class Unit : MonoBehaviour
         if (effect.effectPrefab != null)
         {
             GameObject fx = Instantiate(effect.effectPrefab, checkPos, Quaternion.identity);
-            fx.transform.localScale = new Vector3(range, range, 1f);
+            //fx.transform.localScale = new Vector3(range, range, 1f);
             Destroy(fx, effect.duration);
         }
 
@@ -778,7 +778,7 @@ public class Unit : MonoBehaviour
             GameObject poisonZone = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
 
             float zoneScale = skill.range > 0 ? skill.range : 3f;
-            poisonZone.transform.localScale = new Vector3(zoneScale, zoneScale, 1f);
+            //poisonZone.transform.localScale = new Vector3(zoneScale, zoneScale, 1f);
 
             float elapsed = 0f;
             float duration = effect.duration > 0 ? effect.duration : 5f;
@@ -1124,7 +1124,7 @@ public class Unit : MonoBehaviour
         {
             GameObject eff = Instantiate(effect.effectPrefab, explosionPos, Quaternion.identity);
             float effectScale = explosionRange * 2.0f;
-            eff.transform.localScale = new Vector3(effectScale, effectScale, 1.0f);
+            //eff.transform.localScale = new Vector3(effectScale, effectScale, 1.0f);
             Destroy(eff, 1.0f);
         }
     }
