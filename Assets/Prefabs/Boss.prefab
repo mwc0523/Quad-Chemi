@@ -103,8 +103,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   monsterType: 2
-  maxhp: 1000
-  hp: 1000
+  maxhp: 100
+  hp: 100
   baseSpeed: 1
   defense: 0
   hpSlider: {fileID: 4203473391487837134}
@@ -179,10 +179,10 @@ RectTransform:
   - {fileID: 4804503145838400581}
   m_Father: {fileID: 1059944486837982738}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0.65}
-  m_SizeDelta: {x: 100, y: 10}
+  m_AnchorMin: {x: 0, y: 1.3}
+  m_AnchorMax: {x: 0, y: 1.3}
+  m_AnchoredPosition: {x: 0, y: 1.3}
+  m_SizeDelta: {x: 240.626, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &8084039307130005759
 Canvas:

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: d14d78becdd2b884bb92154caddadcd3
+guid: 7879a3d40e588a847a4aa417670c0373
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3183485665933314323
-    second: BeautyPlus-image-extender 1_0
+      213: -2606320793421569220
+    second: Firefly 20260316013231_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: BeautyPlus-image-extender 1_0
+      name: Firefly 20260316013231_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 1024
-        height: 1507
+        height: 1579
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: de63f7657acf1d3d0800000000000000
-      internalID: -3183485665933314323
+      spriteID: c33a4691c0d74dbd0800000000000000
+      internalID: -2606320793421569220
       vertices: []
       indices: 
       edges: []

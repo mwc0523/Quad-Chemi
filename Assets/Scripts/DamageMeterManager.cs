@@ -94,10 +94,7 @@ public class DamageMeterManager : MonoBehaviour
     {
         isUIActive = !isUIActive;
 
-        // 단순 활성화/비활성화
-        // panelRect.gameObject.SetActive(isUIActive);
-
-        // 혹은 위치 이동 (우측 밖으로 -300만큼 밀어두었다가 0으로 가져오기)
+        //위치 이동
         float targetX = isUIActive ? 0 : 600f; // 패널 너비만큼 이동
         panelRect.anchoredPosition = new Vector2(targetX, panelRect.anchoredPosition.y);
     }

@@ -72,7 +72,7 @@ public class InGameManager : MonoBehaviour
         // 게임 시작 시 초기화
         currentRound = 1;
         currentTime = roundDuration;
-        currentCoin = 10000; // 코인 20개로 시작
+        currentCoin = 50; // 코인 50개로 시작
         currentElementStone = 0;
         UpdateUI();
         spawner.StartSpawn();
@@ -249,7 +249,7 @@ public class InGameManager : MonoBehaviour
             if (targetTile != null)
             {
                 currentCoin -= summonFee;
-                summonFee += 5;
+                summonFee += 2; //2씩 증가
                 UpdateUI();
                 SpawnRandomUnit(targetTile);
             }

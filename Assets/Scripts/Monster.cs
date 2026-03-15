@@ -41,36 +41,40 @@ public class Monster : MonoBehaviour
 
     public void Setup(Transform[] path, int currentRound, MonsterType type)
     {
-
         this.monsterType = type;
 
-        // 1. 기초 체력 계산 (기존 로직 유지)
-        float cumulativeHp = 0f;
-        for (int i = 1; i <= currentRound; i++)
-        {
-            float increaseStep = Mathf.CeilToInt(i / 10f) * 500f;
-            cumulativeHp += increaseStep;
-        }
+        // 1. 지수 함수 기반 체력 계산 (1라운드 100 기준)
+        float initialHp = 100f;
+        float growthRate = 1.1485f; // 100라운드에서 약 4,000만에 도달하는 성장률
+
+        // 지수 계산: HP = 100 * (1.1485 ^ round)
+        float exponentialHp = initialHp * Mathf.Pow(growthRate, currentRound);
+
+        // 이동 속도 계산 (기존 유지)
         currentSpeed = baseSpeed + (currentRound * 0.01f);
+
         // 2. 타입별 체력/방어력 승수 적용
         switch (monsterType)
         {
             case MonsterType.MiniBoss:
-                maxhp = cumulativeHp * (currentRound / 30f);
-                defense = currentRound * 1.5f;   // 방어력도 더 높게
-                currentSpeed *= 0.8f;               // 보스는 조금 느리게 (묵직함)
+                // 기초 체력의 라운드 비례 보정 (기존 로직 유지)
+                maxhp = exponentialHp * (currentRound / 30f);
+                defense = currentRound * 1.5f;
+                currentSpeed *= 0.8f;
                 break;
             case MonsterType.Boss:
-                maxhp = cumulativeHp * (currentRound / 10f);
+                maxhp = exponentialHp * (currentRound / 10f);
                 defense = currentRound * 2f;
                 currentSpeed *= 0.6f;
                 break;
             default:
-                maxhp = cumulativeHp;
+                maxhp = exponentialHp;
                 defense = currentRound;
                 break;
         }
 
+        // 소수점 정리 및 할당
+        maxhp = Mathf.Round(maxhp);
         hp = maxhp;
         waypoints = path;
 
