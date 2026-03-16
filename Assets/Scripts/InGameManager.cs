@@ -212,7 +212,10 @@ public class InGameManager : MonoBehaviour
             }
             else
             {
-                ReturnUnit();
+                unitOnTile.transform.SetParent(originalTile);
+                unitOnTile.transform.localPosition = new Vector3(0, 0, -1);
+                draggingUnit.transform.SetParent(targetTile);
+                draggingUnit.transform.localPosition = new Vector3(0, 0, -1);
             }
         }
         else

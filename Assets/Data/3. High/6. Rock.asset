@@ -25,7 +25,7 @@ MonoBehaviour:
       \uC801 \uD558\uB098\uC5D0\uAC8C \uBC14\uC704\uB97C \uAF42\uC544 \uBC1B\uB294
       \uCD5C\uC885 \uD53C\uD574\uB97C 10% \uC99D\uAC00\uC2DC\uD0B5\uB2C8\uB2E4"
     trigger: 0
-    triggerChance: 0.689
+    triggerChance: 0.1
     triggerCount: 0
     range: 0.1
     effects:

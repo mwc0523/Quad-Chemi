@@ -7,9 +7,6 @@ public class Unit : MonoBehaviour
     public UnitData data; // 위에서 만든 데이터 파일이 여기 꽂힙니다.
     private SpriteRenderer spriteRenderer;
 
-    // 살아있는 작은 태양 리스트
-    private readonly List<GameObject> activeSuns = new List<GameObject>();
-
     // 딜미터기용 통계
     public UnitStatistics stats = new UnitStatistics();
 
@@ -17,6 +14,8 @@ public class Unit : MonoBehaviour
     public int level = 1;                      // 나중에 로비에서 정해줄 유닛 레벨
     public UnitStats combatStats = new UnitStats(); // 전투용 스탯(공격력, 사거리, 공속 등)
 
+    // 살아있는 작은 태양 리스트
+    private readonly List<GameObject> activeSuns = new List<GameObject>();
     // 코일 버프 관련
     public float skillChanceBonus = 0f; // 코일의 스킬 사용 확률 증가량
     private bool isCoilBuffActive = false;
@@ -97,7 +96,7 @@ public class Unit : MonoBehaviour
     {
         isCoilBuffActive = true;
         skillChanceBonus = amount; // += 가 아니라 = 로 설정하여 중첩 원천 봉쇄
-        Debug.Log($"버프 갱신: 현재 확률 보너스 {skillChanceBonus}");
+        //Debug.Log($"버프 갱신: 현재 확률 보너스 {skillChanceBonus}");
 
         yield return new WaitForSeconds(duration);
 
@@ -470,16 +469,42 @@ public class Unit : MonoBehaviour
 
             Vector3 spawnPos = skill.range > 0 ? target.position : transform.position;
 
+            if (data.unitName == "Meteor")
+            {
+                //Debug.Log("메테오 소환!");
+                // 적 머리 기준 오른쪽 위 (X: +2, Y: +5) 에서 시작
+                Vector3 startPos = spawnPos + new Vector3(2f, 5f, 0f);
+                float dropDuration = 0.25f; // 메테오가 떨어지는 속도 (조절 가능)
+                float timer = 0f;
+
+                // 떨어질 메테오 오브젝트 생성 (UnitData의 Projectile Prefab 활용)
+                GameObject fallingMeteor = null;
+                if (data.projectilePrefab != null)
+                {
+                    fallingMeteor = Instantiate(data.projectilePrefab, startPos, Quaternion.identity);
+                    Projectile proj = fallingMeteor.GetComponent<Projectile>();
+                    if (proj != null) Destroy(proj);
+                }
+
+                // Lerp를 이용해 목표 지점까지 이동
+                while (timer < dropDuration)
+                {
+                    if (fallingMeteor != null)
+                    {
+                        fallingMeteor.transform.position = Vector3.Lerp(startPos, spawnPos, timer / dropDuration);
+                    }
+                    timer += Time.deltaTime;
+                    yield return null; // 다음 프레임까지 대기
+                }
+
+                // 바닥에 닿았으므로 낙하 오브젝트는 삭제
+                if (fallingMeteor != null) Destroy(fallingMeteor);
+            }
+
             if (effect.effectPrefab != null)
             {
                 GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
-                float effectScale = skill.range > 0 ? skill.range : range;
-
-                /*if (data.unitName == "Water")
-                    fx.transform.localScale = new Vector3(effectScale, effectScale * 0.2f, 1f);
-                else
-                    fx.transform.localScale = new Vector3(effectScale, effectScale, 1f); */
-
+                //float effectScale = skill.range > 0 ? skill.range : range;
                 Destroy(fx, effect.duration > 0 ? effect.duration : 1.0f);
             }
 
@@ -761,45 +786,75 @@ public class Unit : MonoBehaviour
             }
         }
     }
+
+    // 맹독네모의 투사체 이펙트
     IEnumerator PoisonSkillRoutine(SkillInfo skill, SkillEffect effect)
     {
         if (target == null) yield break;
 
-        int poisonCount = GetUnitCount("Poison");
+        // 1. 시작 및 목표 지점 고정 (적이 이동해도 던진 위치로 날아가게 함)
+        Vector3 startPos = transform.position;
+        Vector3 targetPos = target.position;
 
-        float attack = GetAttack();
-        float finalDamageMultiplier = effect.value + (poisonCount * 2.0f);
-        float finalDamagePerSecond = attack * finalDamageMultiplier;
+        // 2. 투사체(독병) 생성
+        GameObject bottle = null;
+        if (data.projectilePrefab != null)
+        {
+            bottle = Instantiate(data.projectilePrefab, startPos, Quaternion.identity);
 
-        Vector3 spawnPos = target.position;
+            // ★ 핵심: Projectile 스크립트를 파괴해서 직선으로 날아가는 기본 로직을 차단
+            Projectile proj = bottle.GetComponent<Projectile>();
+            if (proj != null) Destroy(proj);
+        }
 
+        // 포물선 이동을 위한 변수
+        float duration = 0.5f; // 날아가는 체공 시간
+        float time = 0f;
+        float arcHeight = 2.0f; // 포물선의 높이
+
+        // 3. 포물선 이동 연출
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float t = time / duration;
+
+            if (bottle != null)
+            {
+                // Vector3.Lerp로 직선 이동을 구한 뒤, Mathf.Sin으로 Y축(높이)만 더해줌 = 포물선
+                Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
+                currentPos.y += arcHeight * Mathf.Sin(t * Mathf.PI);
+
+                bottle.transform.position = currentPos;
+
+                // 독병이 빙글빙글 돌면서 날아가는 연출 (원치 않으시면 지워주세요)
+                bottle.transform.Rotate(0, 0, 360 * Time.deltaTime);
+            }
+            yield return null;
+        }
+
+        // 목표 지점 도착 시 맹독병 파괴
+        if (bottle != null) Destroy(bottle);
+
+        // 4. 목표 지점에 장판(스프라이트) 생성
         if (effect.effectPrefab != null)
         {
-            GameObject poisonZone = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+            GameObject puddle = Instantiate(effect.effectPrefab, targetPos, Quaternion.identity);
+            // 인스펙터에 설정한 Duration(5초)만큼 장판 유지 후 파괴
+            Destroy(puddle, effect.duration > 0 ? effect.duration : 5f);
+        }
 
-            float zoneScale = skill.range > 0 ? skill.range : 3f;
-            //poisonZone.transform.localScale = new Vector3(zoneScale, zoneScale, 1f);
+        // 5. 데미지 적용
+        float attack = GetAttack();
+        float damageRadius = skill.range > 0 ? skill.range / 2f : GetRange() / 2f;
 
-            float elapsed = 0f;
-            float duration = effect.duration > 0 ? effect.duration : 5f;
-
-            while (elapsed < duration)
+        Collider2D[] hits = Physics2D.OverlapCircleAll(targetPos, damageRadius, LayerMask.GetMask("Enemy"));
+        foreach (var hit in hits)
+        {
+            Monster m = hit.GetComponent<Monster>();
+            if (m != null)
             {
-                Collider2D[] hits =
-                    Physics2D.OverlapCircleAll(spawnPos, zoneScale / 2f, LayerMask.GetMask("Enemy"));
-                foreach (var hit in hits)
-                {
-                    Monster m = hit.GetComponent<Monster>();
-                    if (m != null)
-                    {
-                        m.TakeDamage(finalDamagePerSecond, this);
-                    }
-                }
-                yield return new WaitForSeconds(1f);
-                elapsed += 1f;
+                m.TakeDamage(attack * effect.value, this);
             }
-
-            Destroy(poisonZone);
         }
     }
 
@@ -1123,7 +1178,7 @@ public class Unit : MonoBehaviour
         if (effect.effectPrefab != null)
         {
             GameObject eff = Instantiate(effect.effectPrefab, explosionPos, Quaternion.identity);
-            float effectScale = explosionRange * 2.0f;
+            //float effectScale = explosionRange * 2.0f;
             //eff.transform.localScale = new Vector3(effectScale, effectScale, 1.0f);
             Destroy(eff, 1.0f);
         }
@@ -1208,7 +1263,7 @@ public class Unit : MonoBehaviour
     }
     void ExecuteEndSlash(SkillInfo skill, SkillEffect effect)
     {
-        Debug.Log("휘두르기!!!");
+        //Debug.Log("휘두르기!!!");
         // 1. 데미지 판정 (공격범위 크기의 원형)
         float slashRange = skill.range; // 종말의 사거리인 4칸
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, slashRange, LayerMask.GetMask("Enemy"));
@@ -1248,7 +1303,7 @@ public class Unit : MonoBehaviour
                     }
                 }
             }
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(0.01f);
         }
     }
     void ExecuteAbyssRift(SkillInfo skill, SkillEffect effect)
@@ -1303,8 +1358,7 @@ public class Unit : MonoBehaviour
         }
     }
 
-
-
+    
 
 
 

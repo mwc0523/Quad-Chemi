@@ -114,8 +114,8 @@ public class Monster : MonoBehaviour
         if (attacker != null)
         {
             attacker.stats.totalDamage += damageToRecord;  // ★ 누적은 항상 0 이상만 더해짐
+            //Debug.Log(attacker.data.unitName + "의 공격으로 " + damageToRecord + "의 데미지를 입음");
         }
-
         hp -= finalDamage;
 
         if (hpSlider != null) hpSlider.value = hp;

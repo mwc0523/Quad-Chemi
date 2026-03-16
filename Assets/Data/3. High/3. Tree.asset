@@ -38,4 +38,4 @@ MonoBehaviour:
       value: 0
       duration: 3
       count: 0
-      effectPrefab: {fileID: 6094360297785955000, guid: a8e7730b679753244adf8ea437efe0e4, type: 3}
+      effectPrefab: {fileID: 6094360297785955000, guid: 202bd9ff5d0d6854c9d66b19fc0835ba, type: 3}

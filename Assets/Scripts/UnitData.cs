@@ -77,7 +77,7 @@ public class UnitData : ScriptableObject
     [Header("스킬 리스트")]
     public List<SkillInfo> skills;
 }
-
+ 
 
 //딜미터기 관련 데이터 저장소
 public class UnitStatistics
