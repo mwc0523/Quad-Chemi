@@ -74,7 +74,7 @@ The process of developing a tower defense game with the concept of squares and e
 내일 할 일:남은 스킬들 그리기, 유닛 강화 만들기(하/중/상급 & 서사/전설급 & 신화급 이렇게 3개로), 원소석광산 만들기<br>
 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ<br>
 2026-03-17<br>
-오늘 한 일: 여러 스킬들 그려서 <얼음,용암,모래,전기,태풍,메테오,나무,번개,눈보라,바위, 맹독>네모의 스킬 연출 구현, <br> 
+오늘 한 일: 여러 스킬들 그려서 <얼음,용암,모래,전기,태풍,메테오,나무,번개,눈보라,바위, 맹독>네모의 스킬 연출 구현, 합쳐지지 않는 유닛 위에 드랍할 경우 서로 자리를 바꾸는 로직 추가, 심연네모의 처형 데미지가 들어가지 않던 오류 수정, 앱 실행시 로고 추가, 신화 유닛 3마리 dps 테스트 및 조정<br> 
 배운점: 메테오나 맹독과 같이 투사체 혹은 떨어지는 추가 연출이 필요한 경우, 평타 프리펩을 그 투사체 이미지로 대체한 후, 스킬 사용 시점에만<br>
 Projectile proj = projObj.GetComponent<Projectile>();<br>
   if (proj != null) proj.Setup(hit.transform, attack * effect.value, proj.type, this);<br>
