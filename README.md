@@ -79,5 +79,5 @@ The process of developing a tower defense game with the concept of squares and e
 Projectile proj = projObj.GetComponent<Projectile>();<br>
   if (proj != null) proj.Setup(hit.transform, attack * effect.value, proj.type, this);<br>
 위와 같은 코드를 통해 직선으로 발사되려는 성질을 지워주고, 연출 코딩을 하는 방식을 사용했다.<br>
-내일 할 일:<br>
+내일 할 일:남은 스킬들 그리기(강철부터), 유닛 강화 만들기(하/중/상급 & 서사/전설급 & 신화급 이렇게 3개로), 원소석광산 만들기<br>
 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ<br>
