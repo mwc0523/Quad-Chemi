@@ -802,7 +802,7 @@ public class Unit : MonoBehaviour
         {
             bottle = Instantiate(data.projectilePrefab, startPos, Quaternion.identity);
 
-            // ★ 핵심: Projectile 스크립트를 파괴해서 직선으로 날아가는 기본 로직을 차단
+            // 핵심: Projectile 스크립트를 파괴해서 직선으로 날아가는 기본 로직을 차단
             Projectile proj = bottle.GetComponent<Projectile>();
             if (proj != null) Destroy(proj);
         }
@@ -838,23 +838,21 @@ public class Unit : MonoBehaviour
         // 4. 목표 지점에 장판(스프라이트) 생성
         if (effect.effectPrefab != null)
         {
-            GameObject puddle = Instantiate(effect.effectPrefab, targetPos, Quaternion.identity);
-            // 인스펙터에 설정한 Duration(5초)만큼 장판 유지 후 파괴
-            Destroy(puddle, effect.duration > 0 ? effect.duration : 5f);
-        }
+            GameObject areaObj = Instantiate(effect.effectPrefab, targetPos, Quaternion.identity);
 
-        // 5. 데미지 적용
-        float attack = GetAttack();
-        float damageRadius = skill.range > 0 ? skill.range / 2f : GetRange() / 2f;
+            // [에러 해결] GetOrAddComponent 대신 표준 유니티 방식 사용
+            ContinuousRange rangeEffect = areaObj.GetComponent<ContinuousRange>();
+            if (rangeEffect == null) rangeEffect = areaObj.AddComponent<ContinuousRange>();
 
-        Collider2D[] hits = Physics2D.OverlapCircleAll(targetPos, damageRadius, LayerMask.GetMask("Enemy"));
-        foreach (var hit in hits)
-        {
-            Monster m = hit.GetComponent<Monster>();
-            if (m != null)
-            {
-                m.TakeDamage(attack * effect.value, this);
-            }
+            float damagePerSec = GetAttack() * effect.value;
+            float radius = skill.range > 0 ? skill.range / 2f : GetRange() / 2f;
+
+            // [에러 해결] 이름을 puddleDuration으로 변경하여 중복 회피
+            float puddleDuration = effect.duration > 0 ? effect.duration : 5f;
+            float tick = 1f;
+
+            // 초기화 함수 호출
+            rangeEffect.Initialize(damagePerSec, radius, puddleDuration, tick, this);
         }
     }
 
@@ -1045,7 +1043,6 @@ public class Unit : MonoBehaviour
         }
         else if (data.unitName == "End") // 종말의 경우
         {
-            //data.damage += 5;
             StatModifier harvestMod = new StatModifier(StatType.Attack, 5f, StatModifierType.Flat, this);
             combatStats.AddModifier(harvestMod);
         }
@@ -1400,6 +1397,10 @@ public class Unit : MonoBehaviour
 
         level = 1;          // 지금은 1 고정, 나중에 로비에서 받아오면 됨
         InitStatsFromData();
+        //강화버프 적용
+        if (data.grade == UnitGrade.Low || data.grade == UnitGrade.Middle || data.grade == UnitGrade.High) combatStats.AddModifier(UpgradeManager.instance.tier1Modifier);
+        else if (data.grade == UnitGrade.Epic || data.grade == UnitGrade.Legend) combatStats.AddModifier(UpgradeManager.instance.tier2Modifier);
+        else if (data.grade == UnitGrade.Myth) combatStats.AddModifier(UpgradeManager.instance.tier3Modifier);
 
         if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = data.unitSprite;
@@ -1444,6 +1445,5 @@ public class Unit : MonoBehaviour
             sellButton.SetActive(x);
         }
     }
-
     #endregion
 }

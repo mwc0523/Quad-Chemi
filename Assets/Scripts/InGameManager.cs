@@ -19,6 +19,7 @@ public class InGameManager : MonoBehaviour
     Transform originalTile;
     bool isDragging = false;
     int summonFee = 20;
+    bool isBossDie = false;
 
     [Header("UI 연결")]
     public TextMeshProUGUI roundText;
@@ -30,6 +31,7 @@ public class InGameManager : MonoBehaviour
     [Header("게임 설정")]
     public int maxRound = 100;
     public float roundDuration = 15f; // 1라운드당 15초
+    public float bossRoundDuration = 60f; // 1라운드당 60초
 
     [Header("현재 상태 (보기용)")]
     public int currentRound = 1;
@@ -86,7 +88,11 @@ public class InGameManager : MonoBehaviour
         currentTime -= Time.deltaTime;
         if (currentTime <= 0f)
         {
-            NextRound();
+            if (currentRound%10 != 0 || (currentRound % 10 == 0 && isBossDie)) {//보스 라운드가 아닐때
+                isBossDie = false;
+                NextRound();
+            }
+            else GameOver(); //보스 라운드일때
         }
         timerText.text = "0:" + ((int)currentTime).ToString("00");
 
@@ -299,7 +305,9 @@ public class InGameManager : MonoBehaviour
         if (currentRound < maxRound)
         {
             currentRound++;
-            currentTime = roundDuration; // 시간 다시 15초로 꽉 채우기
+            if (currentRound%10 != 0) //보스 라운드가 아닐때
+                currentTime = roundDuration; 
+            else currentTime = bossRoundDuration; //보스라운드일때
             UpdateUI();
 
             spawner.StartSpawn();
@@ -311,6 +319,11 @@ public class InGameManager : MonoBehaviour
             currentTime = 0f;
             Debug.Log("게임 클리어! 보스 등장 또는 로비로 이동");
         }
+    }
+    public void BossKilledSettingTime() {
+        currentTime = 5f;
+        isBossDie = true;
+        UpdateUI();
     }
     public void OnMonsterSpawned()
     {
@@ -349,8 +362,8 @@ public class InGameManager : MonoBehaviour
     void UpdateUI()
     {
         roundText.text = "Round " + currentRound;
-        coinText.text = currentCoin + " C";
-        elementStoneText.text = currentElementStone + " E";
+        coinText.text = currentCoin + "";
+        elementStoneText.text = currentElementStone + "";
         T_summonButton.text = "네모 소환\n" + summonFee.ToString() + " C";
     }
 

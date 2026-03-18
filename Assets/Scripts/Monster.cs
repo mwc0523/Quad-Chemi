@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
-public enum MonsterType { Normal, MiniBoss, Boss }
+public enum MonsterType { Normal, MiniBoss, Boss, Ore }
 
 public class Monster : MonoBehaviour
 {
@@ -77,6 +77,30 @@ public class Monster : MonoBehaviour
         maxhp = Mathf.Round(maxhp);
         hp = maxhp;
         waypoints = path;
+
+        if (hpSlider != null)
+        {
+            hpSlider.maxValue = maxhp;
+            hpSlider.value = hp;
+        }
+    }
+
+    public void SetupOre(int deathCount)
+    {
+        this.monsterType = MonsterType.Ore;
+
+        // 원소석 체력 계산 (예: 기본 1000에서 시작, 파괴될 때마다 1.5배씩 증가)
+        // 수치는 기획에 맞게 수정하세요!
+        float initialHp = 1000f;
+        maxhp = initialHp * Mathf.Pow(1.2f, deathCount);
+        maxhp = Mathf.Round(maxhp);
+        hp = maxhp;
+
+        // 방어력도 조금씩 단단해지게 설정
+        defense = deathCount * 2f;
+
+        // ★ 핵심: 움직이지 않게 하기 위해 waypoints를 null로 둡니다.
+        waypoints = null;
 
         if (hpSlider != null)
         {
@@ -253,27 +277,33 @@ public class Monster : MonoBehaviour
         // 재화 지급 로직
         if (InGameManager.instance != null)
         {
-            if (monsterType == MonsterType.MiniBoss)
+            if (monsterType == MonsterType.Ore)
             {
-                int elementStoneReward = 2; // 1개 지급
-                InGameManager.instance.AddElementStone(elementStoneReward);
+                InGameManager.instance.AddElementStone(1);
+            }
+            else {
+                if (monsterType == MonsterType.MiniBoss)
+                {
+                    int elementStoneReward = 2; // 1개 지급
+                    InGameManager.instance.AddElementStone(elementStoneReward);
 
-                // 코인도 보너스로 더 줄 수 있습니다.
-                InGameManager.instance.AddCoin(50);
-            }
-            else if (monsterType == MonsterType.Boss)
-            {
-                InGameManager.instance.AddElementStone(5); // 보스는 더 많이!
-                InGameManager.instance.AddCoin(200);
-            }
-            else
-            {
-                InGameManager.instance.AddCoin(1); // 일반 몹
-            }
+                    // 코인도 보너스로 더 줄 수 있습니다.
+                    InGameManager.instance.AddCoin(50);
+                }
+                else if (monsterType == MonsterType.Boss)
+                {
+                    InGameManager.instance.AddElementStone(5); // 보스는 더 많이!
+                    InGameManager.instance.AddCoin(200);
+                    InGameManager.instance.BossKilledSettingTime(); //라운드 남은 시간 줄이기
+                }
+                else
+                {
+                    InGameManager.instance.AddCoin(1); // 일반 몹
+                }
 
-            InGameManager.instance.OnMonsterDestroyed();
+                InGameManager.instance.OnMonsterDestroyed();
+            }
         }
-
         Destroy(gameObject);
     }
 }

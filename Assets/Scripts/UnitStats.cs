@@ -17,7 +17,8 @@ public enum StatModifierType
 {
     Flat,        // 고정 수치 +10 처럼
     PercentAdd,  // (1 + 0.10) 처럼 합산되는 % (여러 개 더해진 뒤 한 번에 적용)
-    PercentMul   // (1 + 0.10) * (1 + 0.20) 처럼 곱연산 버프
+    PercentMul,   // (1 + 0.10) * (1 + 0.20) 처럼 곱연산 버프
+    UpgradeMult  // 인게임 강화 배율
 }
 
 /// 버프/업그레이드 1개를 표현
@@ -47,28 +48,26 @@ public class Stat
     {
         get
         {
-            float result = baseValue;
-            float percentAdd = 0f;
-            float percentMul = 1f;
+            float flatSum = 0f;
+            float percentAddSum = 0f;
+            float percentMulProduct = 1f;
+            float upgradeMultiplier = 1f;
 
             foreach (var m in modifiers)
             {
                 switch (m.modifierType)
                 {
-                    case StatModifierType.Flat:
-                        result += m.value;
-                        break;
-                    case StatModifierType.PercentAdd:
-                        percentAdd += m.value;
-                        break;
-                    case StatModifierType.PercentMul:
-                        percentMul *= (1f + m.value);
-                        break;
+                    case StatModifierType.Flat: flatSum += m.value; break;
+                    case StatModifierType.PercentAdd: percentAddSum += m.value; break;
+                    case StatModifierType.PercentMul: percentMulProduct *= (1f + m.value); break;
+                    case StatModifierType.UpgradeMult: upgradeMultiplier += m.value; break;
                 }
             }
+            //최종 공격력 = (기본 공격력 + 고정수치 합연산 + 퍼센트수치 합연산) * (강화레벨) * (최종 공격력 n% 증가)
+            float result = (baseValue + flatSum) * (1f + percentAddSum);
+            result *= upgradeMultiplier;
+            result *= percentMulProduct;
 
-            result *= (1f + percentAdd);
-            result *= percentMul;
             return result;
         }
     }
