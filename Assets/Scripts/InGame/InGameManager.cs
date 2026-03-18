@@ -20,6 +20,7 @@ public class InGameManager : MonoBehaviour
     bool isDragging = false;
     int summonFee = 20;
     bool isBossDie = false;
+    bool isClear = false;
 
     [Header("UI 연결")]
     public TextMeshProUGUI roundText;
@@ -317,10 +318,11 @@ public class InGameManager : MonoBehaviour
         {
             // 100라운드까지 다 깼을 때
             currentTime = 0f;
-            Debug.Log("게임 클리어! 보스 등장 또는 로비로 이동");
+            Debug.Log("오잉 이걸 니가 봤다면 뭔가 오류가 났다는 뜻인데");
         }
     }
     public void BossKilledSettingTime() {
+        if(currentRound == 100) isClear = true;
         currentTime = 5f;
         isBossDie = true;
         UpdateUI();
@@ -344,7 +346,11 @@ public class InGameManager : MonoBehaviour
     {
         Time.timeScale = 0; // 게임 일시정지
         Debug.Log("GAME OVER!");
-        // 여기에 게임오버 UI 띄우기
+        if (DataManager.instance != null) {
+            DataManager.instance.currentUser.currentRunReachedWave = currentRound;
+            DataManager.instance.currentUser.isCurrentRunClear = isClear;
+        }
+        SceneManager.LoadScene("GameOver");
     }
     // 코인 획득 (몹을 잡았을 때 부를 함수)
     public void AddCoin(int amount)

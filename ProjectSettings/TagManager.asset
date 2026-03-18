@@ -15,7 +15,7 @@ TagManager:
   - UI
   - Enemy
   - Unit
-  - 
+  - UIs
   - 
   - 
   - 
@@ -48,6 +48,9 @@ TagManager:
     locked: 0
   - name: Square
     uniqueID: 3488017957
+    locked: 0
+  - name: UI
+    uniqueID: 538988521
     locked: 0
   m_RenderingLayers:
   - Default
