@@ -13,6 +13,7 @@ public class GameResultManager : MonoBehaviour
     public Animator chestAnimator; // 상자 애니메이션
     public TextMeshProUGUI rewardEssenceText; // 정수(Stone) 획득량
     public TextMeshProUGUI rewardAetherText;  // 에테르(Gold?) 획득량
+    public TextMeshProUGUI rewardExpText; //경험치 획득량
 
     void Start() {
         int wave = DataManager.instance.currentUser.currentRunReachedWave;
@@ -28,13 +29,16 @@ public class GameResultManager : MonoBehaviour
         // 2. 형의 기획 공식에 따른 보상 계산
         int earnedEssence = CalculateEssence(reachedWave);
         int earnedAether = CalculateAether(reachedWave);
+        int earnedExp = CalculateExp(reachedWave);
         rewardEssenceText.text = "+" + earnedEssence;
         rewardAetherText.text = "+" + earnedAether;
+        rewardExpText.text = "+" + earnedExp;
 
         // 3. 로컬 데이터 업데이트
         // (기존 currentUser의 변수명에 맞춰 essence/aether 등으로 수정하세요)
         DataManager.instance.currentUser.essence += earnedEssence;
         DataManager.instance.currentUser.aether += earnedAether;
+        DataManager.instance.currentUser.totalExp += earnedExp;
 
         // 4. 서버 저장
         DataManager.instance.SaveData();
@@ -51,6 +55,11 @@ public class GameResultManager : MonoBehaviour
         int tenUnitCount = wave / 10;
         int bonus = (tenUnitCount > 0) ? (int)Mathf.Pow(2, tenUnitCount) - 1 : 0;
         return baseReward + bonus;
+    }
+
+    private int CalculateExp(int wave)
+    {
+        return (wave * 10) + ((int)(wave/10) * 120);
     }
 
     private int CalculateAether(int wave)

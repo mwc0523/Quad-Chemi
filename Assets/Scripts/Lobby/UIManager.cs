@@ -6,6 +6,7 @@ public class UIManager : MonoBehaviour
 {
     [Header("Page Panels")]
     public GameObject[] pages; // 0:Shop, 1:Character, 2:MainMenu, 3:Equipment, 4:Special
+    public CharacterPanelManager characterPanelManager;
 
     [Header("Top Bar UI")]
     public TextMeshProUGUI levelText;
@@ -26,6 +27,8 @@ public class UIManager : MonoBehaviour
         {
             pages[i].SetActive(false);
         }
+        if(index == 2) RefreshTopBar();
+        else if (index == 1) characterPanelManager.RefreshPanel();
         pages[index].SetActive(true);
     }
 

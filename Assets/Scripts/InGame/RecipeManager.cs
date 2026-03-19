@@ -158,17 +158,34 @@ public class RecipeManager : MonoBehaviour
     public bool GetRecipeMaterials(UnitData targetUnit, out UnitData matA, out UnitData matB)
     {
         matA = null; matB = null;
-        if (InGameManager.instance == null || InGameManager.instance.recipes == null) return false;
 
-        foreach (var recipe in InGameManager.instance.recipes)
+        // 1. 인게임 매니저 확인
+        if (InGameManager.instance != null && InGameManager.instance.recipes != null)
         {
-            if (recipe.result == targetUnit)
+            foreach (var recipe in InGameManager.instance.recipes)
             {
-                matA = recipe.materialA;
-                matB = recipe.materialB;
-                return true;
+                if (recipe.result == targetUnit)
+                {
+                    matA = recipe.materialA;
+                    matB = recipe.materialB;
+                    return true;
+                }
             }
         }
+        // 2. 인게임이 아니면 데이터 매니저 확인
+        else if (DataManager.instance != null && DataManager.instance.allRecipes != null)
+        {
+            foreach (var recipe in DataManager.instance.allRecipes)
+            {
+                if (recipe.result == targetUnit)
+                {
+                    matA = recipe.materialA;
+                    matB = recipe.materialB;
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 

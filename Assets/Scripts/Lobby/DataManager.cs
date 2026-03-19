@@ -8,6 +8,11 @@ public class DataManager : MonoBehaviour
     public static DataManager instance;
     public UserProfile currentUser;
 
+    [Header("모든 유닛 데이터베이스")]
+    public List<UnitData> allUnitTemplates;
+    [Header("모든 조합법 데이터베이스")]
+    public List<MergeRecipe> allRecipes;
+
     void Awake()
     {
         if (instance == null)
@@ -49,6 +54,7 @@ public class DataManager : MonoBehaviour
                 // 데이터가 있으면 덮어쓰기
                 string json = result.Data["UserProfile"].Value;
                 currentUser = JsonUtility.FromJson<UserProfile>(json);
+                CheckAndAddMissingUnits(); //유닛 리스트 업데이트
                 Debug.Log("기존 데이터 로드 완료");
             }
             else
@@ -56,10 +62,26 @@ public class DataManager : MonoBehaviour
                 // 신규 유저일 경우 초기 데이터 설정 후 서버에 첫 저장
                 Debug.Log("신규 유저: 초기 데이터 생성 중...");
                 currentUser = new UserProfile();
+                foreach (var template in allUnitTemplates)
+                {
+                    currentUser.unitList.Add(new UnitSaveData(template.unitName));
+                }
                 SaveData();
             }
             onComplete?.Invoke();
         },
         error => Debug.LogError("로드 실패: " + error.GenerateErrorReport()));
+    }
+
+    private void CheckAndAddMissingUnits() //게임 업데이트로 새 유닛이 생겼을 떄 기존 유저 리스트에도 넣어주는 함수
+    {
+        foreach (var template in allUnitTemplates)
+        {
+            // 리스트에 해당 ID가 없으면 추가
+            if (!currentUser.unitList.Exists(u => u.unitID == template.unitName))
+            {
+                currentUser.unitList.Add(new UnitSaveData(template.unitName));
+            }
+        }
     }
 }
