@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class Unit : MonoBehaviour
 {
@@ -42,6 +43,11 @@ public class Unit : MonoBehaviour
 
     [Header("판매 설정")]
     public GameObject sellButton;
+    public TextMeshProUGUI sellPriceText;
+
+    [Header("랜덤 교환 설정")]
+    public GameObject changeButton;
+    public TextMeshProUGUI changePriceText;
 
     void Awake()
     {
@@ -1377,6 +1383,20 @@ public class Unit : MonoBehaviour
         Destroy(gameObject);
     }
 
+    public void ChangeUnit() {
+        if(InGameManager.instance.currentElementStone >= 1) {
+            InGameManager.instance.AddElementStone(-1);
+            Transform parentTile = this.transform.parent;
+
+            if (parentTile != null)
+            {
+                transform.SetParent(null);
+                InGameManager.instance.SpawnRandomUnit(parentTile, 1);
+                Destroy(gameObject);
+            }
+        }
+    }
+
     int GetSellPrice()
     {
         switch (data.grade)
@@ -1413,7 +1433,6 @@ public class Unit : MonoBehaviour
     void SetGradeVisual()
     {
         if (auraRenderer == null) return;
-
         switch (data.grade)
         {
             case UnitGrade.Low: auraRenderer.color = Color.white; break;
@@ -1423,6 +1442,7 @@ public class Unit : MonoBehaviour
             case UnitGrade.Legend: auraRenderer.color = Color.yellow; break;
             case UnitGrade.Myth: auraRenderer.color = Color.red; break;
         }
+        auraRenderer.color = new Color(auraRenderer.color.r, auraRenderer.color.g, auraRenderer.color.b, 0.5f);
     }
 
     public void ShowRange(bool x)
@@ -1443,6 +1463,23 @@ public class Unit : MonoBehaviour
         if (sellButton != null)
         {
             sellButton.SetActive(x);
+            if(x) {
+                switch (data.grade)
+                {
+                    case UnitGrade.Low: sellPriceText.text = "+5C"; break;
+                    case UnitGrade.Middle: sellPriceText.text = "+10C"; break;
+                    case UnitGrade.High: sellPriceText.text = "+20C"; break;
+                    case UnitGrade.Epic: sellPriceText.text = "+40C"; break;
+                    case UnitGrade.Legend: sellPriceText.text = "+80C"; break;
+                    case UnitGrade.Myth: sellPriceText.text = "+160C"; break;
+                }
+            }
+        }
+
+        if (changeButton != null)
+        {
+            if(data.grade == UnitGrade.Low)
+                changeButton.SetActive(x);
         }
     }
     #endregion

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 // 1. 재화 종류를 Enum으로 관리 (추가될 때마다 여기에 이름만 넣으면 됩니다)
 public enum CurrencyType
@@ -64,4 +65,22 @@ public class UserProfile
 
     // 설정 데이터
     public SettingsData settings = new SettingsData();
+
+    public int GetRequiredExp(int level)
+    {
+        return 100 + ((level - 1) * 50) + ((level - 1) * (level - 1) * 3);
+    }
+    public void AddExp(int amount)
+    {
+        totalExp += amount;
+        currentExp += amount;
+        while (currentExp >= GetRequiredExp(playerLevel))
+        {
+            currentExp -= GetRequiredExp(playerLevel); // 요구치만큼 깎고
+            playerLevel++;                             // 레벨업!
+
+            // TODO: 나중에 레벨업 보상(티켓 충전, 재화 지급 등)이 있다면 여기에 추가
+            Debug.Log($"레벨업! 현재 레벨: {playerLevel}");
+        }
+    }
 }

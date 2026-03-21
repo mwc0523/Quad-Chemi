@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
@@ -14,6 +15,11 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI ticketText;
     public TextMeshProUGUI essenceText; //정수
     public TextMeshProUGUI aetherText; //에테르
+
+    [Header("Experience UI")]
+    public Slider expSlider; // 경험치 슬라이더
+    public TextMeshProUGUI expText;
+    public TextMeshProUGUI expPercentText;
 
     void Start()
     {
@@ -38,6 +44,7 @@ public class UIManager : MonoBehaviour
         if (DataManager.instance == null) return;
 
         UserProfile data = DataManager.instance.currentUser;
+        data.AddExp(0);
 
         levelText.text = data.playerLevel.ToString();
         nicknameText.text = data.nickname;
@@ -48,6 +55,19 @@ public class UIManager : MonoBehaviour
         // 정수가 길어질 수 있으니 보기 좋게 콤마 추가 (예: 1,000,000)
         essenceText.text = data.essence.ToString("N0");
         aetherText.text = data.aether.ToString("N0");
+        if (expSlider != null)
+        {
+            int requiredExp = data.GetRequiredExp(data.playerLevel);
+            expSlider.maxValue = requiredExp;
+            expSlider.value = data.currentExp;
+
+            // 만약 경험치 텍스트 UI도 만들어 연결했다면 활성화
+            if (expText != null)
+            {
+                expText.text = $"{data.currentExp} / {requiredExp}";
+                expPercentText.text = $"{((float)data.currentExp / requiredExp * 100f):F1}%";
+            }
+        }
     }
 
     public void GoToInGame()

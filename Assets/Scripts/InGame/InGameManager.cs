@@ -66,6 +66,7 @@ public class InGameManager : MonoBehaviour
 
     void Awake()
     {
+        Time.timeScale = 1f;
         // 싱글톤 세팅 (이 씬 안에서 InGameManager.instance 로 이 스크립트를 부를 수 있습니다)
         if (instance == null) instance = this;
     }
@@ -261,7 +262,7 @@ public class InGameManager : MonoBehaviour
                 currentCoin -= summonFee;
                 summonFee += 2; //2씩 증가
                 UpdateUI();
-                SpawnRandomUnit(targetTile);
+                SpawnRandomUnit(targetTile, 0);
             }
             else
             {
@@ -284,16 +285,21 @@ public class InGameManager : MonoBehaviour
         }
         return null; // 레시피에 없으면 null 반환
     }
-    void SpawnRandomUnit(Transform parentTile)
+    public void SpawnRandomUnit(Transform parentTile, int isStrict)
     {
         // 2. 등급 가챠
         int rand = Random.Range(0, 10000);
         UnitData selectedData;
 
-        if (rand < 9900) selectedData = LowPool[Random.Range(0, LowPool.Length)];
-        else if (rand < 9990) selectedData = MiddlePool[Random.Range(0, MiddlePool.Length)];
-        else selectedData = HighPool[Random.Range(0, HighPool.Length)];
-
+        if(isStrict == 0) { //제약 없이 소환
+            if (rand < 9900) selectedData = LowPool[Random.Range(0, LowPool.Length)];
+            else if (rand < 9990) selectedData = MiddlePool[Random.Range(0, MiddlePool.Length)];
+            else selectedData = HighPool[Random.Range(0, HighPool.Length)];
+        }
+        else { //교환 등으로 인한 제약 발생
+            Debug.Log("교환 요청!");
+            selectedData = LowPool[Random.Range(0, LowPool.Length)];
+        }
         // 3. 소환 및 데이터 주입
         GameObject unitObj = Instantiate(unitBasePrefab, parentTile.position, Quaternion.identity, parentTile);
         unitObj.transform.localPosition = new Vector3(0, 0, -1f);

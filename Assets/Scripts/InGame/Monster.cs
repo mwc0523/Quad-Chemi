@@ -45,9 +45,9 @@ public class Monster : MonoBehaviour
 
         // 1. 지수 함수 기반 체력 계산 (1라운드 100 기준)
         float initialHp = 100f;
-        float growthRate = 1.1485f; // 100라운드에서 약 4,000만에 도달하는 성장률
+        float growthRate = 1.129776f; // 100라운드에서 약 4,000만에 도달하는 성장률
 
-        // 지수 계산: HP = 100 * (1.1485 ^ round)
+        // 지수 계산: HP = 100 * (1.129776 ^ round)
         float exponentialHp = initialHp * Mathf.Pow(growthRate, currentRound);
 
         // 이동 속도 계산 (기존 유지)

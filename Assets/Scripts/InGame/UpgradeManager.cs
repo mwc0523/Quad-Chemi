@@ -15,6 +15,9 @@ public class UpgradeManager : MonoBehaviour
     public TextMeshProUGUI T_tier1;
     public TextMeshProUGUI T_tier2;
     public TextMeshProUGUI T_tier3;
+    public TextMeshProUGUI T_tier1Show;
+    public TextMeshProUGUI T_tier2Show;
+    public TextMeshProUGUI T_tier3Show;
 
     // 유닛들이 공유할 글로벌 스탯 버프 객체
     public StatModifier tier1Modifier;
@@ -89,6 +92,9 @@ public class UpgradeManager : MonoBehaviour
         T_tier1.text = "하/중/상급\n" + tier1Level + " E";
         T_tier2.text = "서사/전설급\n" + (1 + 2 * tier2Level) + " E";
         T_tier3.text = "신화급\n" + (3 + 3 * tier3Level) + " E";
+        T_tier1Show.text = "LV." + tier1Level;
+        T_tier2Show.text = "LV." + tier2Level;
+        T_tier3Show.text = "LV." + tier3Level;
     }
 
     // 강화 창 닫기 (X 버튼용) 함수

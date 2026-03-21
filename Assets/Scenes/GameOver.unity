@@ -2072,7 +2072,7 @@ MonoBehaviour:
   chestAnimator: {fileID: 0}
   rewardEssenceText: {fileID: 150445837}
   rewardAetherText: {fileID: 331834398}
-  rewardExpText: {fileID: 0}
+  rewardExpText: {fileID: 1732268413}
 --- !u!4 &1918496833
 Transform:
   m_ObjectHideFlags: 0

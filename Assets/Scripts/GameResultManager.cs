@@ -38,7 +38,7 @@ public class GameResultManager : MonoBehaviour
         // (기존 currentUser의 변수명에 맞춰 essence/aether 등으로 수정하세요)
         DataManager.instance.currentUser.essence += earnedEssence;
         DataManager.instance.currentUser.aether += earnedAether;
-        DataManager.instance.currentUser.totalExp += earnedExp;
+        DataManager.instance.currentUser.AddExp(earnedExp);
 
         // 4. 서버 저장
         DataManager.instance.SaveData();
