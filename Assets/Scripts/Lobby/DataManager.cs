@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
@@ -45,16 +46,19 @@ public class DataManager : MonoBehaviour
     }
 
     // [데이터 불러오기] 서버에서 데이터를 가져옴
-    public void LoadData(System.Action onComplete = null)
+    public void LoadData(Action<bool> onComplete = null)
     {
         PlayFabClientAPI.GetUserData(new GetUserDataRequest(), result =>
         {
+            bool isNewUser = false;
             if (result.Data != null && result.Data.ContainsKey("UserProfile"))
             {
                 // 데이터가 있으면 덮어쓰기
                 string json = result.Data["UserProfile"].Value;
                 currentUser = JsonUtility.FromJson<UserProfile>(json);
                 CheckAndAddMissingUnits(); //유닛 리스트 업데이트
+
+                if (currentUser.nickname == "Player") isNewUser = true; //신규 유저
                 Debug.Log("기존 데이터 로드 완료");
             }
             else
@@ -66,9 +70,10 @@ public class DataManager : MonoBehaviour
                 {
                     currentUser.unitList.Add(new UnitSaveData(template.unitName));
                 }
+                isNewUser = true;
                 SaveData();
             }
-            onComplete?.Invoke();
+            onComplete?.Invoke(isNewUser);
         },
         error => Debug.LogError("로드 실패: " + error.GenerateErrorReport()));
     }

@@ -72,6 +72,7 @@ public class Projectile : MonoBehaviour
 
     void HitTarget(Monster m)
     {
+        Debug.Log(explosionRadius);
         // 범위 공격(Area)인 경우
         if (explosionRadius > 0)
         {

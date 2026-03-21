@@ -7,6 +7,8 @@ public class PlayFabAuthManager : MonoBehaviour
 {
     public static PlayFabAuthManager Instance;
 
+    [SerializeField] private GameObject nicknamePanel;
+
     void Awake()
     {
         if (Instance == null)
@@ -50,10 +52,18 @@ public class PlayFabAuthManager : MonoBehaviour
     {
         Debug.Log($"<color=green>로그인 성공!</color> 유저 ID: {result.PlayFabId}");
         // 로그인이 성공하면 바로 데이터를 불러옵니다.
-        DataManager.instance.LoadData(() =>
+        DataManager.instance.LoadData((isNewUser) =>
         {
-            // 데이터 로드가 끝난 뒤 씬 이동
-            SceneManager.LoadScene("Lobby");
+            if (isNewUser)
+            {
+                // 신규 유저라면 닉네임 패널 활성화
+                nicknamePanel.SetActive(true);
+            }
+            else
+            {
+                // 기존 유저라면 바로 이동
+                SceneManager.LoadScene("Lobby");
+            }
         });
     }
 

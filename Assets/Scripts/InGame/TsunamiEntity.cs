@@ -4,7 +4,7 @@ using UnityEngine;
 public class TsunamiEntity : MonoBehaviour
 {
     private float damage;
-    private float speed = 6f;
+    private float speed = 3f;
     private List<Transform> waypoints;
     private int nextWaypointIndex;
     private Unit owner;
