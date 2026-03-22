@@ -17,13 +17,32 @@ public class UnitSaveData
     public string unitID;     // 유닛 고유 ID (예: "FireNemo", "WaterNemo")
     public int level;         // 유닛 레벨
     public int count;         // 보유 개수 (합성/진화 등에 사용)
+    public int totalCount;         
     public string weaponID;   // 나중에 전용 무기가 생길 경우를 대비한 확장 변수
+
+    public int GetRequiredCount()
+    {
+        // 초반 완만, 후반 가속
+        return 5 + (level * 3) + (level * level / 2);
+    }
+
+    public long GetRequiredEssence()
+    {
+        // 정수는 더 가파르게 증가
+        return 50 + (level * 20) + (level * level * 5);
+    }
+    public float GetDamageMultiplier()
+    {
+        // 1레벨은 1배, 레벨이 오를수록 효율 급증
+        return 1f + (level - 1) * 0.1f * (1f + level * 0.005f);
+    }
 
     public UnitSaveData(string id)
     {
         unitID = id;
         level = 1;
         count = 0;
+        totalCount = 0;
         weaponID = "";
     }
 }

@@ -18,7 +18,7 @@ MonoBehaviour:
   attackRange: 6
   attackSpeed: 1.8
   unitSprite: {fileID: -6242691497695538698, guid: c8f6cfe5ee006ef46bcac4f55f7a9db6, type: 3}
-  projectilePrefab: {fileID: 6094360297785955000, guid: 9abc8f4c217305b4abe8449b04bb5169, type: 3}
+  projectilePrefab: {fileID: 6094360297785955000, guid: d4277a5050e4c014cbc75e87afb7a257, type: 3}
   skills:
   - skillName: "\uC138\uACC4\uC218\uC758 \uCD95\uBCF5"
     description: "8% \uD655\uB960\uB85C 4\uCD08\uAC04 \uC8FC\uBCC0 \uBC94\uC704\uB0B4
@@ -32,7 +32,7 @@ MonoBehaviour:
       value: 0.5
       duration: 4
       count: 0
-      effectPrefab: {fileID: 6094360297785955000, guid: a8e7730b679753244adf8ea437efe0e4, type: 3}
+      effectPrefab: {fileID: 6094360297785955000, guid: 954c8e61e5991284692a3a7598c48cf5, type: 3}
   - skillName: "\uC528\uC557 \uD3ED\uD0C4"
     description: "15% \uD655\uB960\uB85C 3\uCE78 \uBC94\uC704\uC5D0 \uC528\uC557\uC744
       \uB358\uC838 1000%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
@@ -43,9 +43,9 @@ MonoBehaviour:
     effects:
     - effectType: 0
       value: 10
-      duration: 0.3
+      duration: 1
       count: 1
-      effectPrefab: {fileID: 6094360297785955000, guid: a8e7730b679753244adf8ea437efe0e4, type: 3}
+      effectPrefab: {fileID: 6094360297785955000, guid: 4caaeb7fca62e514cbac3945f4f6368f, type: 3}
   - skillName: "\uB098\uBB34\uB294 \uCE35\uAC04\uC18C\uC74C\uC744 \uC2EB\uC5B4\uD574"
     description: "12% \uD655\uB960\uB85C \uACF5\uACA9\uBC94\uC704\uB0B4 \uBAA8\uB4E0
       \uC801\uC758 \uC774\uB3D9\uC18D\uB3C4\uB97C 5\uCD08\uAC04 50% \uAC10\uC18C\uC2DC\uD0B5\uB2C8\uB2E4"
@@ -58,4 +58,4 @@ MonoBehaviour:
       value: 0.5
       duration: 5
       count: 0
-      effectPrefab: {fileID: 6094360297785955000, guid: a8e7730b679753244adf8ea437efe0e4, type: 3}
+      effectPrefab: {fileID: 6094360297785955000, guid: dfa7e97b93ee62149b4916e142089d91, type: 3}

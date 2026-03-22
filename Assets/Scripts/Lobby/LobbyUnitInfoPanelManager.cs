@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class LobbyUnitInfoPanelManager : MonoBehaviour
 {
     public static LobbyUnitInfoPanelManager Instance { get; private set; }
+    [SerializeField] private CharacterPanelManager characterPanelManager;
 
     [Header("Panel Root")]
     [SerializeField] private GameObject unitInfoPanel;
@@ -17,6 +18,7 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text cardCountText;
     [SerializeField] private Slider progressBar;
+    [SerializeField] private Image progressFillImage;
     [SerializeField] private Button closeButton;
 
     [Header("Stats")]
@@ -34,8 +36,14 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
     [SerializeField] private Button openRecipeButton; // 인스펙터에서 버튼 연결
     [SerializeField] private RecipeManager recipeManager;
 
+    [Header("Upgrade")]
+    [SerializeField] private Button upgradeButton;
+    [SerializeField] private TMP_Text upgradeCostText;
+    [SerializeField] private Image upgradeIcon;
+
     private UnitData currentUnitData;
-    
+    private UnitSaveData currentSaveData;
+
 
     private void Awake()
     {
@@ -49,50 +57,69 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
                     recipeManager.ShowRecipeDetail(currentUnitData);
             });
         }
-        HideUnitInfo();
+        unitInfoPanel.SetActive(false);
     }
 
     public void ShowUnitInfo(UnitSaveData saveData)
     {
         if (saveData == null || DataManager.instance == null) return;
 
-        // 1. 데이터 찾기 (ID 매칭)
+        currentSaveData = saveData;
+
         UnitData unitTemplate = DataManager.instance.allUnitTemplates.Find(u => u.unitName == saveData.unitID);
-        if (unitTemplate == null)
-        {
-            Debug.LogError($"[오류] {saveData.unitID} 에 해당하는 데이터를 찾지 못했습니다.");
-            return;
-        }
-        else
-        {
-            Debug.Log($"[성공] {unitTemplate.unitName} 데이터 로드 완료");
-        }
+        if (unitTemplate == null) return;
 
         currentUnitData = unitTemplate;
-
-        // 2. 패널 활성화 및 최상단 정렬
         unitInfoPanel.SetActive(true);
 
-        // 3. 기본 정보 갱신
+        // 기본 정보 갱신
         unitIcon.sprite = currentUnitData.unitSprite;
         cardFrame.color = GetColorByGrade(currentUnitData.grade);
         unitNameText.text = currentUnitData.unitName;
         levelText.text = $"Lv.{saveData.level}";
-        Debug.Log($"이름 텍스트에 들어간 값: {unitNameText.text}");
 
-        // 4. 게이지 및 카드 수량
-        int required = Mathf.Max(1, saveData.level * 10);
-        cardCountText.text = $"{saveData.count}/{required}";
-        progressBar.value = Mathf.Clamp01((float)saveData.count / required);
+        // 게이지 및 카드 수량 (UnitSaveData의 수식 활용)
+        int requiredCount = saveData.GetRequiredCount();
+        float progressRatio = (float)saveData.count / requiredCount;
+        cardCountText.text = $"{saveData.count}/{requiredCount}";
+        progressBar.value = Mathf.Clamp01(progressRatio);
+        if (progressFillImage != null)
+        {
+            // 1 이상이면 초록색, 아니면 지정하신 주황색
+            progressFillImage.color = (progressRatio >= 1f) ? Color.green : new Color(245f / 255f, 113f / 255f, 0f / 255f); ;
+        }
 
-        // 5. 스탯
-        attackPowerText.text = currentUnitData.damage.ToString("F1");
+        // 스탯 (현재 레벨의 배율이 적용된 최종 스탯을 보여주고 싶다면 계산 필요)
+        float damageMult = saveData.GetDamageMultiplier(); //
+        attackPowerText.text = (currentUnitData.damage * damageMult).ToString("F1");
         attackSpeedText.text = currentUnitData.attackSpeed.ToString("F1");
         attackRangeText.text = currentUnitData.attackRange.ToString("F1");
 
-
-        // 6. 스킬 버튼 생성
         RefreshSkillButtons();
+
+        // ★ 레벨업 버튼 상태 업데이트
+        UpdateUpgradeButtonState();
+    }
+
+    private void UpdateUpgradeButtonState()
+    {
+        if (currentSaveData == null || DataManager.instance == null) return;
+
+        int reqCount = currentSaveData.GetRequiredCount(); //
+        long reqEssence = currentSaveData.GetRequiredEssence(); //
+        long myEssence = DataManager.instance.currentUser.essence; //
+
+        // 조건: 카드 개수가 충분하고, 정수(Essence)가 충분해야 함
+        bool canUpgrade = (currentSaveData.count >= reqCount) && (myEssence >= reqEssence);
+
+        upgradeButton.gameObject.SetActive(canUpgrade);
+        upgradeIcon.gameObject.SetActive(canUpgrade);
+
+
+        if (canUpgrade && upgradeCostText != null)
+        {
+            upgradeCostText.text = reqEssence.ToString("N0"); // 숫자에 콤마(,) 추가
+        }
     }
 
     private void RefreshSkillButtons()
@@ -124,7 +151,9 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
         skillDescriptionText.text = skill.description;
     }
 
-    public void HideUnitInfo() => unitInfoPanel.SetActive(false);
+    public void HideUnitInfo() {
+        unitInfoPanel.SetActive(false);
+    }
 
     private Color GetColorByGrade(UnitGrade grade)
     {
@@ -138,5 +167,35 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
             UnitGrade.Myth => Color.red,
             _ => Color.white
         };
+    }
+
+    public void TryUpgradeUnit()
+    {
+        if (currentSaveData == null || DataManager.instance == null) return;
+
+        int reqCount = currentSaveData.GetRequiredCount(); //
+        long reqEssence = currentSaveData.GetRequiredEssence(); //
+        var user = DataManager.instance.currentUser; //
+
+        // 1. 재차 조건 확인 (보안 및 안전성)
+        if (currentSaveData.count >= reqCount && user.essence >= reqEssence)
+        {
+            // 2. 재화 차감
+            currentSaveData.count -= reqCount;
+            user.essence -= reqEssence;
+
+            // 3. 레벨업!
+            currentSaveData.level++; //
+
+            // 4. UI 갱신 (현재 창을 다시 그려서 레벨과 스탯 변화 확인)
+            ShowUnitInfo(currentSaveData);
+
+            // 5. 로비 유닛 리스트 UI도 갱신이 필요하다면 이벤트 발생 (선택 사항)
+            characterPanelManager.RefreshPanel();
+
+            Debug.Log($"{currentSaveData.unitID} 레벨업 성공! 현재 Lv.{currentSaveData.level}");
+
+            DataManager.instance.SaveData();
+        }
     }
 }

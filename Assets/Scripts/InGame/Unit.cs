@@ -31,6 +31,12 @@ public class Unit : MonoBehaviour
     private Coroutine atlasBuffCoroutine;
     private int attackCount = 0;
 
+    private GameObject currentSteelFX;
+    private GameObject currentAreaFX;
+    private GameObject currentCoilFX;
+    private GameObject currentWorldTreeFX;
+    private GameObject currentSelfFX;
+
 
 
     [Header("시각적 효과")]
@@ -297,12 +303,12 @@ public class Unit : MonoBehaviour
             switch (effect.effectType)
             {
                 case SkillEffectType.DamageArea:
-                    if (data.unitName == "Poison") StartCoroutine(PoisonSkillRoutine(skill, effect));
+                    if (data.unitName == "Poison" || data.unitName == "WorldTree") StartCoroutine(PoisonSkillRoutine(skill, effect));
                     else if (data.unitName == "End") StartCoroutine(EndMeteorRoutine(skill, effect));
                     else if (data.unitName == "Abyss") ExecuteAbyssRift(skill, effect); // 스킬 2
                     else StartCoroutine(FireAreaRoutine(skill, effect));
                     break;
-                case SkillEffectType.DamageProjectile:
+                case SkillEffectType.DamageProjectile: 
                     if (data.unitName == "Blizzard")
                     {
                         int blizzardCount = GetUnitCount("Blizzard");
@@ -441,7 +447,7 @@ public class Unit : MonoBehaviour
         {
             if (target == null)
             {
-                if (data.unitName == "Meteor")
+                if (data.unitName == "Meteor" || data.unitName == "Judgement")
                 {
                     float searchRange = range / 2f;
                     Collider2D[] potentialTargets =
@@ -475,7 +481,7 @@ public class Unit : MonoBehaviour
 
             Vector3 spawnPos = skill.range > 0 ? target.position : transform.position;
 
-            if (data.unitName == "Meteor")
+            if (data.unitName == "Meteor" || data.unitName == "Judgement")
             {
                 //Debug.Log("메테오 소환!");
                 // 적 머리 기준 오른쪽 위 (X: +2, Y: +5) 에서 시작
@@ -509,9 +515,9 @@ public class Unit : MonoBehaviour
 
             if (effect.effectPrefab != null)
             {
-                GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
-                //float effectScale = skill.range > 0 ? skill.range : range;
-                Destroy(fx, effect.duration > 0 ? effect.duration : 1.0f);
+                if (currentAreaFX != null) Destroy(currentAreaFX);
+                currentAreaFX = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+                Destroy(currentAreaFX, effect.duration > 0 ? effect.duration : 1.0f);
             }
 
             Collider2D[] damageHits =
@@ -574,15 +580,21 @@ public class Unit : MonoBehaviour
         if (effect.effectPrefab == null) return;
 
         float range = GetRange();
-
         Vector3 spawnPos = skill.range > 0 ? targetPos : transform.position;
-        GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
-
-        float scale = skill.range > 0 ? skill.range / 2f : range / 2f;
-        //fx.transform.localScale = new Vector3(scale, scale, 1f);
-
         float lifeTime = effect.duration > 0 ? effect.duration : 1.0f;
-        Destroy(fx, lifeTime);
+
+        // ▼ 본인 중심 스킬인지 확인 (사거리가 0 이하) ▼
+        if (skill.range <= 0)
+        {
+            if (currentSelfFX != null) Destroy(currentSelfFX);
+            currentSelfFX = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+            Destroy(currentSelfFX, lifeTime);
+        }
+        else // 타겟 중심 스킬 (기존과 동일하게 개별 생성)
+        {
+            GameObject fx = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+            Destroy(fx, lifeTime);
+        }
     }
 
     void ApplyStun(SkillInfo skill, SkillEffect effect)
@@ -699,9 +711,9 @@ public class Unit : MonoBehaviour
 
         if (effect.effectPrefab != null)
         {
-            GameObject fx = Instantiate(effect.effectPrefab, checkPos, Quaternion.identity);
-            //fx.transform.localScale = new Vector3(range, range, 1f);
-            Destroy(fx, effect.duration);
+            if (currentSteelFX != null) Destroy(currentSteelFX);
+            currentSteelFX = Instantiate(effect.effectPrefab, checkPos, Quaternion.identity);
+            Destroy(currentSteelFX, effect.duration);
         }
 
         Collider2D[] hits =
@@ -769,8 +781,9 @@ public class Unit : MonoBehaviour
 
         if (effect.effectPrefab != null)
         {
-            GameObject fx = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
-            Destroy(fx, effect.duration);
+            if (currentCoilFX != null) Destroy(currentCoilFX);
+            currentCoilFX = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+            Destroy(currentCoilFX, effect.duration);
         }
         yield return null;
     }
@@ -935,8 +948,9 @@ public class Unit : MonoBehaviour
         // 선택: 시각 효과 (세계수 본인 발밑에만 한번)
         if (effect.effectPrefab != null)
         {
-            GameObject fx = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
-            Destroy(fx, duration);
+            if (currentWorldTreeFX != null) Destroy(currentWorldTreeFX);
+            currentWorldTreeFX = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+            Destroy(currentWorldTreeFX, duration);
         }
 
         yield return null;
@@ -1415,8 +1429,21 @@ public class Unit : MonoBehaviour
     {
         data = newData;
 
-        level = 1;          // 지금은 1 고정, 나중에 로비에서 받아오면 됨
+        var saveData = DataManager.instance.currentUser.unitList.Find(u => u.unitID == data.unitName);
+        level = (saveData != null) ? saveData.level : 1;
+
         InitStatsFromData();
+        if (level > 1)
+        {
+            float mult = saveData.GetDamageMultiplier();
+            combatStats.AddModifier(new StatModifier(
+                StatType.Attack,
+                mult - 1f,
+                StatModifierType.PercentMul,
+                "LobbyLevelBonus"
+            ));
+        }
+
         //강화버프 적용
         if (data.grade == UnitGrade.Low || data.grade == UnitGrade.Middle || data.grade == UnitGrade.High) combatStats.AddModifier(UpgradeManager.instance.tier1Modifier);
         else if (data.grade == UnitGrade.Epic || data.grade == UnitGrade.Legend) combatStats.AddModifier(UpgradeManager.instance.tier2Modifier);

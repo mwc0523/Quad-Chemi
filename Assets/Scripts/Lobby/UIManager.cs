@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    public static UIManager instance;
+    
     [Header("Page Panels")]
     public GameObject[] pages; // 0:Shop, 1:Character, 2:MainMenu, 3:Equipment, 4:Special
     public CharacterPanelManager characterPanelManager;

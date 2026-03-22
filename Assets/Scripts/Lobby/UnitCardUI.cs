@@ -28,9 +28,14 @@ public class UnitCardUI : MonoBehaviour, IPointerClickHandler
 
         levelText.text = $"Lv.{saveData.level}";
 
-        int required = Mathf.Max(1, saveData.level * 10);
+        int required = saveData.GetRequiredCount();
         countText.text = $"{saveData.count}/{required}";
         progressBar.value = (float)saveData.count / required;
+        if (saveData.level >= 50)
+        {
+            countText.text = "MAX";
+            progressBar.value = 1f;
+        }
     }
 
     private Color GetColorByGrade(UnitGrade grade)

@@ -7,6 +7,8 @@ public enum SortType { Level, Count, ID }
 
 public class CharacterPanelManager : MonoBehaviour
 {
+    public static CharacterPanelManager instance;
+
     [Header("Config")]
     public GameObject unitCardPrefab;
     public Transform contentTransform;
@@ -16,10 +18,10 @@ public class CharacterPanelManager : MonoBehaviour
 
     public void RefreshPanel()
     {
-        if (LobbyUnitInfoPanelManager.Instance != null)
+        /*if (LobbyUnitInfoPanelManager.Instance != null)
         {
             LobbyUnitInfoPanelManager.Instance.HideUnitInfo();
-        }
+        }*/
 
         foreach (Transform child in contentTransform)
         {
