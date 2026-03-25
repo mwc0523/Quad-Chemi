@@ -16,6 +16,7 @@ public class ShopItemSlot : MonoBehaviour
     [Header("진행도(유닛 전용)")]
     public GameObject progressContainer;
     public Slider progressSlider;        // 추가: 슬라이더 제어용
+    public Image progressImage2;
     public TextMeshProUGUI progressText;
 
     [Header("상태 표시")]
@@ -64,20 +65,17 @@ public class ShopItemSlot : MonoBehaviour
         UnitSaveData myUnit = DataManager.instance.currentUser.unitList.Find(u => u.unitID == myData.itemID);
 
         //Debug.Log($"[Shop] {myData.itemID} 진행도 업데이트 시도. 찾음: {myUnit != null}");
-        int currentCount = myUnit != null ? myUnit.count : 0;
+        int required = myUnit.GetRequiredCount();
+        float progressRatio = (float)myUnit.count / required;
         int currentLevel = myUnit != null ? myUnit.level : 1;
 
-        // TODO: 실제 게임의 레벨업 공식 적용 (현재는 임시)
-        int requiredCount = currentLevel * 10;
-
         // 텍스트 갱신
-        progressText.text = $"{currentCount} / {requiredCount}";
+        progressText.text = $"{myUnit.count} / {required}";
 
         // 슬라이더 갱신 (0~1 사이 값)
-        progressSlider.value = Mathf.Clamp01((float)currentCount / requiredCount);
+        progressSlider.value = Mathf.Clamp01(progressRatio);
 
-        if (currentCount >= requiredCount) progressText.color = Color.green;
-        else progressText.color = Color.black;
+        progressImage2.color = (progressRatio >= 1f) ? Color.green : new Color(245f / 255f, 113f / 255f, 0f / 255f);
     }
 
     private void LoadNonUnitIcon(string id)

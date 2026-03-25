@@ -81,13 +81,29 @@ public class InGameUIManager : MonoBehaviour
     {
         if (currentUnit == null) return;
 
-        lastDmg = currentUnit.combatStats.Get(StatType.Attack);
-        lastSpd = currentUnit.combatStats.Get(StatType.AttackSpeed);
-        lastRng = currentUnit.combatStats.Get(StatType.Range);
+        string lobbySource = "LobbyLevelBonus";
 
-        damageText.text = FormatStat(currentUnit.data.damage, lastDmg);
-        attackSpeedText.text = FormatStat(currentUnit.data.attackSpeed, lastSpd);
-        attackRangeText.text = FormatStat(currentUnit.data.attackRange, lastRng);
+        // 공격력
+        float finalDmg = currentUnit.combatStats.Get(StatType.Attack);
+        float baseDmg = currentUnit.combatStats.GetBaseWithSources(StatType.Attack, lobbySource);
+
+        // 공격속도
+        float finalSpd = currentUnit.combatStats.Get(StatType.AttackSpeed);
+        float baseSpd = currentUnit.combatStats.GetBaseWithSources(StatType.AttackSpeed, lobbySource);
+
+        // 사거리
+        float finalRng = currentUnit.combatStats.Get(StatType.Range);
+        float baseRng = currentUnit.combatStats.GetBaseWithSources(StatType.Range, lobbySource);
+
+        // last 값은 final 기준으로 유지 (기존 로직 유지)
+        lastDmg = finalDmg;
+        lastSpd = finalSpd;
+        lastRng = finalRng;
+
+        // UI 출력
+        damageText.text = FormatStat(baseDmg, finalDmg);
+        attackSpeedText.text = FormatStat(baseSpd, finalSpd);
+        attackRangeText.text = FormatStat(baseRng, finalRng);
     }
 
     private void RefreshSkillButtons()
@@ -140,13 +156,15 @@ public class InGameUIManager : MonoBehaviour
         foreach (Transform child in skillContentParent) Destroy(child.gameObject);
     }
 
-    string FormatStat(float baseValue, float finalValue)
+    string FormatStat(float uiBase, float finalValue)
     {
-        float diff = finalValue - baseValue;
-        if (Mathf.Abs(diff) < 0.01f) return baseValue.ToString("0.##");
+        float diff = finalValue - uiBase;
+
+        if (Mathf.Abs(diff) < 0.01f)
+            return uiBase.ToString("0.##");
 
         string color = diff > 0 ? "#0f861f" : "#ad1818";
-        return $"{baseValue:0.##} (<color={color}>{(diff > 0 ? "+" : "")}{diff:0.##}</color>)";
+        return $"{uiBase:0.##} (<color={color}>{(diff > 0 ? "+" : "")}{diff:0.##}</color>)";
     }
 
     public void HideUnitInfo()

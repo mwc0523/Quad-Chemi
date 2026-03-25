@@ -34,7 +34,7 @@ public class UnitSaveData
     public float GetDamageMultiplier()
     {
         // 1레벨은 1배, 레벨이 오를수록 효율 급증
-        return 1f + (level - 1) * 0.1f * (1f + level * 0.005f);
+        return (1f + (level - 1) * 0.1f) * Mathf.Pow(1.115f, level - 1);
     }
 
     public UnitSaveData(string id)
@@ -78,6 +78,9 @@ public class UserProfile
 
     // 티켓 회복을 위한 마지막 접속 시간 기록
     public string lastTicketChargeTime;
+    public string lastShopRefreshDate = "";  // 마지막 상점 갱신 날짜
+    public int dailyShopRefreshCount = 0;    // 오늘 수동 새로고침 한 횟수
+    public List<ShopItemData> savedDailyShop = new List<ShopItemData>();
 
     // 보유 유닛 목록
     public List<UnitSaveData> unitList = new List<UnitSaveData>();

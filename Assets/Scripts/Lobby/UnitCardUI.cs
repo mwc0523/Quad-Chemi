@@ -12,6 +12,8 @@ public class UnitCardUI : MonoBehaviour, IPointerClickHandler
     public TextMeshProUGUI levelText;
     public TextMeshProUGUI countText;
     public Slider progressBar;
+    public Image progressImage;
+    public Image UpgradeArrow;
 
     private UnitSaveData myData;
 
@@ -25,16 +27,32 @@ public class UnitCardUI : MonoBehaviour, IPointerClickHandler
         nameText.text = baseData.unitName;
         unitIcon.sprite = baseData.unitSprite;
         cardFrame.color = GetColorByGrade(baseData.grade);
-
         levelText.text = $"Lv.{saveData.level}";
 
         int required = saveData.GetRequiredCount();
+        float progressRatio = (float)saveData.count / required;
+
+        // 기본 텍스트 및 슬라이더 값 설정
         countText.text = $"{saveData.count}/{required}";
-        progressBar.value = (float)saveData.count / required;
+        progressBar.value = Mathf.Clamp01(progressRatio);
+
+        // ★ 레벨 50 이상(MAX) 예외 처리
         if (saveData.level >= 50)
         {
             countText.text = "MAX";
             progressBar.value = 1f;
+            progressRatio = 1f; // 색상 판정을 위해 1로 고정
+        }
+
+        if(progressRatio >= 1f) UpgradeArrow.gameObject.SetActive(true);
+        else UpgradeArrow.gameObject.SetActive(false);
+
+        // 슬라이더 색상 변경
+        if (progressImage != null)
+        {
+            // 1 이상(또는 MAX)이면 초록색, 아니면 주황색(245, 113, 0)
+            progressImage.color = (progressRatio >= 1f) ?
+                Color.green : new Color(245f / 255f, 113f / 255f, 0f / 255f);
         }
     }
 

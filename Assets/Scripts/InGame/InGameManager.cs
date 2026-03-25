@@ -408,15 +408,23 @@ public class InGameManager : MonoBehaviour
 
     public void DebugSummonByName()
     {
-        string unitName = debugInputField.text;
-        if (string.IsNullOrEmpty(unitName)) return;
+        string input = debugInputField.text;
+        if (string.IsNullOrEmpty(input)) return;
 
-        // 1. 모든 풀(Low~Myth)을 뒤져서 이름이 일치하는 UnitData 찾기
-        UnitData targetData = FindUnitDataByName(unitName);
+        // --- [추가] 숫자 입력 확인: 1~100 사이의 정수인지 체크 ---
+        if (int.TryParse(input, out int targetRound) && targetRound >= 1 && targetRound <= 100)
+        {
+            currentRound = targetRound;
+            debugInputField.text = "";
+            debugInputField.ActivateInputField();
+            return; // 라운드 이동 후 함수 종료
+        }
+
+        // --- 기존 유닛 소환 로직 (숫자가 아니거나 범위를 벗어난 경우) ---
+        UnitData targetData = FindUnitDataByName(input);
 
         if (targetData != null)
         {
-            // 2. 빈 타일 찾기 (기존 OnClickSummonButton 로직 활용)
             Transform emptyTile = null;
             foreach (Transform tile in mapManager.buildTiles)
             {
@@ -429,14 +437,13 @@ public class InGameManager : MonoBehaviour
 
             if (emptyTile != null)
             {
-                // 3. 소환
                 GameObject unitObj = Instantiate(unitBasePrefab, emptyTile.position, Quaternion.identity, emptyTile);
                 unitObj.transform.localPosition = new Vector3(0, 0, -1f);
                 unitObj.GetComponent<Unit>().SetUnit(targetData);
 
-                Debug.Log($"[Debug] {unitName} 소환 완료!");
-                debugInputField.text = ""; // 입력창 초기화
-                debugInputField.ActivateInputField(); // 다시 바로 입력할 수 있게 포커스
+                Debug.Log($"[Debug] {input} 소환 완료!");
+                debugInputField.text = "";
+                debugInputField.ActivateInputField();
             }
             else
             {
@@ -445,7 +452,7 @@ public class InGameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"{unitName}이라는 유닛을 찾을 수 없습니다. (대소문자/공백 확인)");
+            Debug.LogError($"{input}이라는 유닛을 찾을 수 없거나 올바른 라운드 숫자가 아닙니다.");
         }
     }
 

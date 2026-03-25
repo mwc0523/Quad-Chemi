@@ -86,6 +86,12 @@ public class UpgradeManager : MonoBehaviour
             UpdateUpgradeUI();
         }
     }
+    public void ClickUPgrade()
+    {
+        tier3Level++;
+        tier3Modifier.value = (tier3Level - 1);
+        UpdateUpgradeUI();
+    }
 
     void UpdateUpgradeUI()
     {

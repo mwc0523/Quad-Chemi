@@ -9,6 +9,13 @@ public class DataManager : MonoBehaviour
     public static DataManager instance;
     public UserProfile currentUser;
 
+    // --- 지연 저장 관련 변수 ---
+    private bool isDirty = false;       // 데이터 변경 여부
+    private Coroutine saveCoroutine;    // 저장 대기 코루틴
+    private float saveDelay = 3.0f;     // 3초 대기 후 저장
+    // -------------------------
+
+
     [Header("모든 유닛 데이터베이스")]
     public List<UnitData> allUnitTemplates;
     [Header("모든 조합법 데이터베이스")]
@@ -30,6 +37,31 @@ public class DataManager : MonoBehaviour
     // [데이터 저장] 서버에 현재 currentUser 상태를 업로드
     public void SaveData()
     {
+        isDirty = true;
+
+        // 이미 대기 중인 예약이 있다면 취소하고 새로 카운트 (연속 클릭 대응)
+        if (saveCoroutine != null)
+        {
+            StopCoroutine(saveCoroutine);
+        }
+
+        saveCoroutine = StartCoroutine(DelayedSaveRoutine());
+    }
+
+    private System.Collections.IEnumerator DelayedSaveRoutine()
+    {
+        yield return new WaitForSeconds(saveDelay);
+
+        if (isDirty)
+        {
+            SaveDataInternal();
+        }
+    }
+
+    // 실제 PlayFab API를 호출하는 내부 함수
+    private void SaveDataInternal()
+    {
+        isDirty = false;
         string json = JsonUtility.ToJson(currentUser);
 
         var request = new UpdateUserDataRequest
@@ -40,9 +72,32 @@ public class DataManager : MonoBehaviour
         };
 
         PlayFabClientAPI.UpdateUserData(request,
-            result => Debug.Log("서버 저장 완료!"),
-            error => Debug.LogError("저장 실패: " + error.GenerateErrorReport())
+            result =>
+            {
+                Debug.Log("<color=green>서버 저장 완료!</color>");
+                saveCoroutine = null;
+            },
+            error =>
+            {
+                Debug.LogError("저장 실패: " + error.GenerateErrorReport());
+                // 실패 시 다시 저장 시도하거나 처리가 필요할 수 있음
+                if (error.Error == PlayFabErrorCode.DataUpdateRateExceeded)
+                {
+                    Debug.LogWarning("속도 제한 걸림 - 잠시 후 다시 시도합니다.");
+                    SaveData(); // 다시 예약
+                }
+            }
         );
+    }
+
+    // 게임 종료 시나 씬 전환 시 강제 저장이 필요할 때 사용
+    public void SaveDataImmediate()
+    {
+        if (isDirty)
+        {
+            if (saveCoroutine != null) StopCoroutine(saveCoroutine);
+            SaveDataInternal();
+        }
     }
 
     // [데이터 불러오기] 서버에서 데이터를 가져옴

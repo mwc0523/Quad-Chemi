@@ -42,6 +42,7 @@ public class GameResultManager : MonoBehaviour
 
         // 4. 서버 저장
         DataManager.instance.SaveData();
+        DataManager.instance.SaveDataImmediate();
 
         // 5. 연출 시작
         //StartCoroutine(ShowRewardSequence(earnedEssence, earnedAether));

@@ -658,6 +658,7 @@ MonoBehaviour:
   costIcon: {fileID: 2238029198058656741}
   progressContainer: {fileID: 6149360512491526547}
   progressSlider: {fileID: 2901574830631013983}
+  progressImage2: {fileID: 4983479798137784273}
   progressText: {fileID: 2545976175884134090}
   soldOutDim: {fileID: 8039256473793502696}
 --- !u!114 &3351517474649428315

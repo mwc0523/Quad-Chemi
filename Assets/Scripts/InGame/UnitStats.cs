@@ -10,7 +10,7 @@ public enum StatType
     CritChance,     // 치명타 확률
     CritDamage      // 치명타 배율
     // 필요해지면 여기 계속 추가 (방어력, 관통력 등)
-}
+} 
 
 /// 스탯이 어떻게 더해지는지 방식
 public enum StatModifierType
@@ -84,6 +84,43 @@ public class Stat
     {
     modifiers.Remove(mod);
     }
+
+    public float GetValueOnlyFromSources(params object[] includeSources)
+    {
+        float flatSum = 0f;
+        float percentAddSum = 0f;
+        float percentMulProduct = 1f;
+        float upgradeMultiplier = 1f;
+
+        foreach (var m in modifiers)
+        {
+            bool include = false;
+            foreach (var s in includeSources)
+            {
+                if (m.source == s)
+                {
+                    include = true;
+                    break;
+                }
+            }
+
+            if (!include) continue;
+
+            switch (m.modifierType)
+            {
+                case StatModifierType.Flat: flatSum += m.value; break;
+                case StatModifierType.PercentAdd: percentAddSum += m.value; break;
+                case StatModifierType.PercentMul: percentMulProduct *= (1f + m.value); break;
+                case StatModifierType.UpgradeMult: upgradeMultiplier += m.value; break;
+            }
+        }
+
+        float result = (baseValue + flatSum) * (1f + percentAddSum);
+        result *= upgradeMultiplier;
+        result *= percentMulProduct;
+
+        return result;
+    }
 }
 
 /// 유닛 하나가 갖는 전체 스탯 묶음
@@ -131,5 +168,11 @@ public class UnitStats
         if (!stats.ContainsKey(mod.statType)) return;
 
         stats[mod.statType].RemoveModifier(mod);
+    }
+
+    public float GetBaseWithSources(StatType type, params object[] sources)
+    {
+        if (!stats.ContainsKey(type)) return 0f;
+        return stats[type].GetValueOnlyFromSources(sources);
     }
 }

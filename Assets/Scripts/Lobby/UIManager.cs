@@ -77,6 +77,7 @@ public class UIManager : MonoBehaviour
         if(DataManager.instance.currentUser.ticket >= 1) {
             DataManager.instance.currentUser.ticket -= 1;
             DataManager.instance.SaveData();
+            DataManager.instance.SaveDataImmediate();
             SceneManager.LoadScene("InGame");
         }
         else
