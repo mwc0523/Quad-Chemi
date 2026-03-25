@@ -103,6 +103,8 @@ public class UserProfile
     // 기본 지원하지 않으므로 List나 별도의 직렬화 패키지(Newtonsoft.Json)를 권장합니다.
     // 여기서는 확장성을 위해 List 형태의 보관함을 사용하거나 직접 명시합니다.
     public int ticket = 10;
+    public const int MAX_TICKET = 10;
+    public const int CHARGE_INTERVAL_MINUTES = 30;
     public long essence = 0; // 골드류는 나중에 수치가 커질 수 있어 long 권장
     public int aether = 0;
 
@@ -129,7 +131,7 @@ public class UserProfile
 
 
     // 티켓 회복을 위한 마지막 접속 시간 기록
-    public string lastTicketChargeTime;
+    public string lastTicketChargeTime = "";
     public string lastShopRefreshDate = "";  // 마지막 상점 갱신 날짜
     public int dailyShopRefreshCount = 0;    // 오늘 수동 새로고침 한 횟수
     public List<ShopItemData> savedDailyShop = new List<ShopItemData>();

@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System;
 
 public class UIManager : MonoBehaviour
 {
@@ -17,6 +18,9 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI ticketText;
     public TextMeshProUGUI essenceText; //정수
     public TextMeshProUGUI aetherText; //에테르
+
+    [Header("Ticket Timer UI")]
+    public TextMeshProUGUI ticketTimerText;
 
     [Header("Experience UI")]
     public Slider expSlider; // 경험치 슬라이더
@@ -55,6 +59,12 @@ public class UIManager : MonoBehaviour
         UpdateStageSelectionUI();
     }
 
+    void Update()
+    {
+        // 매 프레임 티켓 회복 로직 체크
+        UpdateTicketRecovery();
+    }
+
     public void OpenPage(int index)
     {
         for (int i = 0; i < pages.Length; i++)
@@ -66,6 +76,61 @@ public class UIManager : MonoBehaviour
         pages[index].SetActive(true);
     }
 
+    private void UpdateTicketRecovery()
+    {
+        if (DataManager.instance == null) return;
+        UserProfile data = DataManager.instance.currentUser;
+
+        // 1. 티켓이 이미 꽉 찼다면 타이머 숨기기
+        if (data.ticket >= UserProfile.MAX_TICKET)
+        {
+            if (ticketTimerText != null) ticketTimerText.text = "MAX";
+            data.lastTicketChargeTime = ""; // 꽉 차면 시작 시간 초기화
+            return;
+        }
+
+        // 2. 현재 시간 가져오기
+        DateTime now = DateTime.Now;
+
+        // 3. 마지막 충전 시각이 비어있다면 현재 시간으로 설정 (처음 티켓이 깎인 순간)
+        if (string.IsNullOrEmpty(data.lastTicketChargeTime))
+        {
+            data.lastTicketChargeTime = now.ToBinary().ToString();
+            DataManager.instance.SaveData();
+            return;
+        }
+
+        // 4. 경과 시간 계산
+        DateTime lastCharge = DateTime.FromBinary(long.Parse(data.lastTicketChargeTime));
+        TimeSpan elapsed = now - lastCharge;
+
+        double totalSecondsElapsed = elapsed.TotalSeconds;
+        int secondsPerTicket = UserProfile.CHARGE_INTERVAL_MINUTES * 60;
+
+        // 5. 티켓 충전 처리 (접속 중 + 오프라인 공통 적용)
+        if (totalSecondsElapsed >= secondsPerTicket)
+        {
+            int amountToRecover = (int)(totalSecondsElapsed / secondsPerTicket);
+            data.ticket = Mathf.Min(data.ticket + amountToRecover, UserProfile.MAX_TICKET);
+
+            // 마지막 충전 시간 갱신 (남은 초만큼 앞으로 당겨서 오차 방지)
+            DateTime nextStartTime = lastCharge.AddSeconds(amountToRecover * secondsPerTicket);
+            data.lastTicketChargeTime = nextStartTime.ToBinary().ToString();
+
+            RefreshTopBar();
+            DataManager.instance.SaveData();
+        }
+
+        // 6. UI 타이머 표시 (다음 충전까지 남은 시간)
+        if (ticketTimerText != null)
+        {
+            double remainingSeconds = secondsPerTicket - (totalSecondsElapsed % secondsPerTicket);
+            int min = (int)remainingSeconds / 60;
+            int sec = (int)remainingSeconds % 60;
+            ticketTimerText.text = $"({min:D2}:{sec:D2})";
+        }
+    }
+
     // DataManager의 실제 데이터를 읽어와서 UI를 갱신
     public void RefreshTopBar()
     {
@@ -74,6 +139,7 @@ public class UIManager : MonoBehaviour
         UserProfile data = DataManager.instance.currentUser;
         data.AddExp(0);
 
+        ticketText.text = $"{data.ticket}/{UserProfile.MAX_TICKET}";
         levelText.text = data.playerLevel.ToString();
         nicknameText.text = data.nickname;
 

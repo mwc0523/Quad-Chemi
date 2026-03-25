@@ -32,9 +32,11 @@ public class GameResultManager : MonoBehaviour
 
     public void OnGameEnd(int reachedWave, bool isClear)
     {
-        // 1. 현재 스테이지 인덱스 계산 (0 ~ 24)
-        int currentTheme = DataManager.instance.currentUser.selectedTheme;
-        int currentStage = DataManager.instance.currentUser.selectedStage;
+        var user = DataManager.instance.currentUser; // 코드 가독성을 위해 변수화
+
+        // 1. 현재 스테이지 정보 가져오기
+        int currentTheme = user.selectedTheme;
+        int currentStage = user.selectedStage;
         int totalStageIndex = (currentTheme * 5) + (currentStage - 1);
 
         // 2. 기본 UI 설정
@@ -42,15 +44,52 @@ public class GameResultManager : MonoBehaviour
         resultTypeText.text = isClear ? "클리어!" : "실패...";
         reachedWaveText.text = reachedWave.ToString();
 
-        // 3. 차등 보상 계산 (스테이지 인덱스 전달)
+        // 3. 진행도(Progress) 갱신 로직 추가 -----------------------------------------
+
+        // 현재 유저의 진행도를 숫자로 환산 (비교용)
+        // 예: 테마0-스테이지1 = 1점 / 테마0-스테이지5 = 5점 / 테마1-스테이지1 = 6점
+        int currentProgressScore = (currentTheme * 5) + currentStage;
+        int savedProgressScore = (user.highestClearedTheme + 1) * 5 + user.highestReachedStage;
+
+        // A. 최고 도달 라운드 갱신
+        // 현재 플레이 중인 스테이지가 기록된 최고 스테이지와 같거나 더 높을 때 라운드 비교
+        if (currentProgressScore > savedProgressScore)
+        {
+            user.highestReachedRound = reachedWave;
+        }
+        else if (currentProgressScore == savedProgressScore)
+        {
+            if (reachedWave > user.highestReachedRound)
+                user.highestReachedRound = reachedWave;
+        }
+
+        // B. 클리어 시 다음 스테이지 개방
+        if (isClear && currentProgressScore == savedProgressScore)
+        {
+            if (currentStage < 5)
+            {
+                // 다음 스테이지로
+                user.highestReachedStage++;
+            }
+            else
+            {
+                // 5단계를 깼으므로 현재 테마 클리어 처리 및 다음 테마 1단계로
+                user.highestClearedTheme = currentTheme;
+                user.highestReachedStage = 1;
+            }
+        }
+        // -------------------------------------------------------------------------
+
+        // 4. 차등 보상 계산
         int earnedEssence = CalculateEssence(reachedWave, totalStageIndex);
         int earnedAether = CalculateAether(reachedWave, totalStageIndex);
         int earnedExp = CalculateExp(reachedWave, totalStageIndex);
 
-        // 4. 데이터 업데이트 및 저장
-        DataManager.instance.currentUser.essence += earnedEssence;
-        DataManager.instance.currentUser.aether += earnedAether;
-        DataManager.instance.currentUser.AddExp(earnedExp);
+        // 5. 데이터 업데이트 및 저장 
+        user.essence += earnedEssence;
+        user.aether += earnedAether;
+        user.AddExp(earnedExp);
+
         DataManager.instance.SaveData();
         DataManager.instance.SaveDataImmediate();
 
