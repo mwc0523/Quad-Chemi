@@ -105,20 +105,22 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
     {
         if (currentSaveData == null || DataManager.instance == null) return;
 
-        int reqCount = currentSaveData.GetRequiredCount(); //
-        long reqEssence = currentSaveData.GetRequiredEssence(); //
-        long myEssence = DataManager.instance.currentUser.essence; //
+        // 1. 만렙 체크 (예: 50레벨이 최대라면)
+        bool isMaxLevel = currentSaveData.level >= 50;
 
-        // 조건: 카드 개수가 충분하고, 정수(Essence)가 충분해야 함
-        bool canUpgrade = (currentSaveData.count >= reqCount) && (myEssence >= reqEssence);
+        int reqCount = currentSaveData.GetRequiredCount();
+        long reqEssence = currentSaveData.GetRequiredEssence();
+        long myEssence = DataManager.instance.currentUser.essence;
+
+        // 2. 만렙이 '아니면서' 재화가 충분할 때만 true
+        bool canUpgrade = !isMaxLevel && (currentSaveData.count >= reqCount) && (myEssence >= reqEssence);
 
         upgradeButton.gameObject.SetActive(canUpgrade);
         upgradeIcon.gameObject.SetActive(canUpgrade);
 
-
         if (canUpgrade && upgradeCostText != null)
         {
-            upgradeCostText.text = reqEssence.ToString("N0"); // 숫자에 콤마(,) 추가
+            upgradeCostText.text = reqEssence.ToString("N0");
         }
     }
 
@@ -189,6 +191,7 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
 
             // 4. UI 갱신 (현재 창을 다시 그려서 레벨과 스탯 변화 확인)
             ShowUnitInfo(currentSaveData);
+            UIManager.instance.RefreshTopBar();
 
             // 5. 로비 유닛 리스트 UI도 갱신이 필요하다면 이벤트 발생 (선택 사항)
             characterPanelManager.RefreshPanel();

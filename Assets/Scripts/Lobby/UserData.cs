@@ -20,16 +20,51 @@ public class UnitSaveData
     public int totalCount;         
     public string weaponID;   // 나중에 전용 무기가 생길 경우를 대비한 확장 변수
 
+    private UnitGrade GetGrade()
+    {
+        // DataManager에서 unitID로 원본 템플릿을 찾아 등급을 반환합니다.
+        var data = DataManager.instance.allUnitTemplates.Find(u => u.unitName == unitID);
+        return (data != null) ? data.grade : UnitGrade.Low;
+    }
+
     public int GetRequiredCount()
     {
-        // 초반 완만, 후반 가속
-        return 5 + (level * 3) + (level * level / 2);
+        // 1. 기본 조각 공식 (현재 유지)
+        float baseCount = 5 + (level * 3) + (level * level * 0.5f);
+
+        // 2. 등급별 조각 가중치 (고급일수록 적게 필요)
+        float gradeModifier = 1f;
+        switch (GetGrade())
+        {
+            case UnitGrade.Low: gradeModifier = 1.0f; break; // 현상 유지
+            case UnitGrade.Middle: gradeModifier = 0.9f; break;
+            case UnitGrade.High: gradeModifier = 0.75f; break;
+            case UnitGrade.Epic: gradeModifier = 0.6f; break;
+            case UnitGrade.Legend: gradeModifier = 0.45f; break;
+            case UnitGrade.Myth: gradeModifier = 0.3f; break; // 신화는 조각이 매우 귀하므로 적게 소모
+        }
+
+        return Mathf.RoundToInt(baseCount * gradeModifier);
     }
 
     public long GetRequiredEssence()
     {
-        // 정수는 더 가파르게 증가
-        return 50 + (level * 20) + (level * level * 5);
+        // 1. 기본 정수 공식
+        float baseEssence = 50 + (level * 20) + (level * level * 5);
+
+        // 2. 등급별 정수 가중치 (고급일수록 기하급수적으로 비싸짐)
+        float priceModifier = 1f;
+        switch (GetGrade())
+        {
+            case UnitGrade.Low: priceModifier = 0.5f; break;  // 하급은 매우 저렴하게
+            case UnitGrade.Middle: priceModifier = 1.0f; break;
+            case UnitGrade.High: priceModifier = 2.5f; break;
+            case UnitGrade.Epic: priceModifier = 8.0f; break;
+            case UnitGrade.Legend: priceModifier = 25.0f; break;
+            case UnitGrade.Myth: priceModifier = 100.0f; break; // 신화는 '돈(정수)'으로 바르는 수준
+        }
+
+        return (long)Mathf.Round(baseEssence * priceModifier);
     }
     public float GetDamageMultiplier()
     {
@@ -75,6 +110,23 @@ public class UserProfile
     public int currentRunReachedWave;
     [NonSerialized]
     public bool isCurrentRunClear;
+
+
+    [Header("Stage Progress")]
+    // -1: 아무 테마도 클리어 못함 / 0: 바위산 클리어 / ... / 4: 공허 클리어
+    public int highestClearedTheme = -1;
+    public int highestReachedStage = 1; // 최고 도달 단계 (1~5)
+    public int highestReachedRound = 0; // 최고 도달 라운드 (1~100)
+
+    public int selectedTheme = 0; // 현재 선택된 테마 (0:바위산 ~ 4:공허)
+    public int selectedStage = 1;
+
+
+
+
+
+
+
 
     // 티켓 회복을 위한 마지막 접속 시간 기록
     public string lastTicketChargeTime;

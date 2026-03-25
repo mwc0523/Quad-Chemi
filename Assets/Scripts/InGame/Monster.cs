@@ -43,21 +43,43 @@ public class Monster : MonoBehaviour
     {
         this.monsterType = type;
 
+        // --- [신규 추가] DataManager에서 현재 테마와 단계 가져오기 ---
+        int currentTheme = 0;
+        int currentStage = 1;
+
+        if (DataManager.instance != null && DataManager.instance.currentUser != null)
+        {
+            currentTheme = DataManager.instance.currentUser.selectedTheme; // 0 ~ 4 (바위산~공허)
+            currentStage = DataManager.instance.currentUser.selectedStage; // 1 ~ 5
+        }
+
+        // 총 25단계 중 현재 위치를 0 ~ 24의 인덱스로 변환
+        int totalStageIndex = (currentTheme * 5) + (currentStage - 1);
+
+        // --- [밸런스 핵심] 성장률(growthRate) 계산 ---
+        // 바위산 1단계 (전투력 1만 타겟)
+        float minGrowthRate = 1.095f;
+
+        // 공허 5단계 (전투력 1000만 타겟)
+        float maxGrowthRate = 1.185f;
+
+        // 현재 인덱스(0~24)에 맞춰 min과 max 사이의 값을 부드럽게 추출 (0.0f ~ 1.0f 비율)
+        float t = totalStageIndex / 24f;
+        float growthRate = Mathf.Lerp(minGrowthRate, maxGrowthRate, t);
+
         // 1. 지수 함수 기반 체력 계산 (1라운드 100 기준)
         float initialHp = 100f;
-        float growthRate = 1.129776f; // 100라운드에서 약 4,000만에 도달하는 성장률
 
-        // 지수 계산: HP = 100 * (1.129776 ^ round)
+        // 지수 계산: HP = 100 * (growthRate ^ round)
         float exponentialHp = initialHp * Mathf.Pow(growthRate, currentRound);
 
         // 이동 속도 계산 (기존 유지)
         currentSpeed = baseSpeed + (currentRound * 0.01f);
 
-        // 2. 타입별 체력/방어력 승수 적용
+        // 2. 타입별 체력/방어력 승수 적용 (이하 기존 코드 동일)
         switch (monsterType)
         {
             case MonsterType.MiniBoss:
-                // 기초 체력의 라운드 비례 보정 (기존 로직 유지)
                 maxhp = exponentialHp * (currentRound / 30f);
                 defense = currentRound * 1.5f;
                 currentSpeed *= 0.8f;
@@ -85,14 +107,15 @@ public class Monster : MonoBehaviour
         }
     }
 
+
     public void SetupOre(int deathCount)
     {
         this.monsterType = MonsterType.Ore;
 
-        // 원소석 체력 계산 (예: 기본 1000에서 시작, 파괴될 때마다 1.5배씩 증가)
+        // 원소석 체력 계산 (예: 기본 1000에서 시작, 파괴될 때마다 1.15배씩 증가)
         // 수치는 기획에 맞게 수정하세요!
         float initialHp = 1000f;
-        maxhp = initialHp * Mathf.Pow(1.2f, deathCount);
+        maxhp = initialHp * Mathf.Pow(1.15f, deathCount);
         maxhp = Mathf.Round(maxhp);
         hp = maxhp;
 
