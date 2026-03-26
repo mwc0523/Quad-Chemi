@@ -318,6 +318,7 @@ public class Monster : MonoBehaviour
                     InGameManager.instance.AddElementStone(5); // 보스는 더 많이!
                     InGameManager.instance.AddCoin(200);
                     InGameManager.instance.BossKilledSettingTime(); //라운드 남은 시간 줄이기
+                    CardUIManager.instance.OpenCardDraw();
                 }
                 else
                 {
