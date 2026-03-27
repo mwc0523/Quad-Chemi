@@ -193,13 +193,31 @@ public class InGameManager : MonoBehaviour
 
             if (result != null)
             {
-                Transform tile = otherUnit.transform.parent;
+                // 1. 삭제될 유닛들을 즉시 비활성화 (이게 "두 마리 팔아야 하는 버그"를 잡는 핵심입니다)
+                otherUnit.gameObject.SetActive(false);
+                draggingUnit.gameObject.SetActive(false);
 
+                // 2. 리스트에서 제거
+                CardUIManager.instance.activeUnits.Remove(otherUnit);
+                CardUIManager.instance.activeUnits.Remove(draggingUnit);
+
+                // 3. 새 유닛 생성
+                Transform tile = otherUnit.transform.parent;
                 GameObject obj = Instantiate(unitBasePrefab, tile.position, Quaternion.identity, tile);
                 obj.transform.localPosition = new Vector3(0, 0, -1);
 
-                obj.GetComponent<Unit>().SetUnit(result);
+                Unit newUnit = obj.GetComponent<Unit>();
+                newUnit.SetUnit(result);
+                if(CardUIManager.instance.HasCard(CardEffectID.Mid_ElementReverse)) AddCoin(5); //원소 역전 카드 효과
 
+                // 4. 새 유닛을 리스트에 즉시 추가 (Start를 기다리지 않음)
+                if (!CardUIManager.instance.activeUnits.Contains(newUnit))
+                    CardUIManager.instance.activeUnits.Add(newUnit);
+
+                // 5. 전체 스탯 갱신 (비활성화된 유닛들은 이제 계산에서 빠짐)
+                CardUIManager.instance.RefreshAllUnitStats();
+
+                // 6. 실제 파괴
                 Destroy(otherUnit.gameObject);
                 Destroy(draggingUnit.gameObject);
 

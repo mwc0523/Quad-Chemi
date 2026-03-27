@@ -22,7 +22,7 @@ public class ChainLightning : MonoBehaviour
     public void Setup(Transform firstTarget, float _damage, int bounces, float range, Unit own)
     {
         damage = _damage;
-        remainingBounces = bounces;
+        remainingBounces = (own.data.unitName == "Electric" && CardUIManager.instance.HasCard(CardEffectID.Mid_StaticShock))? bounces + 2 : bounces; //정전기 카드 효과
         bounceRange = range == 0 ? 3f : range; // 범위가 0이면 기본 3으로 설정
         owner = own;
 
@@ -52,6 +52,7 @@ public class ChainLightning : MonoBehaviour
         // 1. 현재 타겟 정보 저장 (위치값으로 저장해야 안전함)
         Vector3 targetPos = target.position;
         Monster m = target.GetComponent<Monster>();
+        if (owner.data.unitName == "Lightning" && CardUIManager.instance.HasCard(CardEffectID.High_Overload)) damage *= 1.1f; //과부하 카드 효과
         if (m != null) m.TakeDamage(damage, owner);
         hitTargets.Add(target);
 

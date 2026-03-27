@@ -16,6 +16,8 @@ public class TsunamiEntity : MonoBehaviour
     {
         damage = _damage;
         owner = _owner;
+        float duration = _duration;
+        if (owner.data.unitName == "Tsunami" && CardUIManager.instance.HasCard(CardEffectID.Epic_Tsunami)) duration *= 2.5f;
 
         PathManager pathManager = Object.FindObjectOfType<PathManager>();
         if (pathManager != null)
@@ -24,13 +26,12 @@ public class TsunamiEntity : MonoBehaviour
             FindPathReverse();
         }
 
-        Destroy(gameObject, _duration);
+        Destroy(gameObject, duration);
     }
 
     void Update()
     {
         if (waypoints == null || waypoints.Count == 0) return;
-
         // 1. 이동
         transform.position = Vector3.MoveTowards(transform.position, waypoints[nextWaypointIndex].position, speed * Time.deltaTime);
 

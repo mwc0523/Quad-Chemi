@@ -31,6 +31,8 @@ public class Unit : MonoBehaviour
     private Coroutine atlasBuffCoroutine;
     private int attackCount = 0;
 
+    public float skillChanceBonusByCard = 0f; //카드로 인한 스킬 사용 확률 증가량
+
     private GameObject currentSteelFX;
     private GameObject currentAreaFX;
     private GameObject currentCoilFX;
@@ -62,9 +64,14 @@ public class Unit : MonoBehaviour
 
     void Start()
     {
+        CardUIManager.instance.activeUnits.Add(this);
         // 게임 시작 시 혹은 소환 시 공격 루틴 시작
         InitStatsFromData(); // 1. 기본 데이터 로드
         UpdateStatsFromGlobal(); // 2. 전역 카드 효과 적용
+        if (CardUIManager.instance != null)
+        {
+            CardUIManager.instance.RefreshAllUnitStats(); //나로 인한 변경을 계산
+        }
         StartCoroutine(AttackRoutine());
         if (data.unitName == "Atlas")
         {
@@ -88,54 +95,91 @@ public class Unit : MonoBehaviour
         combatStats.SetBase(StatType.CritDamage, 1.5f); // 예: 기본 치명타 150%
     }
 
-    //여기 완성하기
+    // 스탯(공격력, 공격 속도, 사거리 등) 관련 카드 적용
     public void UpdateStatsFromGlobal()
     {
-        if (CardUIManager.instance == null) return;
+        if (CardUIManager.instance == null || data == null) return;
 
-        // 1. 기존 버프 초기화 (기존 코드 유지)
+        // 1. 기존 카드 버프 초기화
         combatStats.RemoveModifiersFromSource("CardSystem");
 
-        // --- 여기서부터 카드 효과 노가다 시작 ---
-
-        // [하급] 발화점: 불네모 공격 속도 +100%
+        // --- [하급 카드] ---
+        // 발화점: 불네모 공속 +100%
         if (data.unitName == "Fire" && CardUIManager.instance.HasCard(CardEffectID.Low_FireSpeed))
-        {
             combatStats.AddModifier(new StatModifier(StatType.AttackSpeed, 1.0f, StatModifierType.PercentAdd, "CardSystem"));
-        }
 
-        // [중급] 영양분 공급: 새싹네모 공격력 +50%
-        if (data.unitName == "Sprout" && CardUIManager.instance.HasCard(CardEffectID.Mid_NutrientSupply))
+        // 가벼운 산들바람: 공기네모 사거리 +1
+        if (data.unitName == "Air" && CardUIManager.instance.HasCard(CardEffectID.Low_RangeUp))
+            combatStats.AddModifier(new StatModifier(StatType.Range, 1.0f, StatModifierType.Flat, "CardSystem"));
+
+        // 다다익선: 필드에 하급네모 8마리 이상일 때 모든 네모 공격력 +20%
+        if (CardUIManager.instance.HasCard(CardEffectID.Low_MoreIsBetter))
         {
-            combatStats.AddModifier(new StatModifier(StatType.Attack, 0.5f, StatModifierType.PercentAdd, "CardSystem"));
+            if (GetGradeCount(UnitGrade.Low) >= 8)
+                combatStats.AddModifier(new StatModifier(StatType.Attack, 0.2f, StatModifierType.PercentAdd, "CardSystem"));
         }
+        if (data.unitName == "Fire" && CardUIManager.instance.HasCard(CardEffectID.Low_FireballBoost)) skillChanceBonusByCard = 0.1f;
+        if (data.unitName == "Earth" && CardUIManager.instance.HasCard(CardEffectID.Low_QuakeChance)) skillChanceBonusByCard = 0.05f;
+        if (data.unitName == "Air" && CardUIManager.instance.HasCard(CardEffectID.Low_Tailwind)) skillChanceBonusByCard = 0.05f;
 
-        // [중급] 원소 평형: 필드에 중급 6종 존재 시 모든 유닛 공격력 +30%
-        // 이 카드는 모든 유닛에게 공통 적용이므로 unitName 체크가 없음
+        // --- [중급 카드] ---
+        // 영양분 공급: 새싹네모 공격력 +50%
+        if (data.unitName == "Sprout" && CardUIManager.instance.HasCard(CardEffectID.Mid_NutrientSupply))
+            combatStats.AddModifier(new StatModifier(StatType.Attack, 0.5f, StatModifierType.PercentAdd, "CardSystem"));
+
+        // 빠른 중급 공격: 중급네모들의 공격속도 +20%
+        if (data.grade == UnitGrade.Middle && CardUIManager.instance.HasCard(CardEffectID.Mid_FastAttack))
+            combatStats.AddModifier(new StatModifier(StatType.AttackSpeed, 0.2f, StatModifierType.PercentAdd, "CardSystem"));
+
+        // 원소 평형: 중급 6종 존재 시 모든 유닛 공격력 +30%
         if (CardUIManager.instance.HasCard(CardEffectID.Mid_ElementBalance))
         {
-            // 필드 체크 로직은 별도로 돌리거나 여기서 가볍게 체크
-            if (CheckElementBalance(CardGrade.Mid))
-            {
+            if (CardUIManager.instance.CheckElementBalance(UnitGrade.Middle))
                 combatStats.AddModifier(new StatModifier(StatType.Attack, 0.3f, StatModifierType.PercentAdd, "CardSystem"));
-            }
+        }
+        if (data.unitName == "Lava" && CardUIManager.instance.HasCard(CardEffectID.Mid_LavaEruption)) skillChanceBonusByCard = 0.1f;
+
+        // --- [상급 카드] ---
+        // 원소 평형 2: 상급 6종 존재 시 모든 유닛 공격력 +50%
+        if (CardUIManager.instance.HasCard(CardEffectID.High_ElementBalance2))
+        {
+            if (CardUIManager.instance.CheckElementBalance(UnitGrade.High))
+                combatStats.AddModifier(new StatModifier(StatType.Attack, 0.5f, StatModifierType.PercentAdd, "CardSystem"));
+        }
+        if (data.grade == UnitGrade.High && CardUIManager.instance.HasCard(CardEffectID.High_CriticalChance)) skillChanceBonusByCard = 0.05f;
+
+        // --- [서사 카드] ---
+        // 테슬라 코일: (자신이 코일일 경우 오라 효과는 별도 로직이지만, 일단 카드 보유 시 전체 공격력 보너스로 구현 가능)
+        // 리스트에 적힌대로 '범위 내'가 아니라 '카드 효과'로만 보면 여기서 처리 가능합니다.
+
+        // 재화의 연금술: 강화 수치 체크 로직이 있다면 추가 (예시: ReinforceManager.instance.IsHighLevel())
+        // if (CardUIManager.instance.HasCard(CardEffectID.Epic_Alchemy) && data.grade == UnitGrade.Epic) { ... }
+
+        // 원소 평형 3: 서사급 6종 존재 시 모든 유닛 공격력 +100%
+        if (CardUIManager.instance.HasCard(CardEffectID.Epic_ElementBalance3))
+        {
+            if (CardUIManager.instance.CheckElementBalance(UnitGrade.Epic))
+                combatStats.AddModifier(new StatModifier(StatType.Attack, 1.0f, StatModifierType.PercentAdd, "CardSystem"));
         }
 
-        // ... 이런 식으로 계속 추가
+        // --- [전설/신화 카드] ---
+        // 무한의 굴레: 모든 유닛 스킬 확률 +15% 
+        // (이건 combatStats에 SkillChance 타입이 있다면 추가, 없다면 Shoot() 함수에서 직접 체크)
+        if (data.unitName == "Atlas" && CardUIManager.instance.HasCard(CardEffectID.Legendary_GiantsShoulder)) skillChanceBonusByCard = 0.1f;
+        if (CardUIManager.instance.HasCard(CardEffectID.Myth_InfiniteLoop)) skillChanceBonusByCard = 0.15f;
     }
 
-    bool CheckElementBalance(CardGrade grade)
+    int GetGradeCount(UnitGrade grade)
     {
-        // 현재 필드에 해당 등급의 서로 다른 유닛이 몇 종류 있는지 체크하는 로직
-        // 예: 중급 네모 6종류가 다 있는지 확인
-        return true; // (실제 로직 구현)
+        int count = 0;
+        Unit[] allUnits = Object.FindObjectsOfType<Unit>();
+        foreach (var u in allUnits)
+        {
+            if (u.data != null && u.data.grade == grade) count++;
+        }
+        return count;
     }
 
-    bool GetUnitCountOnField(string name)
-    {
-        // 특정 유닛이 필드에 몇 마리 있는지 반환
-        return true;
-    }
 
     float GetAttack()
     {
@@ -168,7 +212,6 @@ public class Unit : MonoBehaviour
         isCoilBuffActive = false;
         coilBuffCoroutine = null;
     }
-
     public void AddCoilBuff(float amount, float duration)
     {
         // 1. 이미 버프 코루틴이 돌고 있다면 강제 종료
@@ -187,7 +230,6 @@ public class Unit : MonoBehaviour
         // 2. 새로운 버프 코루틴 시작
         coilBuffCoroutine = StartCoroutine(ApplySkillChanceBuff(amount, duration));
     }
-
     public void AddAtlasBuff(float amount, float duration)
     {
         // 1. 기존 버프 코루틴 및 모디파이어 제거 (중첩 방지 및 갱신)
@@ -201,7 +243,6 @@ public class Unit : MonoBehaviour
         // 2. 새로운 버프 시작
         atlasBuffCoroutine = StartCoroutine(ApplyAtlasAttackBuff(amount, duration));
     }
-
     IEnumerator ApplyAtlasAttackBuff(float amount, float duration)
     {
         // 공격력 20% 증가 모디파이어 생성 및 추가
@@ -293,7 +334,7 @@ public class Unit : MonoBehaviour
         {
             if (skill.trigger == SkillTrigger.OnAttack)
             {
-                float finalChance = skill.triggerChance + skillChanceBonus;
+                float finalChance = skill.triggerChance + skillChanceBonus + skillChanceBonusByCard;
 
                 if (Random.value < finalChance)
                 {
@@ -489,8 +530,10 @@ public class Unit : MonoBehaviour
 
         int totalShots = effect.count > 0 ? effect.count : 1;
         float damageRadius;
-        if (data.unitName == "Meteor")
+        if (data.unitName == "Meteor") {
             damageRadius = skill.range > 0 ? skill.range / 2f : 0.5f;
+            if(CardUIManager.instance.HasCard(CardEffectID.High_MeteorShower)) totalShots += 2; //혜성 낙하 카드 효과
+        }
         else
             damageRadius = skill.range > 0 ? skill.range / 2f : range / 2f;
 
@@ -587,24 +630,41 @@ public class Unit : MonoBehaviour
     {
         float attack = GetAttack();
         float range = GetRange();
-
         int shotCount = effect.count > 0 ? effect.count : 1;
 
-        Collider2D[] hits =
-            Physics2D.OverlapCircleAll(transform.position, range / 2f, LayerMask.GetMask("Enemy"));
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, range / 2f, LayerMask.GetMask("Enemy"));
         int currentShot = 0;
 
         foreach (var hit in hits)
         {
             if (currentShot >= shotCount) break;
-            if (hit == null || hit.gameObject == null) continue;
+            // hit이 살아있는지 먼저 체크
+            if (hit == null || !hit.gameObject.activeInHierarchy) continue;
 
+            // 1. 투사체 먼저 생성 (타겟이 죽기 전에 먼저 쏴야 합니다)
             if (effect.effectPrefab != null)
             {
                 GameObject projObj = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
                 Projectile proj = projObj.GetComponent<Projectile>();
                 if (proj != null) proj.Setup(hit.transform, attack * effect.value, proj.type, this);
             }
+
+            // 2. 그 다음 스플래시 데미지 처리
+            if (data.unitName == "Steam" && CardUIManager.instance.HasCard(CardEffectID.Mid_HighPressureSteam))
+            {
+                yield return new WaitForSeconds(0.1f);
+                Collider2D[] splashHits = Physics2D.OverlapCircleAll(hit.transform.position, 1f, LayerMask.GetMask("Enemy"));
+                foreach (var splashHit in splashHits)
+                {
+                    // 중요: hit이 아니라 splashHit에서 컴포넌트를 가져와야 합니다!
+                    Monster m = splashHit.GetComponent<Monster>();
+                    if (m != null)
+                    {
+                        m.TakeDamage(attack * 3.0f, this);
+                    }
+                }
+            }
+
             currentShot++;
             yield return new WaitForSeconds(0.05f);
         }
@@ -661,7 +721,15 @@ public class Unit : MonoBehaviour
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
-            if (m != null) m.ApplyStun(effect.duration);
+            if (data.unitName == "Earth" && CardUIManager.instance.HasCard(CardEffectID.Low_EarthStun)) {
+                if (m != null) m.ApplyStun(effect.duration + 1.5f);
+            }
+            else if (data.unitName == "Tree" && CardUIManager.instance.HasCard(CardEffectID.High_WorldTreeSprout)) {
+                if (m != null) m.ApplyStun(effect.duration + 2f);
+            }
+            else {
+                if (m != null) m.ApplyStun(effect.duration);
+            }
         }
     }
 
@@ -673,12 +741,30 @@ public class Unit : MonoBehaviour
 
         SpawnSkillEffect(skill, effect, checkPos);
 
-        Collider2D[] hits =
-            Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+
+        //실제 슬로우 적용 로직
+        bool isWater = data.unitName == "Water";
+        bool isSand = data.unitName == "Sand";
+        bool hasDurationWater = CardUIManager.instance.HasCard(CardEffectID.Low_WaterDuration);
+        bool hasSlowWater = CardUIManager.instance.HasCard(CardEffectID.Low_BubbleSlow);
+        bool hasSlowSand = CardUIManager.instance.HasCard(CardEffectID.Mid_QuickSand);
+        float finalValue = effect.value;
+        float finalDuration = effect.duration;
+        if (isWater)
+        {
+            if (hasSlowWater) finalValue += 0.3f;
+            if (hasDurationWater) finalDuration += 5f;
+        }
+        if(isSand) {
+            if (hasSlowSand) finalValue += 0.3f;
+        }
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
-            if (m != null) m.ApplySlow(effect.value, effect.duration);
+            if (m == null) continue;
+
+            m.ApplySlow(finalValue, finalDuration);
         }
     }
 
@@ -1114,7 +1200,8 @@ public class Unit : MonoBehaviour
         }
         else if (data.unitName == "End") // 종말의 경우
         {
-            StatModifier harvestMod = new StatModifier(StatType.Attack, 5f, StatModifierType.Flat, this);
+            float aBonus = CardUIManager.instance.HasCard(CardEffectID.Myth_BeginningOfEnd) ? 20f : 5f;
+            StatModifier harvestMod = new StatModifier(StatType.Attack, aBonus, StatModifierType.Flat, this);
             combatStats.AddModifier(harvestMod);
         }
     }
@@ -1445,6 +1532,13 @@ public class Unit : MonoBehaviour
         {
             InGameManager.instance.AddCoin(sellPrice);
         }
+
+        if (CardUIManager.instance != null)
+        {
+            gameObject.SetActive(false);
+            CardUIManager.instance.activeUnits.Remove(this); //나를 먼저 제거
+            CardUIManager.instance.RefreshAllUnitStats(); //내가 사라짐으로 인한 원소 평형 조건 체크
+        }
         Destroy(gameObject);
     }
 
@@ -1466,8 +1560,8 @@ public class Unit : MonoBehaviour
     {
         switch (data.grade)
         {
-            case UnitGrade.Low: return 5;
-            case UnitGrade.Middle: return 10;
+            case UnitGrade.Low: return CardUIManager.instance.HasCard(CardEffectID.Low_RecycleBasic) ? 20 : 5;
+            case UnitGrade.Middle: return CardUIManager.instance.HasCard(CardEffectID.Mid_RecycleAdvanced) ? 80 : 10;
             case UnitGrade.High: return 20;
             case UnitGrade.Epic: return 40;
             case UnitGrade.Legend: return 80;

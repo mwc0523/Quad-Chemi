@@ -151,6 +151,7 @@ public class Monster : MonoBehaviour
         if (isDead || hp <= 0f) return;
 
         float reductionPercent = defense / (defense + 100f); // 방어력 계산
+        if(CardUIManager.instance.HasCard(CardEffectID.Myth_PrimordialLight)) reductionPercent = 0f; //태초의 빛 카드 효과 적용 (방어력 무시)
 
         float finalDamage = damage * (1f - reductionPercent) * damageMultiplier; // 실제 받는 데미지 계산
         finalDamage = Mathf.Round(finalDamage);
@@ -307,22 +308,22 @@ public class Monster : MonoBehaviour
             else {
                 if (monsterType == MonsterType.MiniBoss)
                 {
-                    int elementStoneReward = 2; // 1개 지급
+                    int elementStoneReward = CardUIManager.instance.HasCard(CardEffectID.High_BonusReward) ? 2 : 1; // 보상 증가 카드 효과 적용
                     InGameManager.instance.AddElementStone(elementStoneReward);
-
                     // 코인도 보너스로 더 줄 수 있습니다.
-                    InGameManager.instance.AddCoin(50);
+                    InGameManager.instance.AddCoin(InGameManager.instance.currentRound * 5);
                 }
                 else if (monsterType == MonsterType.Boss)
                 {
-                    InGameManager.instance.AddElementStone(5); // 보스는 더 많이!
-                    InGameManager.instance.AddCoin(200);
+                    int elementStoneReward = CardUIManager.instance.HasCard(CardEffectID.High_BonusReward) ? 7 : 5; // 보상 증가 카드 효과 적용
+                    InGameManager.instance.AddElementStone(elementStoneReward); // 보스는 더 많이!
+                    InGameManager.instance.AddCoin(InGameManager.instance.currentRound * 10);
                     InGameManager.instance.BossKilledSettingTime(); //라운드 남은 시간 줄이기
                     CardUIManager.instance.OpenCardDraw();
                 }
                 else
                 {
-                    InGameManager.instance.AddCoin(1); // 일반 몹
+                    InGameManager.instance.AddCoin((InGameManager.instance.currentRound > 50) ? 2 : 1); // 일반 몹
                 }
 
                 InGameManager.instance.OnMonsterDestroyed();
