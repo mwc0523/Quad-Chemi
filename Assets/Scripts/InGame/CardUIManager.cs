@@ -195,23 +195,16 @@ public class CardUIManager : MonoBehaviour
     public void OnCardSelected(CardEffectID selectedEffect)
     {
         appliedCards.Add(selectedEffect); // 선택한 카드를 "획득 목록"에 추가
-
+        Unit[] allUnits = Object.FindObjectsOfType<Unit>();
+        foreach (var u in allUnits) u.UpdateStatsFromGlobal();
         cardPanel.SetActive(false);
         Time.timeScale = 1f;
-        ApplyCardEffect(selectedEffect);
+        
     }
 
-    private void ApplyCardEffect(CardEffectID effectID)
+
+    public bool HasCard(CardEffectID id)
     {
-        switch (effectID)
-        {
-            case CardEffectID.Low_FireSpeed:
-                // TODO: 불네모 공속 +100% 버프 적용
-                break;
-            case CardEffectID.Low_WaterDuration:
-                // TODO: 물네모 스킬 지속시간 추가
-                break;
-                // ... (수십 개의 효과들)
-        }
+        return appliedCards.Contains(id);
     }
 }

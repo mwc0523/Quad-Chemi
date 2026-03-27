@@ -63,6 +63,8 @@ public class Unit : MonoBehaviour
     void Start()
     {
         // 게임 시작 시 혹은 소환 시 공격 루틴 시작
+        InitStatsFromData(); // 1. 기본 데이터 로드
+        UpdateStatsFromGlobal(); // 2. 전역 카드 효과 적용
         StartCoroutine(AttackRoutine());
         if (data.unitName == "Atlas")
         {
@@ -84,6 +86,55 @@ public class Unit : MonoBehaviour
         // 치명타 관련 기본값 (원하면 나중에 UnitData로 옮길 수 있음)
         combatStats.SetBase(StatType.CritChance, 0f);
         combatStats.SetBase(StatType.CritDamage, 1.5f); // 예: 기본 치명타 150%
+    }
+
+    //여기 완성하기
+    public void UpdateStatsFromGlobal()
+    {
+        if (CardUIManager.instance == null) return;
+
+        // 1. 기존 버프 초기화 (기존 코드 유지)
+        combatStats.RemoveModifiersFromSource("CardSystem");
+
+        // --- 여기서부터 카드 효과 노가다 시작 ---
+
+        // [하급] 발화점: 불네모 공격 속도 +100%
+        if (data.unitName == "Fire" && CardUIManager.instance.HasCard(CardEffectID.Low_FireSpeed))
+        {
+            combatStats.AddModifier(new StatModifier(StatType.AttackSpeed, 1.0f, StatModifierType.PercentAdd, "CardSystem"));
+        }
+
+        // [중급] 영양분 공급: 새싹네모 공격력 +50%
+        if (data.unitName == "Sprout" && CardUIManager.instance.HasCard(CardEffectID.Mid_NutrientSupply))
+        {
+            combatStats.AddModifier(new StatModifier(StatType.Attack, 0.5f, StatModifierType.PercentAdd, "CardSystem"));
+        }
+
+        // [중급] 원소 평형: 필드에 중급 6종 존재 시 모든 유닛 공격력 +30%
+        // 이 카드는 모든 유닛에게 공통 적용이므로 unitName 체크가 없음
+        if (CardUIManager.instance.HasCard(CardEffectID.Mid_ElementBalance))
+        {
+            // 필드 체크 로직은 별도로 돌리거나 여기서 가볍게 체크
+            if (CheckElementBalance(CardGrade.Mid))
+            {
+                combatStats.AddModifier(new StatModifier(StatType.Attack, 0.3f, StatModifierType.PercentAdd, "CardSystem"));
+            }
+        }
+
+        // ... 이런 식으로 계속 추가
+    }
+
+    bool CheckElementBalance(CardGrade grade)
+    {
+        // 현재 필드에 해당 등급의 서로 다른 유닛이 몇 종류 있는지 체크하는 로직
+        // 예: 중급 네모 6종류가 다 있는지 확인
+        return true; // (실제 로직 구현)
+    }
+
+    bool GetUnitCountOnField(string name)
+    {
+        // 특정 유닛이 필드에 몇 마리 있는지 반환
+        return true;
     }
 
     float GetAttack()
