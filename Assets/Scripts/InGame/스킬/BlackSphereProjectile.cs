@@ -16,6 +16,10 @@ public class BlackSphereProjectile : MonoBehaviour
         splashDamage = splashDmg;
         splashRadius = radius;
         owner = unit;
+        if (target != null)
+        {
+            LookAtTarget(target.position);
+        }
     }
 
     void Update()
@@ -34,6 +38,14 @@ public class BlackSphereProjectile : MonoBehaviour
         {
             Explode();
         }
+    }
+
+    private void LookAtTarget(Vector3 targetPos)
+    {
+        Vector3 dir = (targetPos - transform.position).normalized;
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
+        // 스프라이트가 오른쪽(Right)을 바라보고 있다는 가정하에 회전
+        transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
     }
 
     void Explode()

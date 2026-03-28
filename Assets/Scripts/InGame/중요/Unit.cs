@@ -165,6 +165,8 @@ public class Unit : MonoBehaviour
         // --- [전설/신화 카드] ---
         // 무한의 굴레: 모든 유닛 스킬 확률 +15% 
         // (이건 combatStats에 SkillChance 타입이 있다면 추가, 없다면 Shoot() 함수에서 직접 체크)
+        if (data.unitName == "Judgement" && CardUIManager.instance.HasCard(CardEffectID.Legendary_FinalJudgement))
+            combatStats.AddModifier(new StatModifier(StatType.AttackSpeed, 1.0f, StatModifierType.PercentAdd, "CardSystem"));
         if (data.unitName == "Atlas" && CardUIManager.instance.HasCard(CardEffectID.Legendary_GiantsShoulder)) skillChanceBonusByCard = 0.1f;
         if (CardUIManager.instance.HasCard(CardEffectID.Myth_InfiniteLoop)) skillChanceBonusByCard = 0.15f;
     }
@@ -367,6 +369,12 @@ public class Unit : MonoBehaviour
             return; // 평타 발사 금지
         }
 
+        if (data.unitName == "Atlas")
+        {
+            StartCoroutine(AtlasPunchRoutine());
+            return; 
+        }
+
         // 3. 나머지 유닛: 스킬 안 나갔고 기본공격 대체도 없으면 평타
         if (!skillFired && !basicAttackReplaced)
         {
@@ -512,6 +520,7 @@ public class Unit : MonoBehaviour
             int unitCount = GetUnitCount(data.unitName);
 
             int totalOrbits = 1 + unitCount;
+            if (CardUIManager.instance.HasCard(CardEffectID.Epic_SolarSystem)) totalOrbits += 2; //태양계 형성 카드 효과 적용
             float angleStep = 360f / totalOrbits;
 
             for (int i = 0; i < totalOrbits; i++)
@@ -536,8 +545,8 @@ public class Unit : MonoBehaviour
         }
         else
             damageRadius = skill.range > 0 ? skill.range / 2f : range / 2f;
-
-        for (int i = 0; i < totalShots; i++)
+        if (data.unitName == "Lava" && CardUIManager.instance.HasCard(CardEffectID.Mid_LavaEruption)) damageRadius *= 1.2f; //열기 분출 카드 효과 적용
+            for (int i = 0; i < totalShots; i++)
         {
             if (target == null)
             {
@@ -611,6 +620,7 @@ public class Unit : MonoBehaviour
             {
                 if (currentAreaFX != null) Destroy(currentAreaFX);
                 currentAreaFX = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
+                if (data.unitName == "Lava" && CardUIManager.instance.HasCard(CardEffectID.Mid_LavaEruption))  currentAreaFX.transform.localScale *= 1.2f; //열기 분출 카드 효과 적용
                 Destroy(currentAreaFX, effect.duration > 0 ? effect.duration : 1.0f);
             }
 
@@ -620,6 +630,7 @@ public class Unit : MonoBehaviour
             {
                 Monster m = hit.GetComponent<Monster>();
                 if (m != null) m.TakeDamage(attack * effect.value, this);
+                if (m != null && data.unitName == "Ice" && CardUIManager.instance.HasCard(CardEffectID.Mid_BladeIce)) m.ApplyDamageAmp(0.1f, 3f); //칼날 얼음 카드 효과 적용
             }
 
             if (i < totalShots - 1) yield return new WaitForSeconds(0.3f);
@@ -763,7 +774,7 @@ public class Unit : MonoBehaviour
         {
             Monster m = hit.GetComponent<Monster>();
             if (m == null) continue;
-
+            if (data.unitName == "SnowStorm" && CardUIManager.instance.HasCard(CardEffectID.High_FrozenLand)) m.ApplyDOT(GetAttack() * 8, finalDuration, this); //동토의 땅 카드 효과 적용
             m.ApplySlow(finalValue, finalDuration);
         }
     }
@@ -828,7 +839,9 @@ public class Unit : MonoBehaviour
             Monster m = hit.GetComponent<Monster>();
             if (m != null)
             {
-                m.ApplyDamageAmp(effect.value, effect.duration);
+                float val = effect.value;
+                if (data.unitName == "Rock" && CardUIManager.instance.HasCard(CardEffectID.High_RockBreak)) val += 0.05f; //암석 파쇄 카드 효과 적용
+                m.ApplyDamageAmp(val, effect.duration);
 
                 if (effect.effectPrefab != null)
                 {
@@ -846,13 +859,6 @@ public class Unit : MonoBehaviour
         Vector3 checkPos = transform.position;
         float checkRadius = range / 2f;
 
-        if (effect.effectPrefab != null)
-        {
-            if (currentSteelFX != null) Destroy(currentSteelFX);
-            currentSteelFX = Instantiate(effect.effectPrefab, checkPos, Quaternion.identity);
-            Destroy(currentSteelFX, effect.duration);
-        }
-
         Collider2D[] hits =
             Physics2D.OverlapCircleAll(checkPos, checkRadius, LayerMask.GetMask("Enemy"));
 
@@ -861,8 +867,10 @@ public class Unit : MonoBehaviour
             Monster m = hit.GetComponent<Monster>();
             if (m != null)
             {
-                m.ApplyStun(effect.duration);
-                m.ApplyDamageAmp(calculatedValue, effect.duration);
+                float ed = effect.duration; //effect.duration
+                if(CardUIManager.instance.HasCard(CardEffectID.Epic_IronDefense)) ed += 3f;
+                m.ApplyStun(ed);
+                m.ApplyDamageAmp(calculatedValue, ed);
             }
         }
     }
@@ -996,7 +1004,6 @@ public class Unit : MonoBehaviour
         {
             GameObject areaObj = Instantiate(effect.effectPrefab, targetPos, Quaternion.identity);
 
-            // [에러 해결] GetOrAddComponent 대신 표준 유니티 방식 사용
             ContinuousRange rangeEffect = areaObj.GetComponent<ContinuousRange>();
             if (rangeEffect == null) rangeEffect = areaObj.AddComponent<ContinuousRange>();
 
@@ -1058,8 +1065,8 @@ public class Unit : MonoBehaviour
         // 1. 버프 범위 계산 (skill.range가 0이면 자신의 공격범위 사용)
         float range = GetRange();
         float buffRange = skill.range > 0 ? skill.range / 2f : range / 2f;
+        if (data.unitName == "WorldTree" && CardUIManager.instance.HasCard(CardEffectID.Legendary_WorldTreeBlessing)) buffRange = 20f; //세계수의 가호 카드 효과 적용
 
-        // 2. 범위 내 아군 유닛 찾기
         Collider2D[] allies = Physics2D.OverlapCircleAll(
             transform.position,
             buffRange,
@@ -1434,7 +1441,11 @@ public class Unit : MonoBehaviour
 
         if (effect.effectPrefab != null)
         {
-            GameObject slash = Instantiate(effect.effectPrefab, transform.position, Quaternion.identity);
+            Vector2 direction = (target.position - transform.position).normalized;
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            Quaternion rotation = Quaternion.Euler(0, 0, angle-90f);
+
+            GameObject slash = Instantiate(effect.effectPrefab, transform.position, rotation);
             Destroy(slash, 1.5f);
         }
     }
@@ -1512,9 +1523,36 @@ public class Unit : MonoBehaviour
             wallScript.Init(effect.duration, skill.range > 0 ? skill.range : 1.0f);
         }
     }
+    IEnumerator AtlasPunchRoutine()
+    {
+        if (target == null || data.projectilePrefab == null) yield break;
 
-    
+        float totalDamage = GetAttack(); // 전체 공격력
 
+        // 1. 왼손 주먹 발사 (총 데미지의 50%)
+        SpawnAtlasFist(data.projectilePrefab, totalDamage * 0.5f, true);
+
+        // 2. 주먹 사이의 시간차 (연타감)
+        yield return new WaitForSeconds(0.05f);
+
+        // 3. 오른손 주먹 발사 (타겟이 아직 살아있다면)
+        if (target != null)
+        {
+            SpawnAtlasFist(data.projectilePrefab, totalDamage * 0.5f, false);
+        }
+    }
+    void SpawnAtlasFist(GameObject prefab, float damage, bool isLeft)
+    {
+        // 유닛의 현재 위치에서 생성
+        GameObject obj = Instantiate(prefab, transform.position, Quaternion.identity);
+        AtlasFist fist = obj.GetComponent<AtlasFist>();
+
+        if (fist != null)
+        {
+            // AtlasFist 스크립트에 타겟, 데미지, 유닛(나), 왼손여부 전달
+            fist.Setup(target, damage, this, isLeft);
+        }
+    }
 
 
 
@@ -1635,17 +1673,8 @@ public class Unit : MonoBehaviour
         if (sellButton != null)
         {
             sellButton.SetActive(x);
-            if(x) {
-                switch (data.grade)
-                {
-                    case UnitGrade.Low: sellPriceText.text = "+5C"; break;
-                    case UnitGrade.Middle: sellPriceText.text = "+10C"; break;
-                    case UnitGrade.High: sellPriceText.text = "+20C"; break;
-                    case UnitGrade.Epic: sellPriceText.text = "+40C"; break;
-                    case UnitGrade.Legend: sellPriceText.text = "+80C"; break;
-                    case UnitGrade.Myth: sellPriceText.text = "+160C"; break;
-                }
-            }
+            if(x) sellPriceText.text = "+"+ GetSellPrice() + "C";
+            
         }
 
         if (changeButton != null)

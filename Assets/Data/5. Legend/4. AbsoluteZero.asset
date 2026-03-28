@@ -31,9 +31,9 @@ MonoBehaviour:
     effects:
     - effectType: 3
       value: 0.3
-      duration: 5
+      duration: 3
       count: 0
-      effectPrefab: {fileID: 6094360297785955000, guid: 9b9ed14495e73e54baf14730e5e05923, type: 3}
+      effectPrefab: {fileID: 6094360297785955000, guid: ac461822f2f9691449b4cd9a3c92eedc, type: 3}
   - skillName: "\uD654\uC774\uD2B8\uC544\uC6C3"
     description: "10% \uD655\uB960\uB85C \uB9F5 \uC804\uCCB4\uC5D0 \uC11C\uB9AC\uB97C
       \uB0B4\uB824 8\uCD08\uAC04 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uCD08\uB2F9 300%\uC758
@@ -47,7 +47,7 @@ MonoBehaviour:
       value: 0.4
       duration: 8
       count: 0
-      effectPrefab: {fileID: 6094360297785955000, guid: 9b9ed14495e73e54baf14730e5e05923, type: 3}
+      effectPrefab: {fileID: 6094360297785955000, guid: e8bbf667783f37c49b62f2c61c60e001, type: 3}
     - effectType: 5
       value: 3
       duration: 8

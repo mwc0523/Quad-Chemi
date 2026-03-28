@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3210157130648848288}
   - component: {fileID: 4430167378647976839}
   m_Layer: 0
-  m_Name: AbsoluteZero_Skill3
+  m_Name: AbsoluteZero_Skill1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,7 +27,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -76,8 +76,8 @@ SpriteRenderer:
   m_SortingLayerID: -806949339
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: -8458589942673454887, guid: 4a7484ea6c003cb4096681a9180a6755, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.11372549}
+  m_Sprite: {fileID: -4195077803716384370, guid: 155751477cc76ab4ea85ecd106946b3b, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.5882353}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

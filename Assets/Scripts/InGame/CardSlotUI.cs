@@ -27,6 +27,7 @@ public enum CardEffectID // 카드 종류 모음
     Mid_FastAttack,          // 빠른 중급 공격
     Mid_ElementBalance,      // 원소 평형
     Mid_RecycleAdvanced,     // 재활용(중급)
+    Mid_EmergencySupply,    // 긴급 수급 1
 
     // 상급
     High_SuperTyphoon,       // 초대형 태풍
@@ -38,6 +39,8 @@ public enum CardEffectID // 카드 종류 모음
     High_CriticalChance,     // 치명적 확률
     High_ElementBalance2,    // 원소 평형 2
     High_BonusReward,        // 보상 증가
+    High_EmergencySupply2,  // 긴급 수급 2
+    High_FateCard,          // 운명의 카드 
 
     // 서사
     Epic_DeadlyToxin,            // 치명적인 독소
@@ -49,7 +52,8 @@ public enum CardEffectID // 카드 종류 모음
     Epic_CollectiveIntelligence, // 집단 지성
     Epic_Alchemy,                // 재화의 연금술
     Epic_ElementBalance3,        // 원소 평형 3
-    Epic_EmergencySupply,        // 긴급 수급
+    Epic_EmergencySupply3,        // 긴급 수급 3
+    Epic_FateCard2,             // 운명의 카드 2
 
     // 전설
     Legendary_WorldTreeBlessing, // 세계수의 가호
@@ -58,7 +62,7 @@ public enum CardEffectID // 카드 종류 모음
     Legendary_AbsoluteZero,      // 절대 영역
     Legendary_DivinePunishment,  // 천벌
     Legendary_GiantsShoulder,    // 거인의 어깨
-    Legendary_FateCard,          // 운명의 카드
+    Legendary_FateCard3,          // 운명의 카드 3
 
     // 신화
     Myth_BeginningOfEnd,     // 종말의 시작

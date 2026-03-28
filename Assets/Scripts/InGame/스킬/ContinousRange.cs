@@ -47,15 +47,9 @@ public class ContinuousRange : MonoBehaviour
             Monster m = hit.GetComponent<Monster>();
             if (m != null)
             {
+                if (attacker.data.unitName == "Poison" && CardUIManager.instance.HasCard(CardEffectID.Epic_DeadlyToxin)) m.ApplyArmorReduction(0.2f, tickInterval); //치명적인 독소 카드 효과 적용
                 m.TakeDamage(damagePerTick, attacker);
             }
         }
-    }
-
-    // 에디터에서 범위를 시각적으로 확인
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, radius);
     }
 }

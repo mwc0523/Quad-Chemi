@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1804582272304940888}
   - component: {fileID: 3221646496232895132}
-  - component: {fileID: 1678876567366715937}
   - component: {fileID: 3305884686893187264}
   - component: {fileID: -5065923135143056320}
+  - component: {fileID: -7884520061167125250}
   m_Layer: 0
   m_Name: BlackHole_Skill3
   m_TagString: Untagged
@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 426.4716, y: 944.7723, z: 0}
-  m_LocalScale: {x: 0.7, y: 0.5, z: 1}
+  m_LocalScale: {x: 0.2, y: 0.2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -79,7 +79,7 @@ SpriteRenderer:
   m_SortingLayerID: -806949339
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7764645715553624269, guid: bb7c484691ee554449c7a52f2933d54e, type: 3}
+  m_Sprite: {fileID: 417769737199912877, guid: 242beee796621074cb8857671c86b6ff, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -90,25 +90,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &1678876567366715937
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2643208338281181209}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49e91197f49c03447aab76277bda9ee9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: 0
-  skillEffect:
-    effectType: 0
-    value: 0
-    duration: 0
-    count: 0
-    effectPrefab: {fileID: 0}
 --- !u!50 &3305884686893187264
 Rigidbody2D:
   serializedVersion: 5
@@ -172,3 +153,15 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0.21133333}
   m_Radius: 0.5
+--- !u!114 &-7884520061167125250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2643208338281181209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fca7965db8b68749a125435754f00a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

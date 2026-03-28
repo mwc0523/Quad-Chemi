@@ -10,9 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3210157130648848288}
   - component: {fileID: 4430167378647976839}
-  - component: {fileID: 7253044649812606830}
   m_Layer: 0
-  m_Name: BlackHole_Skill2
+  m_Name: End_Skill3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,7 +27,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.2, y: 1.2, z: 1}
+  m_LocalScale: {x: 1.7, y: 1.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -77,8 +76,8 @@ SpriteRenderer:
   m_SortingLayerID: -806949339
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 1077189741318324890, guid: bc58c77d748456240a4dfee6dc20f050, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.39215687}
+  m_Sprite: {fileID: 3417035152907436848, guid: c3f19aad428d29049b83be1247de83a3, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.5882353}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -88,15 +87,3 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7253044649812606830
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6094360297785955000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f59ba7eed37ce3e4980e0441b1c45ad5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

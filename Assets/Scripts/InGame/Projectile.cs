@@ -21,6 +21,7 @@ public class Projectile : MonoBehaviour
         damage = _damage;
         type = _type;
         owner = _owner;
+        if (owner.data.unitName == "Typhoon" && CardUIManager.instance.HasCard(CardEffectID.High_SuperTyphoon)) damage *= 35f / 15f; //초대형 태풍 카드 효과 적용
 
         if (target != null)
         {
@@ -94,6 +95,7 @@ public class Projectile : MonoBehaviour
         }
         else if (m != null) // 단일 공격인 경우
         {
+            if (owner.data.unitName == "Blizzard" && CardUIManager.instance.HasCard(CardEffectID.Epic_PermanentFrost)) m.ApplyStun(6f); //영구 동토 카드 효과 적용
             m.TakeDamage(damage, owner);
         }
 

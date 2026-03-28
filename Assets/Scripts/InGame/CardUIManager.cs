@@ -13,7 +13,9 @@ public class CardUIManager : MonoBehaviour
     public TextMeshProUGUI cardRerollcount; //리롤 몇번 남았는지
 
     private int rerollCount = 2; // 남은 새로고침 횟수
-    private int destinyCardUsed = 1;
+    private int destinyCard1Used = 1;
+    private int destinyCard2Used = 1;
+    private int destinyCard3Used = 1;
 
     // 등급별 카드 리스트 저장소
     private Dictionary<CardGrade, List<CardData>> allCards = new Dictionary<CardGrade, List<CardData>>();
@@ -67,9 +69,10 @@ public class CardUIManager : MonoBehaviour
         allCards[CardGrade.Mid].Add(new CardData(CardEffectID.Mid_FastAttack, "빠른 중급 공격", "중급네모들의 공격속도 +20%", CardGrade.Mid));
         allCards[CardGrade.Mid].Add(new CardData(CardEffectID.Mid_ElementBalance, "원소 평형", "필드에 중급네모 6종류가 모두 존재하면 모든 유닛 공격력 +30%", CardGrade.Mid));
         allCards[CardGrade.Mid].Add(new CardData(CardEffectID.Mid_RecycleAdvanced, "재활용(중급)", "중급 네모의 판매 비용 8배", CardGrade.Mid));
+        allCards[CardGrade.Mid].Add(new CardData(CardEffectID.Mid_EmergencySupply, "긴급 수급", "앞으로 카드 선택 시 즉시 원소석 2개 획득", CardGrade.Mid));
 
         // 상급
-        allCards[CardGrade.High].Add(new CardData(CardEffectID.High_SuperTyphoon, "초대형 태풍", "태풍네모의 스킬 데미지 +200%", CardGrade.High));
+        allCards[CardGrade.High].Add(new CardData(CardEffectID.High_SuperTyphoon, "초대형 태풍", "태풍네모의 스킬 데미지 +2000%", CardGrade.High));
         allCards[CardGrade.High].Add(new CardData(CardEffectID.High_MeteorShower, "혜성 낙하", "메테오네모의 메테오 개수 +2발", CardGrade.High));
         allCards[CardGrade.High].Add(new CardData(CardEffectID.High_WorldTreeSprout, "세계수의 싹", "나무네모의 기절 지속시간 +2초", CardGrade.High));
         allCards[CardGrade.High].Add(new CardData(CardEffectID.High_Overload, "과부하", "번개네모가 튕길 때마다 데미지 10%씩 증폭", CardGrade.High));
@@ -78,10 +81,12 @@ public class CardUIManager : MonoBehaviour
         allCards[CardGrade.High].Add(new CardData(CardEffectID.High_CriticalChance, "치명적 확률", "모든 상급네모의 스킬 발동 확률 +5%", CardGrade.High));
         allCards[CardGrade.High].Add(new CardData(CardEffectID.High_ElementBalance2, "원소 평형 2", "필드에 상급네모 6종류가 모두 존재하면 모든 유닛 공격력 +50%", CardGrade.High));
         allCards[CardGrade.High].Add(new CardData(CardEffectID.High_BonusReward, "보상 증가", "중간보스 처치 시 획득 원소석 +1, 보스 처치 시 획득 원소석 +2 ", CardGrade.High));
+        allCards[CardGrade.High].Add(new CardData(CardEffectID.High_EmergencySupply2, "긴급 수급2", "앞으로 카드 선택 시 즉시 원소석 5개 획득", CardGrade.High));
+        allCards[CardGrade.High].Add(new CardData(CardEffectID.High_FateCard, "운명의 카드", "다음 카드 선택 시 새로고침 횟수 4회", CardGrade.High));
 
         // 서사
         allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_DeadlyToxin, "치명적인 독소", "맹독네모 독장판 위의 적 방어력 20% 감소", CardGrade.Epic));
-        allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_IronDefense, "철벽 방어", "강철네모의 강철벽 지속 시간 +2초", CardGrade.Epic));
+        allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_IronDefense, "철벽 방어", "강철네모의 강철벽 지속 시간 +3초", CardGrade.Epic));
         allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_SolarSystem, "태양계 형성", "태양네모의 지구 소환 개수 +2", CardGrade.Epic));
         allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_PermanentFrost, "영구 동토", "블리자드네모 스킬에 맞은 적 1초간 빙결", CardGrade.Epic));
         allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_TeslaCoil, "테슬라 코일", "코일네모 버프 범위 내 아군 공격력 +10%", CardGrade.Epic));
@@ -89,16 +94,17 @@ public class CardUIManager : MonoBehaviour
         allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_CollectiveIntelligence, "집단 지성", "서사급 네모들의 스킬2 카운트를 2배로 적용", CardGrade.Epic));
         allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_Alchemy, "재화의 연금술", "서사/전설급 강화가 15강에 도달하면 모든 서사급 네모의 기본 공격력이 20배로 적용", CardGrade.Epic));
         allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_ElementBalance3, "원소 평형 3", "필드에 서사급네모 6종류가 모두 존재하면 모든 유닛 공격력 +100%", CardGrade.Epic));
-        allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_EmergencySupply, "긴급 수급", "앞으로 카드 선택 시 즉시 원소석 10개 획득", CardGrade.Epic));
+        allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_EmergencySupply3, "긴급 수급3", "앞으로 카드 선택 시 즉시 원소석 10개 획득", CardGrade.Epic));
+        allCards[CardGrade.Epic].Add(new CardData(CardEffectID.Epic_FateCard2, "운명의 카드2", "다음 카드 선택 시 새로고침 횟수 9회", CardGrade.Epic));
 
         // 전설
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_WorldTreeBlessing, "세계수의 가호", "세계수네모의 공속 버프가 맵 전체 아군에게 적용", CardGrade.Legendary));
-        allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_FinalJudgement, "최후의 심판", "심판네모의 레이저 데미지 증가 속도 2배", CardGrade.Legendary));
+        allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_FinalJudgement, "최후의 심판", "심판네모의 공격 속도 2배", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_EventHorizon, "이벤트 호라이슨", "블랙홀 네모의 처형 체력 기준선 +10% (총 15% 이하 처형)", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_AbsoluteZero, "절대 영역", "절대영도네모의 맵 전체 서리 데미지 +500%", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_DivinePunishment, "천벌", "뇌전네모의 심판의 벼락 데미지가 적 현재 체력의 3% 추가 피해", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_GiantsShoulder, "거인의 어깨", "아틀라스네모의 스킬 사용 확률 +10%", CardGrade.Legendary));
-        allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_FateCard, "운명의 카드", "다음 카드 선택 시 새로고침 횟수 15회", CardGrade.Legendary));
+        allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_FateCard3, "운명의 카드3", "다음 카드 선택 시 새로고침 횟수 15회", CardGrade.Legendary));
 
         // 신화
         allCards[CardGrade.Myth].Add(new CardData(CardEffectID.Myth_BeginningOfEnd, "종말의 시작", "이후로 종말네모의 처치당 공격력 증가치가 +20으로 상승", CardGrade.Myth));
@@ -166,9 +172,17 @@ public class CardUIManager : MonoBehaviour
     public void OpenCardDraw()
     {
         rerollCount = 20;
-        if(CardUIManager.instance.HasCard(CardEffectID.Legendary_FateCard) && destinyCardUsed > 0) { //운명의 카드 효과 적용
+        if (CardUIManager.instance.HasCard(CardEffectID.High_FateCard) && destinyCard1Used > 0) { //운명의 카드 효과 적용
+            rerollCount = 4;
+            destinyCard1Used--;
+        }
+        if (CardUIManager.instance.HasCard(CardEffectID.Epic_FateCard2) && destinyCard2Used > 0) { //운명의 카드 효과 적용
+            rerollCount = 9;
+            destinyCard2Used--;
+        }
+        if (CardUIManager.instance.HasCard(CardEffectID.Legendary_FateCard3) && destinyCard3Used > 0) { //운명의 카드 효과 적용
             rerollCount = 15;
-            destinyCardUsed--;
+            destinyCard3Used--;
         }
         appearedInSession.Clear(); // [중요] 새로운 카드 뽑기 창이 열릴 때 세션 기록 초기화
 
@@ -201,10 +215,13 @@ public class CardUIManager : MonoBehaviour
     public void OnCardSelected(CardEffectID selectedEffect)
     {
         appliedCards.Add(selectedEffect);
-        if(CardUIManager.instance.HasCard(CardEffectID.Epic_EmergencySupply)) InGameManager.instance.AddElementStone(10); //긴급 수급 카드 효과
+        if (CardUIManager.instance.HasCard(CardEffectID.Mid_EmergencySupply)) InGameManager.instance.AddElementStone(2); //긴급 수급1 카드 효과
+        if (CardUIManager.instance.HasCard(CardEffectID.High_EmergencySupply2)) InGameManager.instance.AddElementStone(5); //긴급 수급2 카드 효과
+        if (CardUIManager.instance.HasCard(CardEffectID.Epic_EmergencySupply3)) InGameManager.instance.AddElementStone(10); //긴급 수급3 카드 효과
         RefreshAllUnitStats();
         cardPanel.SetActive(false);
-        Time.timeScale = 1f;
+        Time.timeScale = SpeedControl.GetFast();
+        Time.fixedDeltaTime = 0.02f * Time.timeScale;
 
     }
 

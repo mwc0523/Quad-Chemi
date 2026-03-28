@@ -26,13 +26,13 @@ MonoBehaviour:
     trigger: 0
     triggerChance: 0.15
     triggerCount: 0
-    range: 2
+    range: 0
     effects:
     - effectType: 8
       value: 0.05
       duration: 0
       count: 0
-      effectPrefab: {fileID: 6094360297785955000, guid: a5dcca3e554cdc14c82374d0b61c0b11, type: 3}
+      effectPrefab: {fileID: 6094360297785955000, guid: 79ec7bb4a2b257f49adf69e087c0d87c, type: 3}
   - skillName: "\uD2B9\uC774\uC810 \uBD95\uAD34"
     description: "10% \uD655\uB960\uB85C 3\uCE78 \uD06C\uAE30\uC758 \uBE14\uB799\uD640\uC744
       \uC18C\uD658\uD574 7\uCD08\uAC04 \uC801\uC744 \uC911\uC2EC\uBD80\uB85C \uB04C\uC5B4\uB2F9\uAE30\uBA70
