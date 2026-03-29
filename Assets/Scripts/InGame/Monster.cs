@@ -319,7 +319,7 @@ public class Monster : MonoBehaviour
                     InGameManager.instance.AddElementStone(elementStoneReward); // 보스는 더 많이!
                     InGameManager.instance.AddCoin(InGameManager.instance.currentRound * 10);
                     InGameManager.instance.BossKilledSettingTime(); //라운드 남은 시간 줄이기
-                    CardUIManager.instance.OpenCardDraw();
+                    if(InGameManager.instance.currentRound < 100) CardUIManager.instance.OpenCardDraw(); //마지막 라운드가 아니라면 카드 뽑기
                 }
                 else
                 {

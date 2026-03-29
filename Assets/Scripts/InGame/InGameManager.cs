@@ -432,7 +432,7 @@ public class InGameManager : MonoBehaviour
 
 
         // 다음 라운드로 넘어가는 함수
-        void NextRound()
+    void NextRound()
     {
         if (currentRound < maxRound)
         {

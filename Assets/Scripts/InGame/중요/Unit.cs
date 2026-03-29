@@ -689,9 +689,11 @@ public class Unit : MonoBehaviour
             if (data.unitName == "Steam" && CardUIManager.instance.HasCard(CardEffectID.Mid_HighPressureSteam))
             {
                 yield return new WaitForSeconds(0.1f);
+                if (hit == null) continue;
                 Collider2D[] splashHits = Physics2D.OverlapCircleAll(hit.transform.position, 1f, LayerMask.GetMask("Enemy"));
                 foreach (var splashHit in splashHits)
                 {
+                    if (splashHit == null) continue;
                     // 중요: hit이 아니라 splashHit에서 컴포넌트를 가져와야 합니다!
                     Monster m = splashHit.GetComponent<Monster>();
                     if (m != null)

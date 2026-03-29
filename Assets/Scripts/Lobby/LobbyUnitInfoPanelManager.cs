@@ -161,12 +161,24 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
     {
         return grade switch
         {
-            UnitGrade.Low => Color.white,
-            UnitGrade.Middle => Color.green,
-            UnitGrade.High => Color.blue,
-            UnitGrade.Epic => new Color(0.6f, 0f, 1f),
-            UnitGrade.Legend => Color.yellow,
-            UnitGrade.Myth => Color.red,
+            // 하급 (Low): 깨끗한 느낌의 밝은 회색
+            UnitGrade.Low => new Color(0.85f, 0.85f, 0.85f),
+
+            // 중급 (Middle): 생기 있는 연두색 (라임 계열)
+            UnitGrade.Middle => new Color(0.55f, 0.85f, 0.55f),
+
+            // 상급 (High): 시원한 느낌의 하늘색
+            UnitGrade.High => new Color(0.5f, 0.75f, 1f),
+
+            // 서사급 (Epic): 신비로운 보라색 (진해지면 눈 아픈 보라를 살짝 중화)
+            UnitGrade.Epic => new Color(0.75f, 0.5f, 0.95f),
+
+            // 전설급 (Legend): 금색에 가까운 진한 노란색
+            UnitGrade.Legend => new Color(1f, 0.85f, 0.3f),
+
+            // 신화급 (Myth): 강렬하지만 부드러운 다홍색
+            UnitGrade.Myth => new Color(1f, 0.5f, 0.5f),
+
             _ => Color.white
         };
     }

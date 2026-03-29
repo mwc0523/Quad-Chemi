@@ -651,6 +651,7 @@ MonoBehaviour:
     costAmount: 0
     isSoldOut: 0
     unitGrade: 0
+  backgroundImage: {fileID: 3873729883906952984}
   iconImage: {fileID: 6724547426397944043}
   nameText: {fileID: 3297675881097886737}
   amountText: {fileID: 7294898553048538351}

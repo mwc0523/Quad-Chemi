@@ -36,11 +36,11 @@ public class CardUIManager : MonoBehaviour
         //*/
         /*
         { CardGrade.Low, 0f },
-        { CardGrade.Mid, 0f },
+        { CardGrade.Mid, 100f },
         { CardGrade.High, 0f },
         { CardGrade.Epic, 0f },
         { CardGrade.Legendary, 0f },
-        { CardGrade.Myth, 100f }
+        { CardGrade.Myth, 0f }
         */
     };
 
@@ -181,7 +181,7 @@ public class CardUIManager : MonoBehaviour
     // 보스 처치 후 InGameManager에서 이 함수를 호출
     public void OpenCardDraw()
     {
-        rerollCount = 20;
+        rerollCount = 2;
         if (CardUIManager.instance.HasCard(CardEffectID.High_FateCard) && destinyCard1Used > 0) { //운명의 카드 효과 적용
             rerollCount = 4;
             destinyCard1Used--;
@@ -237,10 +237,14 @@ public class CardUIManager : MonoBehaviour
 
     public void RefreshAllUnitStats()
     {
-        // 이제 FindObjectsOfType을 쓰지 않고 리스트만 돌립니다.
-        foreach (Unit u in activeUnits)
+        // 원본 리스트(activeUnits)가 아니라, .ToList()로 복사본을 만들어 돌립니다.
+        // 이렇게 하면 루프 도중에 유닛이 추가/삭제되어도 에러가 나지 않습니다.
+        foreach (Unit u in activeUnits.ToList())
         {
-            if (u != null) u.UpdateStatsFromGlobal();
+            if (u != null)
+            {
+                u.UpdateStatsFromGlobal();
+            }
         }
     }
 

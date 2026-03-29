@@ -128,12 +128,12 @@ public class CardSlotUI : MonoBehaviour
     {
         return grade switch
         {
-            CardGrade.Low => Color.white,
-            CardGrade.Mid => Color.green, // Middle -> Mid 로 수정
-            CardGrade.High => Color.blue,
-            CardGrade.Epic => new Color(0.6f, 0f, 1f),
-            CardGrade.Legendary => Color.yellow, // Legend -> Legendary 로 수정
-            CardGrade.Myth => Color.red,
+            CardGrade.Low => new Color(0.85f, 0.85f, 0.85f),
+            CardGrade.Mid => new Color(0.55f, 0.85f, 0.55f),
+            CardGrade.High => new Color(0.5f, 0.75f, 1f),
+            CardGrade.Epic => new Color(0.75f, 0.5f, 0.95f),
+            CardGrade.Legendary => new Color(1f, 0.85f, 0.3f),
+            CardGrade.Myth => new Color(1f, 0.5f, 0.5f),
             _ => Color.white
         };
     }

@@ -7,6 +7,7 @@ public class ShopItemSlot : MonoBehaviour
     public ShopItemData myData;
 
     [Header("UI 연결")]
+    public Image backgroundImage;
     public Image iconImage;
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI amountText; // "X5" 같은 수량 표시용
@@ -47,6 +48,20 @@ public class ShopItemSlot : MonoBehaviour
             LoadNonUnitIcon(data.itemID); // 재화 아이콘은 따로 로드
 
         SetCostIcon(data.costType);
+
+        if (backgroundImage != null)
+        {
+            if (unitTemplate != null)
+            {
+                // 유닛이라면 등급에 맞는 색상을 적용 (조정된 중간 톤)
+                backgroundImage.color = GetColorByGrade(unitTemplate.grade);
+            }
+            else
+            {
+                // 유닛이 아니면(재화 등) 기본 흰색이나 투명하게
+                backgroundImage.color = Color.white;
+            }
+        }
 
         // 4. 유닛 전용 UI (슬라이더 등)
         if (data.itemType == ShopItemType.Unit)
@@ -104,5 +119,19 @@ public class ShopItemSlot : MonoBehaviour
     {
         if (myData.isSoldOut) return;
         FindObjectOfType<ShopManager>().AttemptPurchase(this);
+    }
+
+    private Color GetColorByGrade(UnitGrade grade)
+    {
+        return grade switch
+        {
+            UnitGrade.Low => new Color(0.85f, 0.85f, 0.85f),    // 하급: 부드러운 회색
+            UnitGrade.Middle => new Color(0.55f, 0.85f, 0.55f), // 중급: 라임/연두
+            UnitGrade.High => new Color(0.5f, 0.75f, 1f),       // 상급: 파랑/하늘
+            UnitGrade.Epic => new Color(0.75f, 0.5f, 0.95f),    // 서사급: 보라
+            UnitGrade.Legend => new Color(1f, 0.85f, 0.3f),      // 전설급: 골드/진노랑
+            UnitGrade.Myth => new Color(1f, 0.5f, 0.5f),         // 신화급: 다홍/로즈
+            _ => Color.white
+        };
     }
 }
