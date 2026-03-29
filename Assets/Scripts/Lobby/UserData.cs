@@ -68,8 +68,26 @@ public class UnitSaveData
     }
     public float GetDamageMultiplier()
     {
-        // 1레벨은 1배, 레벨이 오를수록 효율 급증
-        return (1f + (level - 1) * 0.1f) * Mathf.Pow(1.115f, level - 1);
+        if (level <= 1) return 1f;
+
+        // 1. 등급별 성장 가중치 (신화가 1.0 기준, 하급으로 갈수록 낮아짐)
+        float growthWeight = 1.0f;
+        switch (GetGrade())
+        {
+            case UnitGrade.Low: growthWeight = 0.71f; break; // 하급: 성장세가 매우 완만함
+            case UnitGrade.Middle: growthWeight = 0.78f; break;
+            case UnitGrade.High: growthWeight = 0.85f; break;
+            case UnitGrade.Epic: growthWeight = 0.92f; break;
+            case UnitGrade.Legend: growthWeight = 0.96f; break;
+            case UnitGrade.Myth: growthWeight = 1.00f; break; // 신화: 기존 공식 그대로 (100% 효율)
+        }
+
+        // 2. 기존 공식을 가중치에 따라 변형
+        // 선형 성장 부분(0.1)과 지수 성장 부분(1.115) 모두에 가중치를 적용합니다.
+        float linearPart = 1f + (level - 1) * (0.1f * growthWeight);
+        float exponentialPart = Mathf.Pow(1f + (0.115f * growthWeight), level - 1);
+
+        return linearPart * exponentialPart;
     }
 
     public UnitSaveData(string id)

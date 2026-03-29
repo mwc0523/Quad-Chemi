@@ -28,6 +28,7 @@ public class Unit : MonoBehaviour
     private int judgementKillCounter = 0;
     public LineRenderer judgementLaserLine;
     private StatModifier atlasAttackModifier; // 현재 적용 중인 아틀라스 버프 저장용
+    private StatModifier coilAttackModifier;
     private Coroutine atlasBuffCoroutine;
     private int attackCount = 0;
 
@@ -149,11 +150,16 @@ public class Unit : MonoBehaviour
         if (data.grade == UnitGrade.High && CardUIManager.instance.HasCard(CardEffectID.High_CriticalChance)) skillChanceBonusByCard = 0.05f;
 
         // --- [서사 카드] ---
-        // 테슬라 코일: (자신이 코일일 경우 오라 효과는 별도 로직이지만, 일단 카드 보유 시 전체 공격력 보너스로 구현 가능)
-        // 리스트에 적힌대로 '범위 내'가 아니라 '카드 효과'로만 보면 여기서 처리 가능합니다.
 
-        // 재화의 연금술: 강화 수치 체크 로직이 있다면 추가 (예시: ReinforceManager.instance.IsHighLevel())
-        // if (CardUIManager.instance.HasCard(CardEffectID.Epic_Alchemy) && data.grade == UnitGrade.Epic) { ... }
+        // 재화의 연금술: 서사/전설급 강화가 15강 이상일 때 서사급 네모 공격력 20배
+        if (CardUIManager.instance.HasCard(CardEffectID.Epic_Alchemy) && data.grade == UnitGrade.Epic)
+        {
+            if (UpgradeManager.instance != null && UpgradeManager.instance.tier2Level >= 15)
+            {
+                // 20배 적용 = 기본 100% + 추가 1900%(19.0f)
+                combatStats.AddModifier(new StatModifier(StatType.Attack, 19.0f, StatModifierType.PercentAdd, "CardSystem"));
+            }
+        }
 
         // 원소 평형 3: 서사급 6종 존재 시 모든 유닛 공격력 +100%
         if (CardUIManager.instance.HasCard(CardEffectID.Epic_ElementBalance3))
@@ -163,8 +169,6 @@ public class Unit : MonoBehaviour
         }
 
         // --- [전설/신화 카드] ---
-        // 무한의 굴레: 모든 유닛 스킬 확률 +15% 
-        // (이건 combatStats에 SkillChance 타입이 있다면 추가, 없다면 Shoot() 함수에서 직접 체크)
         if (data.unitName == "Judgement" && CardUIManager.instance.HasCard(CardEffectID.Legendary_FinalJudgement))
             combatStats.AddModifier(new StatModifier(StatType.AttackSpeed, 1.0f, StatModifierType.PercentAdd, "CardSystem"));
         if (data.unitName == "Atlas" && CardUIManager.instance.HasCard(CardEffectID.Legendary_GiantsShoulder)) skillChanceBonusByCard = 0.1f;
@@ -204,33 +208,45 @@ public class Unit : MonoBehaviour
     public IEnumerator ApplySkillChanceBuff(float amount, float duration)
     {
         isCoilBuffActive = true;
-        skillChanceBonus = amount; // += 가 아니라 = 로 설정하여 중첩 원천 봉쇄
-        //Debug.Log($"버프 갱신: 현재 확률 보너스 {skillChanceBonus}");
+        skillChanceBonus = amount;
+
+        // 테슬라 코일 카드 효과 적용 (중복 추가 방지를 위해 한 번 더 체크)
+        if (CardUIManager.instance.HasCard(CardEffectID.Epic_TeslaCoil) && coilAttackModifier == null)
+        {
+            coilAttackModifier = new StatModifier(StatType.Attack, 0.1f, StatModifierType.PercentAdd, "CoilBuff");
+            combatStats.AddModifier(coilAttackModifier);
+        }
 
         yield return new WaitForSeconds(duration);
 
-        // 버프 종료
-        skillChanceBonus = 0f;
-        isCoilBuffActive = false;
-        coilBuffCoroutine = null;
+        // 버프 정상 종료 로직
+        ClearCoilBuffEffects();
     }
     public void AddCoilBuff(float amount, float duration)
     {
-        // 1. 이미 버프 코루틴이 돌고 있다면 강제 종료
+        // 1. 이미 버프 코루틴이 돌고 있다면 강제 종료 및 "수치 초기화"
         if (coilBuffCoroutine != null)
         {
             StopCoroutine(coilBuffCoroutine);
             coilBuffCoroutine = null;
-
-            // 기존 보너스 초기화
-            if (isCoilBuffActive)
-            {
-                skillChanceBonus = 0f;
-            }
         }
+
+        // [핵심] 코루틴 중단과 상관없이, 기존에 적용된 스탯 효과를 물리적으로 제거
+        ClearCoilBuffEffects();
 
         // 2. 새로운 버프 코루틴 시작
         coilBuffCoroutine = StartCoroutine(ApplySkillChanceBuff(amount, duration));
+    }
+    private void ClearCoilBuffEffects()
+    {
+        skillChanceBonus = 0f;
+        isCoilBuffActive = false;
+
+        if (coilAttackModifier != null)
+        {
+            combatStats.RemoveModifier(coilAttackModifier);
+            coilAttackModifier = null;
+        }
     }
     public void AddAtlasBuff(float amount, float duration)
     {
@@ -412,6 +428,7 @@ public class Unit : MonoBehaviour
                     if (data.unitName == "Blizzard")
                     {
                         int blizzardCount = GetUnitCount("Blizzard");
+                        if (CardUIManager.instance.HasCard(CardEffectID.Epic_CollectiveIntelligence)) blizzardCount *= 2; // 집단 지성 카드 효과 적용
                         float finalDamageMultiplier = effect.value + (blizzardCount * 2.0f);
                         StartCoroutine(FireBlizzardRoutine(skill, effect, finalDamageMultiplier));
                     }
@@ -452,6 +469,7 @@ public class Unit : MonoBehaviour
                     if (data.unitName == "Steel")
                     {
                         int steelCount = GetUnitCount("Steel");
+                        if (CardUIManager.instance.HasCard(CardEffectID.Epic_CollectiveIntelligence)) steelCount *= 2; // 집단 지성 카드 효과 적용
                         float finalDamageAmp = effect.value + (steelCount * 0.02f);
                         ApplySteelDebuff(skill, effect, finalDamageAmp);
                     }
@@ -520,6 +538,7 @@ public class Unit : MonoBehaviour
             int unitCount = GetUnitCount(data.unitName);
 
             int totalOrbits = 1 + unitCount;
+            if (CardUIManager.instance.HasCard(CardEffectID.Epic_CollectiveIntelligence)) unitCount *= 2; // 집단 지성 카드 효과 적용
             if (CardUIManager.instance.HasCard(CardEffectID.Epic_SolarSystem)) totalOrbits += 2; //태양계 형성 카드 효과 적용
             float angleStep = 360f / totalOrbits;
 
@@ -546,7 +565,8 @@ public class Unit : MonoBehaviour
         else
             damageRadius = skill.range > 0 ? skill.range / 2f : range / 2f;
         if (data.unitName == "Lava" && CardUIManager.instance.HasCard(CardEffectID.Mid_LavaEruption)) damageRadius *= 1.2f; //열기 분출 카드 효과 적용
-            for (int i = 0; i < totalShots; i++)
+
+        for (int i = 0; i < totalShots; i++)
         {
             if (target == null)
             {
@@ -629,6 +649,11 @@ public class Unit : MonoBehaviour
             foreach (var hit in damageHits)
             {
                 Monster m = hit.GetComponent<Monster>();
+                if (m != null && data.unitName == "Thunderbolt" && CardUIManager.instance.HasCard(CardEffectID.Legendary_DivinePunishment)) //천벌 카드 효과 적용
+                {
+                    float divineDamage = m.hp * 0.03f;
+                    m.TakeDamage(divineDamage, this);
+                }
                 if (m != null) m.TakeDamage(attack * effect.value, this);
                 if (m != null && data.unitName == "Ice" && CardUIManager.instance.HasCard(CardEffectID.Mid_BladeIce)) m.ApplyDamageAmp(0.1f, 3f); //칼날 얼음 카드 효과 적용
             }
@@ -788,13 +813,15 @@ public class Unit : MonoBehaviour
         Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
 
         SpawnSkillEffect(skill, effect, checkPos);
+        float dotVal = effect.value;
+        if (data.unitName == "AbsoluteZero" && CardUIManager.instance.HasCard(CardEffectID.Legendary_AbsoluteZero)) dotVal += 5.0f; //절대 영역 카드 효과 적용
 
         Collider2D[] hits =
             Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
-            if (m != null) m.ApplyDOT(attack * effect.value, effect.duration, this);
+            if (m != null) m.ApplyDOT(attack * dotVal, effect.duration, this);
         }
     }
 
@@ -883,15 +910,24 @@ public class Unit : MonoBehaviour
         Vector3 checkPos = skill.range > 0 ? target.position : transform.position;
 
         SpawnSkillEffect(skill, effect, checkPos);
+        float executionVal = effect.value;
+        if (data.unitName == "BlackHole" && CardUIManager.instance.HasCard(CardEffectID.Legendary_EventHorizon)) executionVal += 0.1f; //이벤트 호라이슨 카드 효과 적용
 
-        Collider2D[] hits =
-            Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+        Collider2D[] hits = Physics2D.OverlapCircleAll(checkPos, checkRange, LayerMask.GetMask("Enemy"));
+        bool hasAbyssCall = (data.unitName == "Abyss" && CardUIManager.instance.HasCard(CardEffectID.Myth_AbyssCall));
         foreach (var hit in hits)
         {
             Monster m = hit.GetComponent<Monster>();
-            if (m != null && (m.hp / m.maxhp) <= effect.value)
+            if (m != null && (m.hp / m.maxhp) <= executionVal)
             {
                 m.TakeDamage(9999999999f, this);
+            }
+            if (hasAbyssCall && m.monsterType != MonsterType.Boss && m.monsterType != MonsterType.MiniBoss && m.monsterType != MonsterType.Ore) // 심연의 부름 카드 효과 적용
+            {
+                if (m != null && Random.value <= 0.005f)
+                {
+                    m.TakeDamage(9999999999f, this);
+                }
             }
         }
     }
@@ -907,6 +943,7 @@ public class Unit : MonoBehaviour
     IEnumerator CoilBuffRoutine(SkillInfo skill, SkillEffect effect)
     {
         int coilCount = GetUnitCount("Coil");
+        if (CardUIManager.instance.HasCard(CardEffectID.Epic_CollectiveIntelligence)) coilCount *= 2; // 집단 지성 카드 효과 적용
         float finalBuffValue = effect.value + (coilCount * 0.05f);
 
         float range = GetRange();
@@ -936,6 +973,7 @@ public class Unit : MonoBehaviour
     void TsunamiSkill(SkillInfo skill, SkillEffect effect)
     {
         int tsunamiCount = GetUnitCount("Tsunami");
+        if (CardUIManager.instance.HasCard(CardEffectID.Epic_CollectiveIntelligence)) tsunamiCount *= 2; // 집단 지성 카드 효과 적용
         float attack = GetAttack();
         float finalTsunamiDamage = attack * (effect.value + (tsunamiCount * 1.0f));
 
@@ -998,6 +1036,8 @@ public class Unit : MonoBehaviour
 
         // 목표 지점 도착 시 맹독병 파괴
         if (bottle != null) Destroy(bottle);
+        int unitCount = GetUnitCount("Poison");
+        if (CardUIManager.instance.HasCard(CardEffectID.Epic_CollectiveIntelligence)) unitCount *= 2; // 집단 지성 카드 효과 적용
 
         // 4. 목표 지점에 장판(스프라이트) 생성
         if (effect.effectPrefab != null)
@@ -1007,7 +1047,7 @@ public class Unit : MonoBehaviour
             ContinuousRange rangeEffect = areaObj.GetComponent<ContinuousRange>();
             if (rangeEffect == null) rangeEffect = areaObj.AddComponent<ContinuousRange>();
 
-            float damagePerSec = GetAttack() * effect.value;
+            float damagePerSec = GetAttack() * (effect.value + unitCount * 2f);
             float radius = skill.range > 0 ? skill.range / 2f : GetRange() / 2f;
 
             // [에러 해결] 이름을 puddleDuration으로 변경하여 중복 회피

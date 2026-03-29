@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using UnityEngine.EventSystems;
+using System.Collections;
 
 [System.Serializable]
 public struct MergeRecipe //유닛 조합표 구조체
@@ -80,6 +81,7 @@ public class InGameManager : MonoBehaviour
         currentElementStone = 0;
         UpdateUI();
         spawner.StartSpawn();
+        StartCoroutine(GoldMineRoutine());
     }
 
     void Update()
@@ -209,6 +211,7 @@ public class InGameManager : MonoBehaviour
                 Unit newUnit = obj.GetComponent<Unit>();
                 newUnit.SetUnit(result);
                 if(CardUIManager.instance.HasCard(CardEffectID.Mid_ElementReverse)) AddCoin(5); //원소 역전 카드 효과
+                OnUnitAdded(newUnit);
 
                 // 4. 새 유닛을 리스트에 즉시 추가 (Start를 기다리지 않음)
                 if (!CardUIManager.instance.activeUnits.Contains(newUnit))
@@ -322,10 +325,114 @@ public class InGameManager : MonoBehaviour
         GameObject unitObj = Instantiate(unitBasePrefab, parentTile.position, Quaternion.identity, parentTile);
         unitObj.transform.localPosition = new Vector3(0, 0, -1f);
         unitObj.GetComponent<Unit>().SetUnit(selectedData);
+        OnUnitAdded(unitObj.GetComponent<Unit>());
     }
 
-    // 다음 라운드로 넘어가는 함수
-    void NextRound()
+    // 빈자리를 찾아 신화급 유닛 1마리를 확정 소환하는 함수
+    public void SpawnMythUnit()
+    {
+        Transform emptyTile = null;
+        foreach (Transform tile in mapManager.buildTiles)
+        {
+            if (tile.childCount == 0)
+            {
+                emptyTile = tile;
+                break;
+            }
+        }
+
+        if (emptyTile != null)
+        {
+            UnitData selectedData = MythPool[Random.Range(0, MythPool.Length)];
+            GameObject unitObj = Instantiate(unitBasePrefab, emptyTile.position, Quaternion.identity, emptyTile);
+            unitObj.transform.localPosition = new Vector3(0, 0, -1f);
+
+            Unit newUnit = unitObj.GetComponent<Unit>();
+            newUnit.SetUnit(selectedData);
+
+            // 소환되었으니 카드 효과 트리거 검사
+            OnUnitAdded(newUnit);
+        }
+        else
+        {
+            Debug.LogWarning("신화급 유닛을 소환할 빈 공간이 없습니다!");
+        }
+    }
+
+    // 유닛이 필드에 새롭게 등장(소환/합성)할 때마다 호출할 트리거 함수
+    public void OnUnitAdded(Unit newUnit) {
+        // 1. [신화의 재림] 카드 효과 처리
+        if (CardUIManager.instance != null && CardUIManager.instance.HasCard(CardEffectID.Myth_MythRebirth))
+        {
+            // 새로 등장한 유닛이 신화급인지 확인 (MythPool 안에 데이터가 있는지 검사)
+            bool isMythic = System.Array.Exists(MythPool, data => data == newUnit.data);
+            if (isMythic)
+            {
+                Monster[] allMonsters = FindObjectsOfType<Monster>();
+                foreach (var m in allMonsters)
+                {
+                    if (m != null && m.monsterType != MonsterType.Boss)
+                    {
+                        // 현재 체력의 99%를 깎음, 공격자는 신화급 유닛 자신
+                        m.TakeDamage(m.hp * 0.99f, newUnit);
+                    }
+                }
+            }
+        }
+
+        // 2. [초월] 카드 효과 처리
+        if (CardUIManager.instance != null && CardUIManager.instance.HasCard(CardEffectID.Myth_AscensionTrigger))
+        {
+            string targetName = newUnit.data.unitName;
+
+            // 방금 소환된 유닛과 같은 이름의 유닛이 16마리 이상인지 검사
+            if (Unit.GetUnitCount(targetName) >= 16)
+            {
+                Unit[] allUnits = FindObjectsOfType<Unit>();
+                int removedCount = 0;
+
+                // 딱 16마리만 찾아서 파괴
+                foreach (var u in allUnits)
+                {
+                    if (u.data != null && u.data.unitName == targetName)
+                    {
+                        // UI 리스트에서 제거 (기존 합성 로직과 포맷 맞춤)
+                        if (CardUIManager.instance.activeUnits.Contains(u))
+                            CardUIManager.instance.activeUnits.Remove(u);
+                        u.transform.SetParent(null);
+                        Destroy(u.gameObject);
+                        removedCount++;
+
+                        if (removedCount >= 16) break; // 16마리 채웠으면 중단
+                    }
+                }
+
+                // 전체 스탯 한번 갱신해주고 신화급 2마리 소환
+                CardUIManager.instance.RefreshAllUnitStats();
+                SpawnMythUnit();
+                SpawnMythUnit();
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // 다음 라운드로 넘어가는 함수
+        void NextRound()
     {
         if (currentRound < maxRound)
         {
@@ -423,6 +530,23 @@ public class InGameManager : MonoBehaviour
         InGameUIManager.instance.HideUnitInfo();
     }
 
+    IEnumerator GoldMineRoutine() // 황금 광산 카드 효과 적용
+    {
+        // 10초를 기다리기 위한 캐싱 (성능 최적화)
+        WaitForSeconds waitTenSeconds = new WaitForSeconds(10f);
+
+        while (true)
+        {
+            yield return waitTenSeconds;
+
+            // 황금 광산 카드 보유 시 원소석 1개 지급
+            if (CardUIManager.instance != null && CardUIManager.instance.HasCard(CardEffectID.Myth_GoldMine))
+            {
+                AddElementStone(1);
+            }
+        }
+    }
+
 
     public void DebugSummonByName()
     {
@@ -458,6 +582,7 @@ public class InGameManager : MonoBehaviour
                 GameObject unitObj = Instantiate(unitBasePrefab, emptyTile.position, Quaternion.identity, emptyTile);
                 unitObj.transform.localPosition = new Vector3(0, 0, -1f);
                 unitObj.GetComponent<Unit>().SetUnit(targetData);
+                OnUnitAdded(unitObj.GetComponent<Unit>());
 
                 Debug.Log($"[Debug] {input} 소환 완료!");
                 debugInputField.text = "";
@@ -488,10 +613,5 @@ public class InGameManager : MonoBehaviour
             }
         }
         return null;
-    }
-    //테스트용 버튼
-    public void GoToLobby()
-    {
-        SceneManager.LoadScene("Lobby");
     }
 }

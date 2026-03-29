@@ -19,12 +19,12 @@ public class ShopManager : MonoBehaviour
     // 등급별 등장 확률 (합계 1.0 = 100%)
     private Dictionary<UnitGrade, float> gradeProbabilities = new Dictionary<UnitGrade, float>()
     {
-        { UnitGrade.Low, 0.45f },
+        { UnitGrade.Low, 0.40f },
         { UnitGrade.Middle, 0.30f },
-        { UnitGrade.High, 0.15f },
-        { UnitGrade.Epic, 0.07f },
-        { UnitGrade.Legend, 0.025f },
-        { UnitGrade.Myth, 0.005f }
+        { UnitGrade.High, 0.16f },
+        { UnitGrade.Epic, 0.08f },
+        { UnitGrade.Legend, 0.04f },
+        { UnitGrade.Myth, 0.02f }
     };
 
     void Start()
@@ -190,15 +190,26 @@ public class ShopManager : MonoBehaviour
     }
     private int GetRandomAmountByGrade(UnitGrade grade)
     {
-        // 등급별 최소/최대 개수 설정
         switch (grade)
         {
-            case UnitGrade.Low: return Random.Range(50, 101); // 10~50개
-            case UnitGrade.Middle: return Random.Range(30, 71);  // 5~20개
-            case UnitGrade.High: return Random.Range(20, 51);  // 3~10개
-            case UnitGrade.Epic: return Random.Range(10, 31);   // 2~5개
-            case UnitGrade.Legend: return Random.Range(5, 21);   // 1~3개
-            case UnitGrade.Myth: return Random.Range(3, 11);   // 1~2개
+            // 하급: 40% 확률로 등장. 조각이 너무 흔해지지 않게 조정 (필요량 2.3만)
+            case UnitGrade.Low: return UnityEngine.Random.Range(30, 61);
+
+            // 중급: 30% 확률. (필요량 2만)
+            case UnitGrade.Middle: return UnityEngine.Random.Range(20, 41);
+
+            // 상급: 16% 확률. (필요량 1.7만)
+            case UnitGrade.High: return UnityEngine.Random.Range(15, 31);
+
+            // 서사: 8% 확률. 여기서부터는 '득템' 느낌이 나야 함 (필요량 1.3만)
+            case UnitGrade.Epic: return UnityEngine.Random.Range(10, 21);
+
+            // 전설: 4% 확률. (필요량 1만)
+            case UnitGrade.Legend: return UnityEngine.Random.Range(8, 16);
+
+            // 신화: 2% 확률. 귀한 만큼 한 번 떴을 때 확실한 체감이 필요 (필요량 7천)
+            case UnitGrade.Myth: return UnityEngine.Random.Range(5, 11);
+
             default: return 10;
         }
     }

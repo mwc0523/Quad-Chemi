@@ -44,7 +44,7 @@ public class UnitCardUI : MonoBehaviour, IPointerClickHandler
             progressRatio = 1f; // 색상 판정을 위해 1로 고정
         }
 
-        if(progressRatio >= 1f) UpgradeArrow.gameObject.SetActive(true);
+        if(progressRatio >= 1f && saveData.level < 50) UpgradeArrow.gameObject.SetActive(true);
         else UpgradeArrow.gameObject.SetActive(false);
 
         // 슬라이더 색상 변경

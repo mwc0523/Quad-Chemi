@@ -22,7 +22,7 @@ public class CharacterPanelManager : MonoBehaviour
     public Transform contentTransform;
     public TMP_Dropdown sortDropdown; // Inspector에서 드롭다운 연결
 
-    private SortType currentSortType = SortType.LevelDesc; // 기본값 레벨 내림차순
+    private SortType currentSortType = SortType.GradeAsc; // 기본값 레벨 내림차순
 
     void Awake() => instance = this;
     void Start()

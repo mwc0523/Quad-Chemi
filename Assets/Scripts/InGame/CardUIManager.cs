@@ -26,12 +26,22 @@ public class CardUIManager : MonoBehaviour
     // 등급별 확률 (합이 100이 되도록 설정)
     private Dictionary<CardGrade, float> gradeProbabilities = new Dictionary<CardGrade, float>()
     {
+        ///*
         { CardGrade.Low, 40f },
         { CardGrade.Mid, 30f },
         { CardGrade.High, 16f },
         { CardGrade.Epic, 8f },
         { CardGrade.Legendary, 4f },
         { CardGrade.Myth, 2f }
+        //*/
+        /*
+        { CardGrade.Low, 0f },
+        { CardGrade.Mid, 0f },
+        { CardGrade.High, 0f },
+        { CardGrade.Epic, 0f },
+        { CardGrade.Legendary, 0f },
+        { CardGrade.Myth, 100f }
+        */
     };
 
     void Awake()
@@ -101,7 +111,7 @@ public class CardUIManager : MonoBehaviour
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_WorldTreeBlessing, "세계수의 가호", "세계수네모의 공속 버프가 맵 전체 아군에게 적용", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_FinalJudgement, "최후의 심판", "심판네모의 공격 속도 2배", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_EventHorizon, "이벤트 호라이슨", "블랙홀 네모의 처형 체력 기준선 +10% (총 15% 이하 처형)", CardGrade.Legendary));
-        allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_AbsoluteZero, "절대 영역", "절대영도네모의 맵 전체 서리 데미지 +500%", CardGrade.Legendary));
+        allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_AbsoluteZero, "절대 영역", "절대영도네모의 맵 전체 서리 데미지 틱당 +500%", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_DivinePunishment, "천벌", "뇌전네모의 심판의 벼락 데미지가 적 현재 체력의 3% 추가 피해", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_GiantsShoulder, "거인의 어깨", "아틀라스네모의 스킬 사용 확률 +10%", CardGrade.Legendary));
         allCards[CardGrade.Legendary].Add(new CardData(CardEffectID.Legendary_FateCard3, "운명의 카드3", "다음 카드 선택 시 새로고침 횟수 15회", CardGrade.Legendary));
@@ -114,7 +124,7 @@ public class CardUIManager : MonoBehaviour
         allCards[CardGrade.Myth].Add(new CardData(CardEffectID.Myth_PrimordialLight, "태초의 빛", "모든 유닛이 적 방어력을 무시함", CardGrade.Myth));
         allCards[CardGrade.Myth].Add(new CardData(CardEffectID.Myth_GoldMine, "황금 광산", "10초마다 원소석 1개 획득", CardGrade.Myth));
         allCards[CardGrade.Myth].Add(new CardData(CardEffectID.Myth_MythRebirth, "신화의 재림", "필드에 신화급 유닛이 등장할 때마다 맵 전체 적 체력 99% 감소 (보스 제외)", CardGrade.Myth));
-        allCards[CardGrade.Myth].Add(new CardData(CardEffectID.Myth_AscensionTrigger, "초월 발동", "필드에 같은 종류의 네모 16마리가 존재할 시, 모든 네모를 제거하고 즉시 랜덤 신화급 2마리 소환", CardGrade.Myth));
+        allCards[CardGrade.Myth].Add(new CardData(CardEffectID.Myth_AscensionTrigger, "초월", "필드에 같은 종류의 네모 16마리가 존재할 시, 모든 네모를 제거하고 즉시 랜덤 신화급 2마리 소환", CardGrade.Myth));
     }
 
     public void AssignRandomCardToSlot(CardSlotUI slot)

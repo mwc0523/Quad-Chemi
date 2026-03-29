@@ -58,6 +58,7 @@ public class UpgradeManager : MonoBehaviour
             tier2Level++;
             tier2Modifier.value = (tier2Level - 1);
             Debug.Log($"2번 강화 성공! Lv.{tier2Level}");
+            CardUIManager.instance.RefreshAllUnitStats();
             UpdateUpgradeUI();
         }
     }
@@ -88,6 +89,9 @@ public class UpgradeManager : MonoBehaviour
     }
     public void ClickUPgrade()
     {
+        InGameManager.instance.AddElementStone(100);
+        tier2Level++;
+        tier2Modifier.value = (tier2Level - 1);
         tier3Level++;
         tier3Modifier.value = (tier3Level - 1);
         UpdateUpgradeUI();
