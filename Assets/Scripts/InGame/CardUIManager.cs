@@ -12,6 +12,11 @@ public class CardUIManager : MonoBehaviour
     public CardSlotUI[] cardSlots; // 기본 3개의 슬롯 (운명의 카드를 대비해 동적 생성으로 바꿔도 됨)
     public TextMeshProUGUI cardRerollcount; //리롤 몇번 남았는지
 
+    public RectTransform curtainRect; // 화면을 덮을 막(이미지)의 RectTransform
+    public float curtainDelay = 2.0f; // 막이 열리기 전 대기 시간 (초)
+    public float curtainOpenDuration = 2.0f; // 막이 위로 다 열리는데 걸리는 시간 (초)
+    private Vector2 curtainStartPosition;  // 막의 원래 위치 기억용
+
     private int rerollCount = 2; // 남은 새로고침 횟수
     private int destinyCard1Used = 1;
     private int destinyCard2Used = 1;
@@ -181,7 +186,7 @@ public class CardUIManager : MonoBehaviour
     // 보스 처치 후 InGameManager에서 이 함수를 호출
     public void OpenCardDraw()
     {
-        rerollCount = 2;
+        rerollCount = 200;
         if (CardUIManager.instance.HasCard(CardEffectID.High_FateCard) && destinyCard1Used > 0) { //운명의 카드 효과 적용
             rerollCount = 4;
             destinyCard1Used--;
@@ -205,8 +210,55 @@ public class CardUIManager : MonoBehaviour
         {
             AssignRandomCardToSlot(slot);
         }
+        StartCoroutine(OpenCurtainRoutine());
     }
 
+    private System.Collections.IEnumerator OpenCurtainRoutine()
+    {
+        // 1. 처음 위치 설정 및 커튼 활성화
+        if (curtainStartPosition == Vector2.zero)
+        {
+            curtainStartPosition = curtainRect.anchoredPosition; // 원래(화면을 덮은) 위치 기억
+        }
+        curtainRect.anchoredPosition = curtainStartPosition;
+        curtainRect.gameObject.SetActive(true);
+
+        // ★ 2. 가장 중요: 막이 걷히기 전에는 클릭 방지
+        // cardPanel에 CanvasGroup 컴포넌트가 없다면 코드로 즉시 추가합니다.
+        CanvasGroup cardCanvasGroup = cardPanel.GetComponent<CanvasGroup>();
+        if (cardCanvasGroup == null) cardCanvasGroup = cardPanel.AddComponent<CanvasGroup>();
+
+        cardCanvasGroup.blocksRaycasts = false; // 카드 클릭 완전 차단
+
+        // 3. 플레이어가 인지할 수 있도록 잠깐 대기 (timeScale이 0이므로 Realtime 사용)
+        yield return new WaitForSecondsRealtime(curtainDelay);
+
+        // 4. 서서히 위로 올리는 애니메이션 시작
+        float elapsed = 0f;
+        // 화면 위쪽으로 충분히 벗어나도록 목표 Y좌표 설정 (해상도 높이만큼 더함)
+        float targetY = curtainStartPosition.y + Screen.height * 4f;
+        Vector2 startPos = curtainStartPosition;
+        Vector2 targetPos = new Vector2(startPos.x, targetY);
+
+        while (elapsed < curtainOpenDuration)
+        {
+            // timeScale이 0이므로 unscaledDeltaTime 사용
+            elapsed += Time.unscaledDeltaTime;
+
+            // 0~1 사이의 진행도 계산
+            float t = Mathf.Clamp01(elapsed / curtainOpenDuration);
+
+            // 부드럽게 감속하는 느낌을 주려면 주석 해제 (SmoothStep 효과)
+            t = t * t * (3f - 2f * t); 
+
+            curtainRect.anchoredPosition = Vector2.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        // 5. 애니메이션 종료 후 깔끔하게 정리
+        curtainRect.gameObject.SetActive(false);
+        cardCanvasGroup.blocksRaycasts = true; // 이제 카드 선택 가능!
+    }
 
     public void OnCardRerolled(CardSlotUI slot)
     {
