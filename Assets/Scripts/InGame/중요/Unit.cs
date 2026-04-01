@@ -1539,29 +1539,66 @@ public class Unit : MonoBehaviour
     }
     void SpawnElectricWall(SkillInfo skill, SkillEffect effect, Vector3 spawnPos)
     {
-        // 1. 거대한 번개 창 낙하 데미지 (5000%)
-        float damageRange = 1.5f; // 창이 떨어질 때 주변 데미지 범위
+        // 코루틴을 실행하여 번개 창 낙하 연출을 시작합니다.
+        StartCoroutine(ElectricSpearFallingRoutine(skill, effect, spawnPos));
+    }
+
+    IEnumerator ElectricSpearFallingRoutine(SkillInfo skill, SkillEffect effect, Vector3 spawnPos)
+    {
+        // 1. 번개 창 생성 위치 설정 (목표 지점 위쪽 10유닛 거리)
+        float fallHeight = 10f;
+        Vector3 startPos = spawnPos + Vector3.up * fallHeight;
+
+        // 2. 평타 프리펩(창) 생성
+        if (data.projectilePrefab != null)
+        {
+            GameObject spear = Instantiate(data.projectilePrefab, startPos, Quaternion.identity);
+            Projectile proj = spear.GetComponent<Projectile>();
+            if (proj != null) Destroy(proj);
+
+            // 창이 아래를 향하도록 회전 (기본 이미지가 오른쪽 방향일 경우 -90도 회전)
+            spear.transform.rotation = Quaternion.Euler(0, 0, 0);
+
+            // 3. 하늘에서 지면까지 이동 (약 0.2초 동안 빠르게 낙하)
+            float duration = 1f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                // 지면(spawnPos)으로 부드럽게 이동
+                spear.transform.position = Vector3.Lerp(startPos, spawnPos, t);
+                yield return null;
+            }
+
+            // 지면에 닿으면 창 제거 (혹은 타격 이펙트가 있다면 여기서 실행)
+            Destroy(spear);
+        }
+
+        // --- 창이 지면에 닿은 후 기존 로직 실행 ---
+
+        // 4. 거대한 번개 창 낙하 데미지 (5000%)
+        float damageRange = 1.5f;
         Collider2D[] hits = Physics2D.OverlapCircleAll(spawnPos, damageRange, LayerMask.GetMask("Enemy"));
 
         foreach (var hit in hits)
         {
+            if (hit == null) continue; // null 체크 추가
             Monster m = hit.GetComponent<Monster>();
             if (m != null)
             {
-                float damage = combatStats.Get(StatType.Attack) * effect.value; // 5000%
+                float damage = combatStats.Get(StatType.Attack) * effect.value;
                 m.TakeDamage(damage, this);
             }
         }
 
-        // 2. 전기벽 생성 (10초간 유지)
+        // 5. 전기벽 생성 (원래 코드 그대로)
         if (effect.effectPrefab != null)
         {
             GameObject wallObj = Instantiate(effect.effectPrefab, spawnPos, Quaternion.identity);
             ElectricWall wallScript = wallObj.GetComponent<ElectricWall>();
 
             if (wallScript == null) wallScript = wallObj.AddComponent<ElectricWall>();
-
-            // 스킬 정보에 설정된 지속시간(10)과 범위(1)를 전달
             wallScript.Init(effect.duration, skill.range > 0 ? skill.range : 1.0f);
         }
     }

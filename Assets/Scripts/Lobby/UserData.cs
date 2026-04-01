@@ -8,7 +8,42 @@ public enum CurrencyType
     Ticket,     // 입장 티켓
     Essence,    // 정수 (기본 재화)
     Aether      // 에테르 (유료 재화)
-} 
+}
+
+[Serializable]
+public enum CrystalElement
+{
+    None,   // 무속성
+    Fire,   // 불
+    Water,  // 물
+    Earth,  // 땅
+    Air,    // 공기
+    Prism   // 모든 속성 대체 가능 (자유 원소)
+}
+
+[Serializable]
+public class CrystalPieceData
+{
+    public string uid;           // 고유 식별자 (Guid.NewGuid().ToString())
+    public int shapeIndex;      // B방식 하드코딩 배열의 인덱스
+    public CrystalElement element;
+    public UnitGrade grade;
+
+    public bool isPlaced;       // 배치 여부
+    // 조각의 '중심' 기준 좌표: 
+    // 조각 모양(4x4)에서 첫 번째 '1'이 나타나는 지점을 (0,0)으로 보고, 
+    // 해당 지점이 5x5 그리드의 어느 인덱스(0~24)에 위치하는지 저장합니다.
+    public int placedRootIndex = -1;
+
+    public CrystalPieceData(int shape, CrystalElement elem, UnitGrade g)
+    {
+        uid = Guid.NewGuid().ToString();
+        shapeIndex = shape;
+        element = elem;
+        grade = g;
+        isPlaced = false;
+    }
+}
 
 // 2. 유닛 개별 정보 (확장성을 고려한 구조)
 [Serializable]
@@ -141,8 +176,8 @@ public class UserProfile
     public int selectedTheme = 0; // 현재 선택된 테마 (0:바위산 ~ 4:공허)
     public int selectedStage = 1;
 
-
-
+    public List<CrystalPieceData> crystalInventory = new List<CrystalPieceData>(); //보유 결정 목록
+    public List<int> unlockedCrystalGridIndices = new List<int> { 6, 7, 8, 11, 12, 13 }; //해금된 필드 목록 (초기 위치)
 
 
 

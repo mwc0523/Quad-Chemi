@@ -5,6 +5,8 @@ using System.Collections;
 using System;
 using Random = UnityEngine.Random;
 using TMPro;
+using UnityEngine.UI;
+
 
 public class ShopManager : MonoBehaviour
 {
@@ -15,6 +17,14 @@ public class ShopManager : MonoBehaviour
 
     public GameObject shopSlotPrefab;
     public TMP_Text refreshBtnText;
+
+    [Header("Gacha UI")]
+    public GameObject gachaResultPanel;    // 결과창 패널 전체
+    public Transform gachaResultGrid;      // 카드가 나열될 GridLayoutGroup
+    public GameObject unitCardPrefab;
+
+    public int nowCount = 0;
+
 
     // 등급별 등장 확률 (합계 1.0 = 100%)
     private Dictionary<UnitGrade, float> gradeProbabilities = new Dictionary<UnitGrade, float>()
@@ -27,6 +37,9 @@ public class ShopManager : MonoBehaviour
         { UnitGrade.Myth, 0.02f }
     };
 
+    void Awake() {
+        gachaResultPanel.SetActive(false);
+    }
     void Start()
     {
         // 기존 RefreshAllShops() 대신 서버 시간을 가져오는 코루틴 실행
@@ -73,6 +86,121 @@ public class ShopManager : MonoBehaviour
         GenerateFixedShop(essenceShopGrid, ShopItemType.Currency, "정수", 3);
         GenerateFixedShop(aetherShopGrid, ShopItemType.Currency, "에테르", 3);
     }
+
+    public void OnClickGacha(int drawCount)
+    {
+        nowCount = drawCount;
+        // 1회 뽑기당 에테르 10 소모 (10회=100, 100회=1000)
+        int costAmount = drawCount * 10;
+        var user = DataManager.instance.currentUser;
+
+        // 1. 재화 체크
+        if (user.aether < costAmount)
+        {
+            Debug.Log("에테르가 부족합니다.");
+            return;
+        }
+
+        // 2. 재화 차감
+        user.aether -= costAmount;
+
+        // 3. 뽑기 진행 및 합산
+        // 100번 돌려서 불네모 15번, 물네모 10번... 이런 식으로 합산하기 위한 딕셔너리
+        Dictionary<UnitData, int> drawResults = new Dictionary<UnitData, int>();
+
+        for (int i = 0; i < drawCount; i++)
+        {
+            UnitGrade grade = GetRandomGrade();
+            UnitData randomUnit = GetRandomUnitByGrade(grade);
+
+            if (randomUnit == null) continue;
+
+            // 딕셔너리에 뽑힌 횟수 누적
+            if (drawResults.ContainsKey(randomUnit))
+            {
+                drawResults[randomUnit]++;
+            }
+            else
+            {
+                drawResults[randomUnit] = 1;
+            }
+
+            // 유저 데이터에 실제 조각 1개 추가
+            AddUnit(randomUnit.unitName, 1);
+        }
+
+        // 4. 데이터 저장 및 상단 바 UI 갱신
+        DataManager.instance.SaveData();
+        UIManager ui = FindObjectOfType<UIManager>();
+        if (ui != null) ui.RefreshTopBar();
+
+        // 5. 결과창 띄우기
+        ShowGachaResult(drawResults);
+    }
+    private void ShowGachaResult(Dictionary<UnitData, int> results)
+    {
+        // 기존 카드 제거
+        foreach (Transform child in gachaResultGrid) Destroy(child.gameObject);
+
+        gachaResultPanel.SetActive(true);
+
+        // 코루틴 시작
+        StopAllCoroutines(); // 혹시 실행 중인 연출이 있다면 정지
+        StartCoroutine(Co_ShowCardsSequentially(results));
+    }
+    private IEnumerator Co_ShowCardsSequentially(Dictionary<UnitData, int> results)
+    {
+        // 스크롤을 맨 위로 초기화
+        ScrollRect scrollRect = gachaResultPanel.GetComponentInChildren<ScrollRect>();
+        if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
+
+        foreach (var kvp in results)
+        {
+            UnitData unitData = kvp.Key;
+            int count = kvp.Value;
+
+            // 카드 생성
+            GameObject cardObj = Instantiate(unitCardPrefab, gachaResultGrid);
+            UnitCardUI cardUI = cardObj.GetComponent<UnitCardUI>();
+            cardUI.SetupForResult(unitData, count);
+
+            // --- 연출용 코드: 살짝 커지는 효과 ---
+            cardObj.transform.localScale = Vector3.zero; // 처음엔 크기 0
+            StartCoroutine(Co_ScaleUp(cardObj.transform));
+            // ------------------------------------
+
+            // 레이아웃 즉시 갱신 (스크롤 바 크기 실시간 업데이트)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(gachaResultGrid.GetComponent<RectTransform>());
+
+            if (scrollRect != null) scrollRect.verticalNormalizedPosition = 0f;
+            yield return new WaitForSeconds(0.08f); //대기 시간
+        }
+    }
+    private IEnumerator Co_ScaleUp(Transform target)
+    {
+        float duration = 0.2f; // 커지는 시간
+        float timer = 0f;
+        Vector3 targetScale = Vector3.one;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            target.localScale = Vector3.Lerp(Vector3.zero, targetScale, timer / duration);
+            yield return null;
+        }
+        target.localScale = targetScale;
+    }
+    public void OnClickGachaAgain()
+    {
+        if(nowCount != 0) OnClickGacha(nowCount);
+    }
+    public void CloseGachaResultPanel()
+    {
+        gachaResultPanel.SetActive(false);
+    }
+
+
+
     // 1. 일일 랜덤 상점 (확률 적용)
     public void GenerateDailyShop()
     {

@@ -9,7 +9,7 @@ public class UIManager : MonoBehaviour
     public static UIManager instance;
     
     [Header("Page Panels")]
-    public GameObject[] pages; // 0:Shop, 1:Character, 2:MainMenu, 3:Equipment, 4:Special
+    public GameObject[] pages; // 0:Shop, 1:Character, 2:MainMenu, 3:crystal, 4:Special
     public CharacterPanelManager characterPanelManager;
 
     [Header("Top Bar UI")]

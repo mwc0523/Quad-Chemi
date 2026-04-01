@@ -56,6 +56,26 @@ public class UnitCardUI : MonoBehaviour, IPointerClickHandler
         }
     }
 
+    // --- [신규 추가] 뽑기 결과창 전용 Setup 함수 ---
+    public void SetupForResult(UnitData baseData, int drawnCount)
+    {
+        myData = null; // 결과창에서는 클릭해서 정보창을 띄우지 않을 것이므로 null 처리
+
+        nameText.text = baseData.unitName;
+        unitIcon.sprite = baseData.unitSprite;
+        cardFrame.color = GetColorByGrade(baseData.grade);
+
+        // 레벨 텍스트를 숨기거나 "획득!" 같은 문구로 변경
+        levelText.text = "GET!";
+
+        // 몇 개를 뽑았는지 표시 (예: +5)
+        countText.text = $"+{drawnCount}";
+
+        // 뽑기 결과창에서는 진행도 바와 업그레이드 화살표를 숨김
+        if (progressBar != null) progressBar.gameObject.SetActive(false);
+        if (UpgradeArrow != null) UpgradeArrow.gameObject.SetActive(false);
+    }
+
     private Color GetColorByGrade(UnitGrade grade)
     {
         return grade switch
@@ -99,7 +119,6 @@ public class UnitCardUI : MonoBehaviour, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         if (eventData.button != PointerEventData.InputButton.Left) return;
-
         OnCardClicked();
     }
 }
