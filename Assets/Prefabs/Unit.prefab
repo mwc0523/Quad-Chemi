@@ -482,6 +482,7 @@ MonoBehaviour:
   level: 1
   skillChanceBonus: 0
   judgementLaserLine: {fileID: 3261417466493029716}
+  skillChanceBonusByCard: 0
   auraRenderer: {fileID: 5184019441439614}
   rangeCircle: {fileID: 7932112952598016715}
   basicProjectilePrefab: {fileID: 4113111827210690632, guid: 2fc285519df487e4f942b3d2be2eaf44, type: 3}

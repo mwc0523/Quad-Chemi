@@ -27,7 +27,8 @@ public class CrystalPieceData
     public string uid;           // 고유 식별자 (Guid.NewGuid().ToString())
     public int shapeIndex;      // B방식 하드코딩 배열의 인덱스
     public CrystalElement element;
-    public UnitGrade grade;
+    public CrystalGrade grade;
+    public long acquisitionTick;
 
     public bool isPlaced;       // 배치 여부
     // 조각의 '중심' 기준 좌표: 
@@ -35,13 +36,14 @@ public class CrystalPieceData
     // 해당 지점이 5x5 그리드의 어느 인덱스(0~24)에 위치하는지 저장합니다.
     public int placedRootIndex = -1;
 
-    public CrystalPieceData(int shape, CrystalElement elem, UnitGrade g)
+    public CrystalPieceData(int shape, CrystalElement elem, CrystalGrade g)
     {
         uid = Guid.NewGuid().ToString();
         shapeIndex = shape;
         element = elem;
         grade = g;
         isPlaced = false;
+        acquisitionTick = System.DateTime.Now.Ticks;
     }
 }
 
@@ -177,7 +179,7 @@ public class UserProfile
     public int selectedStage = 1;
 
     public List<CrystalPieceData> crystalInventory = new List<CrystalPieceData>(); //보유 결정 목록
-    public List<int> unlockedCrystalGridIndices = new List<int> { 6, 7, 8, 11, 12, 13 }; //해금된 필드 목록 (초기 위치)
+    public List<int> unlockedCrystalGridIndices = new List<int> { 6,7,8,11,12,13 }; //해금된 필드 목록 (초기 위치)
 
 
 

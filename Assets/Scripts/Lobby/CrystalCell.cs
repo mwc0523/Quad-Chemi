@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class CrystalCell : MonoBehaviour
+public class CrystalCell : MonoBehaviour, IPointerClickHandler
 {
     public int cellIndex;
     public bool isUnlocked;
@@ -23,4 +24,22 @@ public class CrystalCell : MonoBehaviour
     {
         isOccupied = occupied;
     }
-}
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        //Debug.Log($"{cellIndex}번 타일 클릭됨!"); // 로그가 찍히는지 확인
+
+        if (eventData.dragging) return;
+
+        CrystalPieceData piece = CrystalUIManager.Instance.GetPieceAtCell(cellIndex);
+        if (piece != null)
+        {
+            //Debug.Log("크리스탈 발견! 회수 진행");
+            CrystalUIManager.Instance.RemovePiece(piece);
+        }
+        else
+        {
+            //Debug.Log("이 칸에는 배치된 크리스탈이 없음");
+        }
+    }
+} 
