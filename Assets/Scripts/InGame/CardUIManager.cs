@@ -22,6 +22,11 @@ public class CardUIManager : MonoBehaviour
     private int destinyCard2Used = 1;
     private int destinyCard3Used = 1;
 
+    [Header("Owned Cards List UI")]
+    public GameObject ownedCardsPanel;       // 전체 패널
+    public Transform listContent;            // Scroll View의 Content
+    public GameObject ownedCardItemPrefab;
+
     // 등급별 카드 리스트 저장소
     private Dictionary<CardGrade, List<CardData>> allCards = new Dictionary<CardGrade, List<CardData>>();
 
@@ -54,6 +59,7 @@ public class CardUIManager : MonoBehaviour
         if (instance == null) instance = this;
         InitializeCardDatabase(); // 카드 데이터 초기화
         cardPanel.SetActive(false);
+        ownedCardsPanel.SetActive(false);
     }
 
     void InitializeCardDatabase()
@@ -318,5 +324,47 @@ public class CardUIManager : MonoBehaviour
     public bool HasCard(CardEffectID id)
     {
         return appliedCards.Contains(id);
+    }
+
+    public void OpenOwnedCardsList()
+    {
+        // 1. 패널 활성화
+        ownedCardsPanel.SetActive(true);
+
+        // 2. 기존 리스트 아이템 제거 (새로고침)
+        foreach (Transform child in listContent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // 3. 획득한 카드 데이터 추출 및 정렬 (신화 -> 하급 순)
+        List<CardData> ownedList = new List<CardData>();
+
+        // 전체 카드 DB를 순회하며 appliedCards(HashSet)에 있는 카드만 가져옴
+        foreach (var gradeGroup in allCards.Values)
+        {
+            foreach (var card in gradeGroup)
+            {
+                if (appliedCards.Contains(card.id))
+                {
+                    ownedList.Add(card);
+                }
+            }
+        }
+
+        // 등급(Grade) 역순 정렬 (Myth가 가장 높은 숫자이므로 Descending)
+        var sortedList = ownedList.OrderByDescending(c => (int)c.grade).ToList();
+
+        // 4. UI 생성
+        foreach (var card in sortedList)
+        {
+            GameObject obj = Instantiate(ownedCardItemPrefab, listContent);
+            obj.GetComponent<OwnedCardItemUI>().Setup(card);
+        }
+    }
+
+    public void CloseOwnedCardsList()
+    {
+        ownedCardsPanel.SetActive(false);
     }
 }

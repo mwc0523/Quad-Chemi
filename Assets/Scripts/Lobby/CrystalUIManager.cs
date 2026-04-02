@@ -27,13 +27,29 @@ public class CrystalUIManager : MonoBehaviour
     [Header("Sort Settings")]
     public CrystalSortType currentSortType = CrystalSortType.GradeAsc;
 
-
+    private CrystalCell currentlyOpenedCell = null;
 
     void Awake() => Instance = this;
 
     void Start()
     {
         if (DataManager.instance == null) return;
+
+        // 1. 이미 데이터 로드가 끝났다면 즉시 UI 생성 (씬 이동 시 등)
+        if (DataManager.instance.isDataLoaded)
+        {
+            InitUI();
+        }
+        // 2. 아직 로드 중이라면, 완료 이벤트(OnDataLoaded)를 기다렸다가 생성
+        else
+        {
+            DataManager.instance.OnDataLoaded += InitUI;
+        }
+    }
+
+    // 기존 Start()에 있던 생성 로직을 묶어둔 함수
+    private void InitUI()
+    {
         GenerateGrid();
         UpdateGridStatus();
         RefreshInventory();
@@ -50,8 +66,7 @@ public class CrystalUIManager : MonoBehaviour
             CrystalCell cell = cellObj.GetComponent<CrystalCell>();
             cell.cellIndex = i;
 
-            bool isUnlocked = DataManager.instance.currentUser.unlockedCrystalGridIndices.Contains(i);
-            cell.SetUnlock(isUnlocked);
+            cell.isUnlocked = DataManager.instance.currentUser.unlockedCrystalGridIndices.Contains(i);
 
             allCells.Add(cell);
         }
@@ -123,8 +138,11 @@ public class CrystalUIManager : MonoBehaviour
         foreach (var cell in allCells)
         {
             cell.SetOccupied(false);
-            // 기본 타일 색상으로 복구 (예: 회색이나 투명도 있는 흰색 등 설정된 기본값)
-            cell.GetComponent<Image>().color = cell.isUnlocked ? Color.white : Color.gray;
+            // GetComponent<Image>()를 지우고, 스크립트에 연결된 cell.cellImage를 직접 사용합니다.
+            if (cell.cellImage != null)
+            {
+                cell.cellImage.color = cell.isUnlocked ? Color.white : Color.gray;
+            }
         }
 
         // 2. 배치된 피스들을 순회하며 타일 색칠
@@ -141,8 +159,11 @@ public class CrystalUIManager : MonoBehaviour
                     foreach (int idx in indices)
                     {
                         allCells[idx].SetOccupied(true);
-                        // ❗ 타일의 색상을 크리스탈 색상으로 변경
-                        allCells[idx].GetComponent<Image>().color = pieceColor;
+                        // 여기도 GetComponent<Image>() 대신 cellImage 사용
+                        if (allCells[idx].cellImage != null)
+                        {
+                            allCells[idx].cellImage.color = pieceColor;
+                        }
                     }
                 }
             }
@@ -163,7 +184,7 @@ public class CrystalUIManager : MonoBehaviour
         {
             foreach (int targetIndex in requiredIndices)
             {
-                Image cellImage = allCells[targetIndex].GetComponent<Image>();
+                Image cellImage = allCells[targetIndex].cellImage;
                 if (cellImage != null)
                 {
                     if (!originalCellColors.ContainsKey(targetIndex))
@@ -180,7 +201,7 @@ public class CrystalUIManager : MonoBehaviour
     {
         foreach (int idx in currentPreviewIndices)
         {
-            Image cellImage = allCells[idx].GetComponent<Image>();
+            Image cellImage = allCells[idx].cellImage;
             if (cellImage != null && originalCellColors.ContainsKey(idx))
             {
                 cellImage.color = originalCellColors[idx]; // 원래 색상으로 복구
@@ -219,6 +240,58 @@ public class CrystalUIManager : MonoBehaviour
         DataManager.instance.SaveData();
     }
     // ----------------------------------------
+
+    public void RegisterOpenedCell(CrystalCell newCell)
+    {
+        if (currentlyOpenedCell != null && currentlyOpenedCell != newCell)
+        {
+            currentlyOpenedCell.CloseUnlockButton();
+        }
+        currentlyOpenedCell = newCell;
+    }
+
+    // 3. 가격 상승 공식 계산
+    public int GetCurrentUnlockPrice()
+    {
+        int unlockedCount = DataManager.instance.currentUser.unlockedCrystalGridIndices.Count;
+        int baseFreeCells = 6; // 처음에 제공되는 무료 칸 갯수
+        int purchasedCount = Mathf.Max(0, unlockedCount - baseFreeCells);
+
+        // 예시: 100 에테르부터 시작해서 한 칸 열 때마다 50 에테르씩 증가
+        // 기획에 맞게 숫자를 조절하세요!
+        return 100 + (purchasedCount * 50);
+    }
+
+    // 3. 재화 검사 및 칸 오픈 서버 저장
+    public bool TryUnlockCell(int cellIndex)
+    {
+        int price = GetCurrentUnlockPrice();
+
+        if (DataManager.instance.currentUser.aether >= price)
+        {
+            // 1. 재화 차감
+            DataManager.instance.currentUser.aether -= price;
+
+            // 2. 해금 인덱스 추가
+            DataManager.instance.currentUser.unlockedCrystalGridIndices.Add(cellIndex);
+
+            // 3. 타일 상태 업데이트
+            allCells[cellIndex].SetUnlock(true);
+            UpdateGridStatus();
+
+            // 4. 서버 저장
+            DataManager.instance.SaveData();
+            UIManager.instance.RefreshTopBar();
+            Debug.Log($"[{cellIndex}]번 칸 해금 완료! 남은 에테르: {DataManager.instance.currentUser.aether}");
+            return true;
+        }
+        else
+        {
+            Debug.Log("에테르가 부족합니다.");
+            // TODO: 에테르 부족 팝업을 띄우는 로직이 있다면 여기에 추가
+            return false;
+        }
+    }
 
     public void OnSortChanged(int index)
     {

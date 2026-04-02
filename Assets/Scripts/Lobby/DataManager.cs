@@ -21,6 +21,9 @@ public class DataManager : MonoBehaviour
     [Header("모든 조합법 데이터베이스")]
     public List<MergeRecipe> allRecipes;
 
+    public bool isDataLoaded = false;
+    public event Action OnDataLoaded;
+
     void Awake()
     {
         if (instance == null)
@@ -128,6 +131,8 @@ public class DataManager : MonoBehaviour
                 isNewUser = true;
                 SaveData();
             }
+            isDataLoaded = true;
+            OnDataLoaded?.Invoke();
             onComplete?.Invoke(isNewUser);
         },
         error => Debug.LogError("로드 실패: " + error.GenerateErrorReport()));
