@@ -12066,6 +12066,7 @@ GameObject:
   - component: {fileID: 1949640878}
   - component: {fileID: 1949640880}
   - component: {fileID: 1949640879}
+  - component: {fileID: 1949640881}
   m_Layer: 4
   m_Name: BackGround
   m_TagString: Untagged
@@ -12112,7 +12113,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -2606320793421569220, guid: 7879a3d40e588a847a4aa417670c0373, type: 3}
+  m_Sprite: {fileID: -1803215994260461527, guid: a773f2d5f9800cc4a9dda866ed829a11, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -12130,6 +12131,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1949640877}
   m_CullTransparentMesh: 1
+--- !u!114 &1949640881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1949640877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 116ddfe352e209b42985b3b93e2f97b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  difficultyBackgrounds:
+  - {fileID: -1803215994260461527, guid: a773f2d5f9800cc4a9dda866ed829a11, type: 3}
+  - {fileID: 4215213363157451371, guid: 8b1dcb81f30cac941999a909eb86bcec, type: 3}
+  - {fileID: 3624287665184247570, guid: 6248122a1e0376245b187af6667de666, type: 3}
+  - {fileID: -1276161128818165896, guid: f69bbfa36ed5c604b979c8a8e3d73f73, type: 3}
+  - {fileID: -3415878871102792564, guid: 68d10c953adb2254da3813f632ec178f, type: 3}
 --- !u!1 &1993598292
 GameObject:
   m_ObjectHideFlags: 0

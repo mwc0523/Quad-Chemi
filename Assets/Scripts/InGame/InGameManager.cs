@@ -74,6 +74,7 @@ public class InGameManager : MonoBehaviour
 
     void Start()
     {
+        BackgroundManager.instance.ChangeBackground(DataManager.instance.currentUser.selectedTheme); //배경 변경
         // 게임 시작 시 초기화
         currentRound = 1;
         currentTime = roundDuration;
