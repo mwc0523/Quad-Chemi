@@ -283,6 +283,8 @@ public class InGameManager : MonoBehaviour
             {
                 currentCoin -= summonFee;
                 summonFee += 2; //2씩 증가
+                //3,5 스테이지라면 소환 비용 상승량이 3코인으로 증가
+                if(DataManager.instance.currentUser.selectedStage == 3 || DataManager.instance.currentUser.selectedStage == 5) summonFee += 1;
                 UpdateUI();
                 SpawnRandomUnit(targetTile, 0);
             }

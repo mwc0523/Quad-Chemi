@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 // 1. 재화 종류를 Enum으로 관리 (추가될 때마다 여기에 이름만 넣으면 됩니다)
 public enum CurrencyType
@@ -36,6 +37,9 @@ public class CrystalPieceData
     // 해당 지점이 5x5 그리드의 어느 인덱스(0~24)에 위치하는지 저장합니다.
     public int placedRootIndex = -1;
 
+    public float primaryValue;   // 첫 번째 능력치 (예: 불의 공격력 증가 %)
+    public float secondaryValue; // 두 번째 능력치 (예: 서사 이상 불의 화상 데미지 계수 %)
+
     public CrystalPieceData(int shape, CrystalElement elem, CrystalGrade g)
     {
         uid = Guid.NewGuid().ToString();
@@ -44,6 +48,75 @@ public class CrystalPieceData
         grade = g;
         isPlaced = false;
         acquisitionTick = System.DateTime.Now.Ticks;
+        GenerateRandomStats(); //획득 시점에 랜덤 수치 결정
+    }
+
+    private void GenerateRandomStats()
+    {
+        float RoundToTwo(float val) => Mathf.Round(val * 100f) / 100f;
+
+        switch (element)
+        {
+            case CrystalElement.Fire:
+                switch (grade)
+                {
+                    case CrystalGrade.Low: primaryValue = RoundToTwo(Random.Range(2f, 4f)); break;
+                    case CrystalGrade.Middle: primaryValue = RoundToTwo(Random.Range(4f, 6f)); break;
+                    case CrystalGrade.High: primaryValue = RoundToTwo(Random.Range(6f, 8f)); break;
+                    case CrystalGrade.Epic: primaryValue = RoundToTwo(Random.Range(8f, 12f)); secondaryValue = RoundToTwo(Random.Range(100f, 200f)); break;
+                    case CrystalGrade.Legend: primaryValue = RoundToTwo(Random.Range(12f, 16f)); secondaryValue = RoundToTwo(Random.Range(200f, 300f)); break;
+                    case CrystalGrade.Myth: primaryValue = RoundToTwo(Random.Range(16f, 25f)); secondaryValue = RoundToTwo(Random.Range(300f, 500f)); break;
+                }
+                break;
+
+            case CrystalElement.Water:
+                switch (grade)
+                {
+                    case CrystalGrade.Low: primaryValue = RoundToTwo(Random.Range(0f, 5f)); break;
+                    case CrystalGrade.Middle: primaryValue = RoundToTwo(Random.Range(5f, 10f)); break;
+                    case CrystalGrade.High: primaryValue = RoundToTwo(Random.Range(10f, 15f)); break;
+                    case CrystalGrade.Epic: primaryValue = RoundToTwo(Random.Range(15f, 20f)); secondaryValue = RoundToTwo(Random.Range(0.1f, 2f)); break;
+                    case CrystalGrade.Legend: primaryValue = RoundToTwo(Random.Range(20f, 25f)); secondaryValue = RoundToTwo(Random.Range(2f, 4f)); break;
+                    case CrystalGrade.Myth: primaryValue = RoundToTwo(Random.Range(25f, 40f)); secondaryValue = RoundToTwo(Random.Range(4f, 8f)); break;
+                }
+                break;
+
+            case CrystalElement.Earth:
+                switch (grade)
+                {
+                    case CrystalGrade.Low: primaryValue = RoundToTwo(Random.Range(0.1f, 0.4f)); break;
+                    case CrystalGrade.Middle: primaryValue = RoundToTwo(Random.Range(0.4f, 0.8f)); break;
+                    case CrystalGrade.High: primaryValue = RoundToTwo(Random.Range(0.8f, 1.2f)); break;
+                    case CrystalGrade.Epic: primaryValue = RoundToTwo(Random.Range(1.2f, 1.6f)); secondaryValue = RoundToTwo(Random.Range(1f, 10f)); break;
+                    case CrystalGrade.Legend: primaryValue = RoundToTwo(Random.Range(1.6f, 2f)); secondaryValue = RoundToTwo(Random.Range(10f, 20f)); break;
+                    case CrystalGrade.Myth: primaryValue = RoundToTwo(Random.Range(2f, 3f)); secondaryValue = RoundToTwo(Random.Range(20f, 40f)); break;
+                }
+                break;
+
+            case CrystalElement.Air:
+                switch (grade)
+                {
+                    case CrystalGrade.Low: primaryValue = RoundToTwo(Random.Range(0f, 5f)); break;
+                    case CrystalGrade.Middle: primaryValue = RoundToTwo(Random.Range(5f, 10f)); break;
+                    case CrystalGrade.High: primaryValue = RoundToTwo(Random.Range(10f, 15f)); break;
+                    case CrystalGrade.Epic: primaryValue = RoundToTwo(Random.Range(15f, 20f)); secondaryValue = RoundToTwo(Random.Range(0.1f, 0.5f)); break;
+                    case CrystalGrade.Legend: primaryValue = RoundToTwo(Random.Range(20f, 25f)); secondaryValue = RoundToTwo(Random.Range(0.5f, 1f)); break;
+                    case CrystalGrade.Myth: primaryValue = RoundToTwo(Random.Range(25f, 40f)); secondaryValue = RoundToTwo(Random.Range(1f, 2f)); break;
+                }
+                break;
+
+            case CrystalElement.Prism:
+                switch (grade)
+                {
+                    case CrystalGrade.Low: primaryValue = 1.1f; break;
+                    case CrystalGrade.Middle: primaryValue = 1.2f; break;
+                    case CrystalGrade.High: primaryValue = 1.3f; break;
+                    case CrystalGrade.Epic: primaryValue = 1.5f; break;
+                    case CrystalGrade.Legend: primaryValue = 1.7f; break;
+                    case CrystalGrade.Myth: primaryValue = 2.0f; break;
+                }
+                break;
+        }
     }
 }
 

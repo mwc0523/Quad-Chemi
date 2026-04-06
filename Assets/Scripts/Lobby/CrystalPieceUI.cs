@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
-public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
     public CrystalPieceData pieceData;
 
@@ -21,6 +21,7 @@ public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
     private int currentHoverCellIndex = -1; // 최적화를 위한 현재 마우스 위치 캐싱
     private Vector2 originalSize;
     private Vector2 dragOffset;
+    private bool isDragging = false;
 
     void Awake()
     {
@@ -63,12 +64,12 @@ public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
     {
         return grade switch
         {
-            CrystalGrade.Common => new Color(0.85f, 0.85f, 0.85f),    // 하급: 회색
-            CrystalGrade.Rare => new Color(0.55f, 0.85f, 0.55f),      // 중급: 연두
-            CrystalGrade.Unique => new Color(0.5f, 0.75f, 1f),        // 상급: 하늘
+            CrystalGrade.Low => new Color(0.85f, 0.85f, 0.85f),    // 하급: 회색
+            CrystalGrade.Middle => new Color(0.55f, 0.85f, 0.55f),      // 중급: 연두
+            CrystalGrade.High => new Color(0.5f, 0.75f, 1f),        // 상급: 하늘
             CrystalGrade.Epic => new Color(0.75f, 0.5f, 0.95f),      // 서사급: 보라
-            CrystalGrade.Legendary => new Color(1f, 0.85f, 0.3f),    // 전설급: 골드
-            CrystalGrade.Mythic => new Color(1f, 0.5f, 0.5f),       // 신화급: 다홍
+            CrystalGrade.Legend => new Color(1f, 0.85f, 0.3f),    // 전설급: 골드
+            CrystalGrade.Myth => new Color(1f, 0.5f, 0.5f),       // 신화급: 다홍
             _ => Color.white
         };
     }
@@ -88,6 +89,7 @@ public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        isDragging = true; // 드래그 시작됨
         originalParent = transform.parent;
         originalPosition = transform.position;
 
@@ -148,6 +150,7 @@ public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        Invoke(nameof(ResetDragFlag), 0.1f);
         canvasGroup.alpha = 1.0f;
         CrystalUIManager.Instance.ClearPreview();
 
@@ -164,6 +167,21 @@ public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         else
         {
             ReturnToInventory();
+        }
+    }
+
+    private void ResetDragFlag()
+    {
+        isDragging = false;
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // 드래그 중이 아니었다면 '정보 패널 열기' 실행
+        if (!isDragging)
+        {
+            // 중앙 정보 패널 띄우기 호출
+            CrystalUIManager.Instance.ShowCrystalInfoPanel(pieceData);
         }
     }
 

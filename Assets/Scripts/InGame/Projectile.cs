@@ -96,6 +96,8 @@ public class Projectile : MonoBehaviour
         else if (m != null) // 단일 공격인 경우
         {
             if (owner.data.unitName == "Blizzard" && CardUIManager.instance.HasCard(CardEffectID.Epic_PermanentFrost)) m.ApplyStun(6f); //영구 동토 카드 효과 적용
+            var cm = InGameCrystalManager.Instance;
+            if (cm.FinalWaterSlow > 0) m.ApplySlow(cm.FinalWaterSlow, 0.5f); //물원소 결정 효과
             m.TakeDamage(damage, owner);
         }
 

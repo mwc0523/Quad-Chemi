@@ -33,6 +33,7 @@ public class Unit : MonoBehaviour
     private int attackCount = 0;
 
     public float skillChanceBonusByCard = 0f; //카드로 인한 스킬 사용 확률 증가량
+    public float skillChanceBonusByCrystal = 0f; //결정으로 인한 스킬 사용 확률 증가량
 
     private GameObject currentSteelFX;
     private GameObject currentAreaFX;
@@ -69,6 +70,7 @@ public class Unit : MonoBehaviour
         // 게임 시작 시 혹은 소환 시 공격 루틴 시작
         InitStatsFromData(); // 1. 기본 데이터 로드
         UpdateStatsFromGlobal(); // 2. 전역 카드 효과 적용
+        UpdateStatsFromCrystal(); // 3. 결정 버프 적용
         if (CardUIManager.instance != null)
         {
             CardUIManager.instance.RefreshAllUnitStats(); //나로 인한 변경을 계산
@@ -91,9 +93,9 @@ public class Unit : MonoBehaviour
         combatStats.SetBase(StatType.AttackSpeed, data.attackSpeed);
         combatStats.SetBase(StatType.Range, data.attackRange);
 
-        // 치명타 관련 기본값 (원하면 나중에 UnitData로 옮길 수 있음)
-        combatStats.SetBase(StatType.CritChance, 0f);
-        combatStats.SetBase(StatType.CritDamage, 1.5f); // 예: 기본 치명타 150%
+        // 치명타 관련 기본값
+        combatStats.SetBase(StatType.CritChance, 0.05f); // 기본 치명타 확률 5%
+        combatStats.SetBase(StatType.CritDamage, 1.5f); // 기본 치명타 피해 150%
     }
 
     // 스탯(공격력, 공격 속도, 사거리 등) 관련 카드 적용
@@ -103,6 +105,7 @@ public class Unit : MonoBehaviour
 
         // 1. 기존 카드 버프 초기화
         combatStats.RemoveModifiersFromSource("CardSystem");
+        skillChanceBonusByCard = 0f;
 
         // --- [하급 카드] ---
         // 발화점: 불네모 공속 +100%
@@ -119,9 +122,9 @@ public class Unit : MonoBehaviour
             if (GetGradeCount(UnitGrade.Low) >= 8)
                 combatStats.AddModifier(new StatModifier(StatType.Attack, 0.2f, StatModifierType.PercentAdd, "CardSystem"));
         }
-        if (data.unitName == "Fire" && CardUIManager.instance.HasCard(CardEffectID.Low_FireballBoost)) skillChanceBonusByCard = 0.1f;
-        if (data.unitName == "Earth" && CardUIManager.instance.HasCard(CardEffectID.Low_QuakeChance)) skillChanceBonusByCard = 0.05f;
-        if (data.unitName == "Air" && CardUIManager.instance.HasCard(CardEffectID.Low_Tailwind)) skillChanceBonusByCard = 0.05f;
+        if (data.unitName == "Fire" && CardUIManager.instance.HasCard(CardEffectID.Low_FireballBoost)) skillChanceBonusByCard += 0.1f;
+        if (data.unitName == "Earth" && CardUIManager.instance.HasCard(CardEffectID.Low_QuakeChance)) skillChanceBonusByCard += 0.05f;
+        if (data.unitName == "Air" && CardUIManager.instance.HasCard(CardEffectID.Low_Tailwind)) skillChanceBonusByCard += 0.05f;
 
         // --- [중급 카드] ---
         // 영양분 공급: 새싹네모 공격력 +50%
@@ -138,7 +141,7 @@ public class Unit : MonoBehaviour
             if (CardUIManager.instance.CheckElementBalance(UnitGrade.Middle))
                 combatStats.AddModifier(new StatModifier(StatType.Attack, 0.3f, StatModifierType.PercentAdd, "CardSystem"));
         }
-        if (data.unitName == "Lava" && CardUIManager.instance.HasCard(CardEffectID.Mid_LavaEruption)) skillChanceBonusByCard = 0.1f;
+        if (data.unitName == "Lava" && CardUIManager.instance.HasCard(CardEffectID.Mid_LavaEruption)) skillChanceBonusByCard += 0.1f;
 
         // --- [상급 카드] ---
         // 원소 평형 2: 상급 6종 존재 시 모든 유닛 공격력 +50%
@@ -147,7 +150,7 @@ public class Unit : MonoBehaviour
             if (CardUIManager.instance.CheckElementBalance(UnitGrade.High))
                 combatStats.AddModifier(new StatModifier(StatType.Attack, 0.5f, StatModifierType.PercentAdd, "CardSystem"));
         }
-        if (data.grade == UnitGrade.High && CardUIManager.instance.HasCard(CardEffectID.High_CriticalChance)) skillChanceBonusByCard = 0.05f;
+        if (data.grade == UnitGrade.High && CardUIManager.instance.HasCard(CardEffectID.High_CriticalChance)) skillChanceBonusByCard += 0.05f;
 
         // --- [서사 카드] ---
 
@@ -171,8 +174,8 @@ public class Unit : MonoBehaviour
         // --- [전설/신화 카드] ---
         if (data.unitName == "Judgement" && CardUIManager.instance.HasCard(CardEffectID.Legendary_FinalJudgement))
             combatStats.AddModifier(new StatModifier(StatType.AttackSpeed, 1.0f, StatModifierType.PercentAdd, "CardSystem"));
-        if (data.unitName == "Atlas" && CardUIManager.instance.HasCard(CardEffectID.Legendary_GiantsShoulder)) skillChanceBonusByCard = 0.1f;
-        if (CardUIManager.instance.HasCard(CardEffectID.Myth_InfiniteLoop)) skillChanceBonusByCard = 0.15f;
+        if (data.unitName == "Atlas" && CardUIManager.instance.HasCard(CardEffectID.Legendary_GiantsShoulder)) skillChanceBonusByCard += 0.1f;
+        if (CardUIManager.instance.HasCard(CardEffectID.Myth_InfiniteLoop)) skillChanceBonusByCard += 0.15f;
     }
 
     int GetGradeCount(UnitGrade grade)
@@ -186,7 +189,6 @@ public class Unit : MonoBehaviour
         return count;
     }
 
-
     float GetAttack()
     {
         float atk = combatStats.Get(StatType.Attack);
@@ -199,6 +201,66 @@ public class Unit : MonoBehaviour
         float range = combatStats.Get(StatType.Range);
         if (range <= 0f && data != null) range = data.attackRange;
         return range;
+    }
+    
+    public void SetUnit(UnitData newData)
+    {
+        data = newData;
+
+        var saveData = DataManager.instance.currentUser.unitList.Find(u => u.unitID == data.unitName);
+        level = (saveData != null) ? saveData.level : 1;
+
+        InitStatsFromData();
+        if (level > 1)
+        {
+            float mult = saveData.GetDamageMultiplier();
+            combatStats.AddModifier(new StatModifier(
+                StatType.Attack,
+                mult - 1f,
+                StatModifierType.PercentMul,
+                "LobbyLevelBonus"
+            ));
+        }
+
+        //강화버프 적용
+        if (data.grade == UnitGrade.Low || data.grade == UnitGrade.Middle || data.grade == UnitGrade.High) combatStats.AddModifier(UpgradeManager.instance.tier1Modifier);
+        else if (data.grade == UnitGrade.Epic || data.grade == UnitGrade.Legend) combatStats.AddModifier(UpgradeManager.instance.tier2Modifier);
+        else if (data.grade == UnitGrade.Myth) combatStats.AddModifier(UpgradeManager.instance.tier3Modifier);
+
+        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = data.unitSprite;
+
+        SetGradeVisual();
+
+        UpdateStatsFromCrystal();
+
+        if (rangeCircle != null) rangeCircle.SetActive(false);
+    }
+
+    // 결정 효과 적용
+    public void UpdateStatsFromCrystal()
+    {
+        if (InGameCrystalManager.Instance == null) return;
+        combatStats.RemoveModifiersFromSource("CrystalSystem");
+        var cm = InGameCrystalManager.Instance;
+
+        // 공격력 (불)
+        if (cm.FinalFireAtk > 0)
+            combatStats.AddModifier(new StatModifier(StatType.Attack, cm.FinalFireAtk, StatModifierType.PercentAdd, "CrystalSystem"));
+
+        // 공격 속도 (공기)
+        if (cm.FinalAirAtkSpeed > 0)
+            combatStats.AddModifier(new StatModifier(StatType.AttackSpeed, cm.FinalAirAtkSpeed, StatModifierType.PercentAdd, "CrystalSystem"));
+
+        // 치명타 확률 (공기 + 기본 5%)
+        if (cm.FinalAirCritChance > 0)
+            combatStats.AddModifier(new StatModifier(StatType.CritChance, cm.FinalAirCritChance, StatModifierType.Flat, "CrystalSystem"));
+
+        // 치명타 피해 (땅)
+        if (cm.FinalEarthCritDmg > 0)
+            combatStats.AddModifier(new StatModifier(StatType.CritDamage, cm.FinalEarthCritDmg, StatModifierType.PercentAdd, "CrystalSystem"));
+        // 스킬 사용 확률 (물)
+        if (cm.FinalWaterSkillChance > 0) skillChanceBonusByCrystal = cm.FinalWaterSkillChance;
     }
 
     #endregion
@@ -352,7 +414,7 @@ public class Unit : MonoBehaviour
         {
             if (skill.trigger == SkillTrigger.OnAttack)
             {
-                float finalChance = skill.triggerChance + skillChanceBonus + skillChanceBonusByCard;
+                float finalChance = skill.triggerChance + skillChanceBonus + skillChanceBonusByCard + skillChanceBonusByCrystal;
 
                 if (Random.value < finalChance)
                 {
@@ -405,6 +467,10 @@ public class Unit : MonoBehaviour
         Projectile proj = projObj.GetComponent<Projectile>();
 
         float attack = GetAttack();
+
+        var cm = InGameCrystalManager.Instance;
+        if(cm.FinalFireExtraDmg > 0) attack *= cm.FinalFireExtraDmg; //불원소 결정 효과
+
         if (proj != null) proj.Setup(target, attack, ProjectileType.Normal, this);
     }
 
@@ -606,8 +672,6 @@ public class Unit : MonoBehaviour
 
             if (data.unitName == "Meteor" || data.unitName == "Judgement")
             {
-                //Debug.Log("메테오 소환!");
-                // 적 머리 기준 오른쪽 위 (X: +2, Y: +5) 에서 시작
                 Vector3 startPos = spawnPos + new Vector3(2f, 5f, 0f);
                 float dropDuration = 0.25f; // 메테오가 떨어지는 속도 (조절 가능)
                 float timer = 0f;
@@ -922,13 +986,13 @@ public class Unit : MonoBehaviour
             Monster m = hit.GetComponent<Monster>();
             if (m != null && (m.hp / m.maxhp) <= executionVal)
             {
-                m.TakeDamage(9999999999f, this);
+                m.TakeDamage(9999999999f, this, false);
             }
             if (hasAbyssCall && m.monsterType != MonsterType.Boss && m.monsterType != MonsterType.MiniBoss && m.monsterType != MonsterType.Ore) // 심연의 부름 카드 효과 적용
             {
                 if (m != null && Random.value <= 0.005f)
                 {
-                    m.TakeDamage(9999999999f, this);
+                    m.TakeDamage(9999999999f, this, false);
                 }
             }
         }
@@ -1467,7 +1531,6 @@ public class Unit : MonoBehaviour
     }
     void ExecuteEndSlash(SkillInfo skill, SkillEffect effect)
     {
-        //Debug.Log("휘두르기!!!");
         // 1. 데미지 판정 (공격범위 크기의 원형)
         float slashRange = skill.range; // 종말의 사거리인 4칸
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, slashRange, LayerMask.GetMask("Enemy"));
@@ -1507,7 +1570,7 @@ public class Unit : MonoBehaviour
                     m.ApplySlow(0.7f, 1.2f);
                     if (m.hp > 0 && m.hp <= m.maxhp * 0.1f)
                     {
-                        m.TakeDamage(9999999999f, this);
+                        m.TakeDamage(9999999999f, this, false);
                     }
                 }
             }
@@ -1685,38 +1748,6 @@ public class Unit : MonoBehaviour
             case UnitGrade.Myth: return 160;
             default: return 0;
         }
-    }
-
-    public void SetUnit(UnitData newData)
-    {
-        data = newData;
-
-        var saveData = DataManager.instance.currentUser.unitList.Find(u => u.unitID == data.unitName);
-        level = (saveData != null) ? saveData.level : 1;
-
-        InitStatsFromData();
-        if (level > 1)
-        {
-            float mult = saveData.GetDamageMultiplier();
-            combatStats.AddModifier(new StatModifier(
-                StatType.Attack,
-                mult - 1f,
-                StatModifierType.PercentMul,
-                "LobbyLevelBonus"
-            ));
-        }
-
-        //강화버프 적용
-        if (data.grade == UnitGrade.Low || data.grade == UnitGrade.Middle || data.grade == UnitGrade.High) combatStats.AddModifier(UpgradeManager.instance.tier1Modifier);
-        else if (data.grade == UnitGrade.Epic || data.grade == UnitGrade.Legend) combatStats.AddModifier(UpgradeManager.instance.tier2Modifier);
-        else if (data.grade == UnitGrade.Myth) combatStats.AddModifier(UpgradeManager.instance.tier3Modifier);
-
-        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
-        spriteRenderer.sprite = data.unitSprite;
-
-        SetGradeVisual();
-
-        if (rangeCircle != null) rangeCircle.SetActive(false);
     }
 
     void SetGradeVisual()

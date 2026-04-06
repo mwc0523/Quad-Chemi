@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CrystalGrade { Common, Rare, Unique, Epic, Legendary, Mythic }
+public enum CrystalGrade { Low, Middle, High, Epic, Legend, Myth }
 
 public static class CrystalDatabase
 {
@@ -55,12 +55,12 @@ public static class CrystalDatabase
     // 등급별 가중치 (전체 합 1000 = 100%)
     public static readonly Dictionary<CrystalGrade, int> GradeWeights = new Dictionary<CrystalGrade, int>
     {
-        { CrystalGrade.Common, 560 },   // 56%
-        { CrystalGrade.Rare, 300 },     // 30%
-        { CrystalGrade.Unique, 100 },   // 10%
+        { CrystalGrade.Low, 560 },   // 56%
+        { CrystalGrade.Middle, 300 },     // 30%
+        { CrystalGrade.High, 100 },   // 10%
         { CrystalGrade.Epic, 25 },      // 2.5%
-        { CrystalGrade.Legendary, 10 }, // 1%
-        { CrystalGrade.Mythic, 5 }      // 0.5%
+        { CrystalGrade.Legend, 10 }, // 1%
+        { CrystalGrade.Myth, 5 }      // 0.5%
     };
 
     // 등급별 인덱스 범위 정보
@@ -68,12 +68,12 @@ public static class CrystalDatabase
     {
         return grade switch
         {
-            CrystalGrade.Common => (0, 9),
-            CrystalGrade.Rare => (10, 17),
-            CrystalGrade.Unique => (18, 23),
+            CrystalGrade.Low => (0, 9),
+            CrystalGrade.Middle => (10, 17),
+            CrystalGrade.High => (18, 23),
             CrystalGrade.Epic => (24, 27),
-            CrystalGrade.Legendary => (28, 29),
-            CrystalGrade.Mythic => (30, 30),
+            CrystalGrade.Legend => (28, 29),
+            CrystalGrade.Myth => (30, 30),
             _ => (0, 0)
         };
     }
@@ -98,7 +98,7 @@ public static class CrystalDatabase
 
     public static CrystalGrade GetNextGrade(CrystalGrade current)
     {
-        if (current == CrystalGrade.Mythic) return CrystalGrade.Mythic;
+        if (current == CrystalGrade.Myth) return CrystalGrade.Myth;
         return (CrystalGrade)((int)current + 1);
     }
 }

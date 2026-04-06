@@ -14,6 +14,8 @@ public class CrystalUIManager : MonoBehaviour
     public Transform inventoryContent;
     public GameObject crystalItemPrefab;
 
+    public CrystalInfoPanel infoPanel;
+
     [Header("Preview Settings")]
     public Color validPreviewColor = new Color(0.5f, 1f, 0.5f, 0.6f); // 연두색 (반투명)
     public Color invalidPreviewColor = new Color(1f, 0.5f, 0.5f, 0.6f); // 연한 빨간색 (반투명)
@@ -138,7 +140,6 @@ public class CrystalUIManager : MonoBehaviour
         foreach (var cell in allCells)
         {
             cell.SetOccupied(false);
-            // GetComponent<Image>()를 지우고, 스크립트에 연결된 cell.cellImage를 직접 사용합니다.
             if (cell.cellImage != null)
             {
                 cell.cellImage.color = cell.isUnlocked ? Color.white : Color.gray;
@@ -159,7 +160,6 @@ public class CrystalUIManager : MonoBehaviour
                     foreach (int idx in indices)
                     {
                         allCells[idx].SetOccupied(true);
-                        // 여기도 GetComponent<Image>() 대신 cellImage 사용
                         if (allCells[idx].cellImage != null)
                         {
                             allCells[idx].cellImage.color = pieceColor;
@@ -336,31 +336,39 @@ public class CrystalUIManager : MonoBehaviour
     }
 
     public void AddRandomCrystalTest()
-{
-    if (DataManager.instance == null || DataManager.instance.currentUser == null) return;
+    {
+        if (DataManager.instance == null || DataManager.instance.currentUser == null) return;
 
-    // 1. 원소 랜덤 선택
-    CrystalElement randomElement = (CrystalElement)Random.Range(1, 6);
-    
-    // 2. 데이터베이스의 확률 로직을 사용하여 랜덤 모양(인덱스) 결정
-    int randomShapeIndex = CrystalDatabase.GetRandomShapeIndex();
-    
-    // 3. 모양 인덱스를 통해 해당 등급(Grade) 역추적 (DataManager에 저장하기 위함)
-    CrystalGrade grade = GetGradeFromIndex(randomShapeIndex);
-    CrystalPieceData newPiece = new CrystalPieceData(randomShapeIndex, randomElement, grade);
-    DataManager.instance.currentUser.crystalInventory.Add(newPiece);
-    DataManager.instance.SaveData();
-    RefreshInventory();
-}
+        // 1. 원소 랜덤 선택
+        CrystalElement randomElement = (CrystalElement)Random.Range(1, 6);
 
-// 인덱스로 등급을 찾는 헬퍼 함수
-private CrystalGrade GetGradeFromIndex(int index)
-{
-    if (index <= 9) return CrystalGrade.Common;
-    if (index <= 17) return CrystalGrade.Rare;
-    if (index <= 23) return CrystalGrade.Unique;
-    if (index <= 27) return CrystalGrade.Epic;
-    if (index <= 29) return CrystalGrade.Legendary;
-    return CrystalGrade.Mythic;
-}
+        // 2. 데이터베이스의 확률 로직을 사용하여 랜덤 모양(인덱스) 결정
+        int randomShapeIndex = CrystalDatabase.GetRandomShapeIndex();
+
+        // 3. 모양 인덱스를 통해 해당 등급(Grade) 역추적 (DataManager에 저장하기 위함)
+        CrystalGrade grade = GetGradeFromIndex(randomShapeIndex);
+        CrystalPieceData newPiece = new CrystalPieceData(randomShapeIndex, randomElement, grade);
+        DataManager.instance.currentUser.crystalInventory.Add(newPiece);
+        DataManager.instance.SaveData();
+        RefreshInventory();
+    }
+
+    // 인덱스로 등급을 찾는 헬퍼 함수
+    private CrystalGrade GetGradeFromIndex(int index)
+    {
+        if (index <= 9) return CrystalGrade.Low;
+        if (index <= 17) return CrystalGrade.Middle;
+        if (index <= 23) return CrystalGrade.High;
+        if (index <= 27) return CrystalGrade.Epic;
+        if (index <= 29) return CrystalGrade.Legend;
+        return CrystalGrade.Myth;
+    }
+
+    public void ShowCrystalInfoPanel(CrystalPieceData pieceData)
+    {
+        if (infoPanel != null)
+        {
+            infoPanel.SetupAndShow(pieceData);
+        }
+    }
 }

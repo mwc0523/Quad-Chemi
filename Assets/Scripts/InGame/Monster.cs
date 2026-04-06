@@ -20,6 +20,7 @@ public class Monster : MonoBehaviour
 
     [Header("UI 연결")]
     public Slider hpSlider;
+    public GameObject damageTextPrefab; //데미지 프리펩
 
     [Header("상태")]
     public bool isStunned = false;
@@ -32,6 +33,8 @@ public class Monster : MonoBehaviour
     private Coroutine slowCoroutine;
     private Coroutine stunCoroutine;
     private Color baseColor = Color.white;
+
+    private Coroutine bossTeleportCoroutine; // 보스 텔레포트 관리용
 
     void Awake()
     {
@@ -75,6 +78,7 @@ public class Monster : MonoBehaviour
 
         // 이동 속도 계산 (기존 유지)
         currentSpeed = baseSpeed + (currentRound * 0.01f);
+        if(currentStage == 2 || currentStage == 5) currentSpeed *= 1.3f; // 2, 5스테이지라면 이동속도 30% 증가
 
         // 2. 타입별 체력/방어력 승수 적용 (이하 기존 코드 동일)
         switch (monsterType)
@@ -88,6 +92,12 @@ public class Monster : MonoBehaviour
                 maxhp = exponentialHp * (currentRound / 10f);
                 defense = currentRound * 2f;
                 currentSpeed *= 0.6f;
+                // 5스테이지일 경우 보스 전용 텔레포트 시작
+                if (currentStage == 5)
+                {
+                    if (bossTeleportCoroutine != null) StopCoroutine(bossTeleportCoroutine);
+                    bossTeleportCoroutine = StartCoroutine(BossTeleportRoutine());
+                }
                 break;
             default:
                 maxhp = exponentialHp;
@@ -106,7 +116,6 @@ public class Monster : MonoBehaviour
             hpSlider.value = hp;
         }
     }
-
 
     public void SetupOre(int deathCount)
     {
@@ -146,16 +155,30 @@ public class Monster : MonoBehaviour
             if (currentIndex >= waypoints.Length) currentIndex = 0;
         }
     }
-    public void TakeDamage(float damage, Unit attacker)
+    
+    public void TakeDamage(float damage, Unit attacker, bool canCrit = true)
     {
         if (isDead || hp <= 0f) return;
+
+        float finalDamage = damage;
+        bool isCriticalHit = false;
+
+        // 1. 치명타 계산 (공격자가 있고, 치명타가 가능한 공격일 때)
+        if (attacker != null && canCrit)
+        {
+            float critChance = attacker.combatStats.Get(StatType.CritChance);
+            if (Random.value < critChance)
+            {
+                finalDamage *= attacker.combatStats.Get(StatType.CritDamage);
+                isCriticalHit = true;
+            }
+        }
 
         float reductionPercent = defense / (defense + 100f); // 방어력 계산
         if(CardUIManager.instance.HasCard(CardEffectID.Myth_PrimordialLight)) reductionPercent = 0f; //태초의 빛 카드 효과 적용 (방어력 무시)
 
-        float finalDamage = damage * (1f - reductionPercent) * damageMultiplier; // 실제 받는 데미지 계산
-        finalDamage = Mathf.Round(finalDamage);
-        finalDamage = Mathf.Max(1f, finalDamage); // 최소 1은 들어가게 함
+        finalDamage = finalDamage * (1f - reductionPercent) * damageMultiplier; // 실제 받는 데미지 계산
+        finalDamage = Mathf.Max(1f, Mathf.Round(finalDamage));
 
         // 실제로 이 한 번의 공격으로 빠지는 체력
         float damageToRecord = Mathf.Min(finalDamage, Mathf.Max(0f, hp));
@@ -164,6 +187,7 @@ public class Monster : MonoBehaviour
             attacker.stats.totalDamage += damageToRecord;  // ★ 누적은 항상 0 이상만 더해짐
             //Debug.Log(attacker.data.unitName + "의 공격으로 " + damageToRecord + "의 데미지를 입음");
         }
+        ShowDamageText(finalDamage, isCriticalHit);
         hp -= finalDamage;
 
         if (hpSlider != null) hpSlider.value = hp;
@@ -175,6 +199,24 @@ public class Monster : MonoBehaviour
                 attacker.OnMonsterKilled(this);   // 심판 업보용 20킬 카운트
             }
             Die();
+        }
+    }
+
+    private void ShowDamageText(float damage, bool isCrit)
+    {
+        if (damageTextPrefab == null) return;
+
+        // 몬스터 머리 위 위치 계산 (HP 바 근처)
+        Vector3 randomOffset = new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(0, 0.2f), 0);
+        Vector3 spawnPos = transform.position + Vector3.up * 0.8f + randomOffset;
+
+        // 텍스트 생성
+        GameObject obj = Instantiate(damageTextPrefab, spawnPos, Quaternion.identity);
+        DamageText dt = obj.GetComponent<DamageText>();
+
+        if (dt != null)
+        {
+            dt.Setup(damage, isCrit);
         }
     }
     // 방어력 감소 효과 (예: 0.3f면 30% 감소)
@@ -197,6 +239,32 @@ public class Monster : MonoBehaviour
         armorDebuffCoroutine = null;
     }
 
+    IEnumerator BossTeleportRoutine()
+    {
+        while (!isDead)
+        {
+            yield return new WaitForSeconds(5f);
+
+            // 기절 중이거나 경로가 없으면 건너뜀
+            if (isStunned || waypoints == null || waypoints.Length == 0) continue;
+
+            // 현재 위치를 제외한 랜덤한 인덱스 선택
+            int nextIndex = Random.Range(0, waypoints.Length);
+
+            // 시각 효과가 있다면 여기서 재생 (예: AddVisualEffect)
+
+            // 1. 위치 이동
+            transform.position = waypoints[nextIndex].position;
+
+            // 2. 이동 인덱스 갱신 (텔레포트한 지점부터 다음 지점을 향해 가도록)
+            currentIndex = nextIndex;
+
+            // 마지막 웨이포인트로 갔다면 다음 목표는 다시 0번이 되도록 처리
+            if (currentIndex >= waypoints.Length) currentIndex = 0;
+
+            Debug.Log($"보스 텔레포트! 목적지 인덱스: {currentIndex}");
+        }
+    }
     // ㅡㅡㅡ 상태이상 구현부 ㅡㅡㅡ
 
     // 감속 효과 (예: 0.2f면 20% 느려짐)
@@ -209,6 +277,7 @@ public class Monster : MonoBehaviour
         // 새로 시작하고 변수에 저장합니다.
         slowCoroutine = StartCoroutine(SlowRoutine(percent, duration));
     }
+    
     IEnumerator SlowRoutine(float percent, float duration)
     {
         if(!isStunned)
@@ -239,16 +308,19 @@ public class Monster : MonoBehaviour
         damageMultiplier = 1f; // 원래대로 복구
         debuffCoroutine = null;
     }
-
     // 기절 효과
     public void ApplyStun(float duration)
     {
+        var cm = InGameCrystalManager.Instance;
+        if (cm.FinalEarthStunTime > 0) duration += cm.FinalEarthStunTime; //땅원소 결정 효과
+        
         if (stunCoroutine != null)
         {
             StopCoroutine(stunCoroutine);
         }
         stunCoroutine = StartCoroutine(StunRoutine(duration));
     }
+    
     IEnumerator StunRoutine(float duration)
     {
         isStunned = true;
@@ -323,7 +395,8 @@ public class Monster : MonoBehaviour
                 }
                 else
                 {
-                    InGameManager.instance.AddCoin((InGameManager.instance.currentRound > 50) ? 2 : 1); // 일반 몹
+                    // 4,5 스테이지라면 적처치 획득 코인이 1로 감소
+                    InGameManager.instance.AddCoin((DataManager.instance.currentUser.selectedStage == 4 || DataManager.instance.currentUser.selectedStage == 5) ? 1 : 2); // 일반 몹
                 }
 
                 InGameManager.instance.OnMonsterDestroyed();
