@@ -110,6 +110,7 @@ MonoBehaviour:
   hpSlider: {fileID: 4203473391487837134}
   damageTextPrefab: {fileID: 2361224149401304372, guid: 12e0e3828c759bc4091db6499d35e88a, type: 3}
   isStunned: 0
+  monsterPrefab: {fileID: 778181034058785899}
 --- !u!58 &2165439407180679608
 CircleCollider2D:
   m_ObjectHideFlags: 0

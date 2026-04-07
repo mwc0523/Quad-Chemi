@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using System.Collections.Generic;
+
 public enum MonsterType { Normal, MiniBoss, Boss, Ore }
 
 public class Monster : MonoBehaviour
@@ -36,6 +38,13 @@ public class Monster : MonoBehaviour
 
     private Coroutine bossTeleportCoroutine; // 보스 텔레포트 관리용
 
+    // ㅡㅡㅡ [숲 테마 기믹 변수] ㅡㅡㅡ
+    [Header("숲 테마 기믹 (분열)")]
+    public GameObject monsterPrefab; // 자기 자신의 프리팹을 인스펙터에서 할당
+    private Coroutine regenCoroutine; // 지속 회복 코루틴
+    private bool isForestTheme = false; // 현재 테마가 숲인지 저장
+    private bool isClone = false; // 이 몬스터가 분열된 녀석인지 체크 (무한 분열 방지)
+
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -45,8 +54,9 @@ public class Monster : MonoBehaviour
     public void Setup(Transform[] path, int currentRound, MonsterType type)
     {
         this.monsterType = type;
+        this.isClone = false; // 본체이므로 클론 아님
 
-        // --- [신규 추가] DataManager에서 현재 테마와 단계 가져오기 ---
+        // --- DataManager에서 현재 테마와 단계 가져오기 ---
         int currentTheme = 0;
         int currentStage = 1;
 
@@ -56,31 +66,27 @@ public class Monster : MonoBehaviour
             currentStage = DataManager.instance.currentUser.selectedStage; // 1 ~ 5
         }
 
+        // [숲 테마 체크] 인덱스 1번을 숲이라고 가정
+        isForestTheme = (currentTheme == 1 || currentTheme == 4);
+
         // 총 25단계 중 현재 위치를 0 ~ 24의 인덱스로 변환
         int totalStageIndex = (currentTheme * 5) + (currentStage - 1);
 
         // --- [밸런스 핵심] 성장률(growthRate) 계산 ---
-        // 바위산 1단계 (전투력 1만 타겟)
         float minGrowthRate = 1.095f;
-
-        // 공허 5단계 (전투력 1000만 타겟)
         float maxGrowthRate = 1.185f;
-
-        // 현재 인덱스(0~24)에 맞춰 min과 max 사이의 값을 부드럽게 추출 (0.0f ~ 1.0f 비율)
         float t = totalStageIndex / 24f;
         float growthRate = Mathf.Lerp(minGrowthRate, maxGrowthRate, t);
 
         // 1. 지수 함수 기반 체력 계산 (1라운드 100 기준)
         float initialHp = 100f;
-
-        // 지수 계산: HP = 100 * (growthRate ^ round)
         float exponentialHp = initialHp * Mathf.Pow(growthRate, currentRound);
 
-        // 이동 속도 계산 (기존 유지)
+        // 이동 속도 계산
         currentSpeed = baseSpeed + (currentRound * 0.01f);
-        if(currentStage == 2 || currentStage == 5) currentSpeed *= 1.3f; // 2, 5스테이지라면 이동속도 30% 증가
+        if (currentStage == 2 || currentStage == 5) currentSpeed *= 1.3f;
 
-        // 2. 타입별 체력/방어력 승수 적용 (이하 기존 코드 동일)
+        // 2. 타입별 체력/방어력 승수 적용
         switch (monsterType)
         {
             case MonsterType.MiniBoss:
@@ -92,7 +98,6 @@ public class Monster : MonoBehaviour
                 maxhp = exponentialHp * (currentRound / 10f);
                 defense = currentRound * 2f;
                 currentSpeed *= 0.6f;
-                // 5스테이지일 경우 보스 전용 텔레포트 시작
                 if (currentStage == 5)
                 {
                     if (bossTeleportCoroutine != null) StopCoroutine(bossTeleportCoroutine);
@@ -115,23 +120,54 @@ public class Monster : MonoBehaviour
             hpSlider.maxValue = maxhp;
             hpSlider.value = hp;
         }
+
+        // 숲 테마라면 지속 회복 시작
+        if (isForestTheme && regenCoroutine == null)
+        {
+            regenCoroutine = StartCoroutine(ForestRegenRoutine());
+        }
+    }
+
+    // ㅡㅡㅡ [분열 전용 Setup 함수] ㅡㅡㅡ
+    public void SetupSplit(float parentMaxHp, Transform[] path, int index, float speed, float def, MonsterType type)
+    {
+        this.monsterType = type;
+        this.waypoints = path;
+        this.currentIndex = index;
+        this.currentSpeed = speed;
+        this.defense = def;
+
+        this.isForestTheme = true;
+        this.isClone = true; // 클론으로 태어남을 명시 (더 이상 분열 안 함)
+
+        // ★ 분열된 녀석은 크기를 조금 작게 만듭니다 
+        this.transform.localScale = new Vector3(0.2f, 0.2f, 1f);
+
+        // 본체의 1/3 체력으로 설정
+        this.maxhp = Mathf.Max(1f, Mathf.Round(parentMaxHp / 3f));
+        this.hp = this.maxhp;
+
+        if (hpSlider != null)
+        {
+            hpSlider.maxValue = maxhp;
+            hpSlider.value = hp;
+        }
+
+        // 분열된 놈도 회복 시작
+        if (regenCoroutine == null)
+        {
+            regenCoroutine = StartCoroutine(ForestRegenRoutine());
+        }
     }
 
     public void SetupOre(int deathCount)
     {
         this.monsterType = MonsterType.Ore;
-
-        // 원소석 체력 계산 (예: 기본 1000에서 시작, 파괴될 때마다 1.15배씩 증가)
-        // 수치는 기획에 맞게 수정하세요!
         float initialHp = 1000f;
         maxhp = initialHp * Mathf.Pow(1.15f, deathCount);
         maxhp = Mathf.Round(maxhp);
         hp = maxhp;
-
-        // 방어력도 조금씩 단단해지게 설정
         defense = deathCount * 2f;
-
-        // ★ 핵심: 움직이지 않게 하기 위해 waypoints를 null로 둡니다.
         waypoints = null;
 
         if (hpSlider != null)
@@ -145,7 +181,6 @@ public class Monster : MonoBehaviour
     {
         if (isDead || isStunned || waypoints == null) return;
 
-        // 이동 로직
         Transform target = waypoints[currentIndex];
         transform.position = Vector3.MoveTowards(transform.position, target.position, currentSpeed * Time.deltaTime);
 
@@ -155,7 +190,7 @@ public class Monster : MonoBehaviour
             if (currentIndex >= waypoints.Length) currentIndex = 0;
         }
     }
-    
+
     public void TakeDamage(float damage, Unit attacker, bool canCrit = true)
     {
         if (isDead || hp <= 0f) return;
@@ -163,7 +198,6 @@ public class Monster : MonoBehaviour
         float finalDamage = damage;
         bool isCriticalHit = false;
 
-        // 1. 치명타 계산 (공격자가 있고, 치명타가 가능한 공격일 때)
         if (attacker != null && canCrit)
         {
             float critChance = attacker.combatStats.Get(StatType.CritChance);
@@ -174,18 +208,16 @@ public class Monster : MonoBehaviour
             }
         }
 
-        float reductionPercent = defense / (defense + 100f); // 방어력 계산
-        if(CardUIManager.instance.HasCard(CardEffectID.Myth_PrimordialLight)) reductionPercent = 0f; //태초의 빛 카드 효과 적용 (방어력 무시)
+        float reductionPercent = defense / (defense + 100f);
+        if (CardUIManager.instance.HasCard(CardEffectID.Myth_PrimordialLight)) reductionPercent = 0f;
 
-        finalDamage = finalDamage * (1f - reductionPercent) * damageMultiplier; // 실제 받는 데미지 계산
+        finalDamage = finalDamage * (1f - reductionPercent) * damageMultiplier;
         finalDamage = Mathf.Max(1f, Mathf.Round(finalDamage));
 
-        // 실제로 이 한 번의 공격으로 빠지는 체력
         float damageToRecord = Mathf.Min(finalDamage, Mathf.Max(0f, hp));
         if (attacker != null)
         {
-            attacker.stats.totalDamage += damageToRecord;  // ★ 누적은 항상 0 이상만 더해짐
-            //Debug.Log(attacker.data.unitName + "의 공격으로 " + damageToRecord + "의 데미지를 입음");
+            attacker.stats.totalDamage += damageToRecord;
         }
         ShowDamageText(finalDamage, isCriticalHit);
         hp -= finalDamage;
@@ -196,7 +228,7 @@ public class Monster : MonoBehaviour
             if (attacker != null)
             {
                 attacker.stats.killCount++;
-                attacker.OnMonsterKilled(this);   // 심판 업보용 20킬 카운트
+                attacker.OnMonsterKilled(this);
             }
             Die();
         }
@@ -205,21 +237,13 @@ public class Monster : MonoBehaviour
     private void ShowDamageText(float damage, bool isCrit)
     {
         if (damageTextPrefab == null) return;
-
-        // 몬스터 머리 위 위치 계산 (HP 바 근처)
         Vector3 randomOffset = new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(0, 0.2f), 0);
         Vector3 spawnPos = transform.position + Vector3.up * 0.8f + randomOffset;
-
-        // 텍스트 생성
         GameObject obj = Instantiate(damageTextPrefab, spawnPos, Quaternion.identity);
         DamageText dt = obj.GetComponent<DamageText>();
-
-        if (dt != null)
-        {
-            dt.Setup(damage, isCrit);
-        }
+        if (dt != null) dt.Setup(damage, isCrit);
     }
-    // 방어력 감소 효과 (예: 0.3f면 30% 감소)
+
     public void ApplyArmorReduction(float percent, float duration)
     {
         if (armorDebuffCoroutine != null) StopCoroutine(armorDebuffCoroutine);
@@ -229,12 +253,8 @@ public class Monster : MonoBehaviour
     IEnumerator ArmorReductionRoutine(float percent, float duration)
     {
         float originalDefense = defense;
-        // 방어력 감소 적용
         defense *= (1f - percent);
-
         yield return new WaitForSeconds(duration);
-
-        // 복구 (다른 디버프와 겹칠 수 있으므로 원래대로 돌리거나 라운드 수치로 재계산)
         defense = originalDefense;
         armorDebuffCoroutine = null;
     }
@@ -244,51 +264,79 @@ public class Monster : MonoBehaviour
         while (!isDead)
         {
             yield return new WaitForSeconds(5f);
-
-            // 기절 중이거나 경로가 없으면 건너뜀
             if (isStunned || waypoints == null || waypoints.Length == 0) continue;
-
-            // 현재 위치를 제외한 랜덤한 인덱스 선택
             int nextIndex = Random.Range(0, waypoints.Length);
-
-            // 시각 효과가 있다면 여기서 재생 (예: AddVisualEffect)
-
-            // 1. 위치 이동
             transform.position = waypoints[nextIndex].position;
-
-            // 2. 이동 인덱스 갱신 (텔레포트한 지점부터 다음 지점을 향해 가도록)
             currentIndex = nextIndex;
-
-            // 마지막 웨이포인트로 갔다면 다음 목표는 다시 0번이 되도록 처리
             if (currentIndex >= waypoints.Length) currentIndex = 0;
-
-            Debug.Log($"보스 텔레포트! 목적지 인덱스: {currentIndex}");
         }
     }
-    // ㅡㅡㅡ 상태이상 구현부 ㅡㅡㅡ
 
-    // 감속 효과 (예: 0.2f면 20% 느려짐)
+    // 지속 체력 회복 (1초당 최대 체력의 1%)
+    IEnumerator ForestRegenRoutine()
+    {
+        while (!isDead)
+        {
+            yield return new WaitForSeconds(1f);
+            if (hp < maxhp && !isDead)
+            {
+                float regenAmount = maxhp * 0.01f;
+                hp = Mathf.Min(maxhp, hp + regenAmount);
+                if (hpSlider != null) hpSlider.value = hp;
+            }
+        }
+    }
+
+    // ㅡㅡㅡ [죽었을 때 분열 로직] ㅡㅡㅡ
+    private void ForestSplit()
+    {
+        // 1. 오직 잡몹(Normal)만 분열되도록 방어코드 추가
+        if (monsterType != MonsterType.Normal) return;
+
+        // 2. 이미 한 번 분열된 녀석(클론)이라면 더 이상 분열하지 않음
+        if (isClone) return;
+
+        if (monsterPrefab == null)
+        {
+            Debug.LogWarning("Monster 프리팹이 할당되지 않아 분열할 수 없습니다.");
+            return;
+        }
+
+        // 딱 2마리만 생성합니다.
+        for (int i = 0; i < 2; i++)
+        {
+            // 약간 위치를 다르게 해서 겹치지 않게
+            Vector3 spawnPos = transform.position + new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0);
+            GameObject cloneObj = Instantiate(monsterPrefab, spawnPos, Quaternion.identity);
+            Monster clone = cloneObj.GetComponent<Monster>();
+
+            if (clone != null)
+            {
+                // 클론 셋업 (스탯과 상태 물려주기)
+                clone.SetupSplit(maxhp, waypoints, currentIndex, currentSpeed, defense, monsterType);
+
+                // ★ 매우 중요: 클론이 태어날 때마다 매니저에 알려야 마이너스 버그가 발생하지 않습니다.
+                if (InGameManager.instance != null)
+                {
+                    InGameManager.instance.OnMonsterSpawned();
+                }
+            }
+        }
+    }
+
     public void ApplySlow(float percent, float duration)
     {
-        if (slowCoroutine != null)
-        {
-            StopCoroutine(slowCoroutine);
-        }
-        // 새로 시작하고 변수에 저장합니다.
+        if (slowCoroutine != null) StopCoroutine(slowCoroutine);
         slowCoroutine = StartCoroutine(SlowRoutine(percent, duration));
     }
-    
+
     IEnumerator SlowRoutine(float percent, float duration)
     {
-        if(!isStunned)
-            spriteRenderer.color = new Color(0.5f, 0.5f, 1f, 1f); //파란색으로
-
+        if (!isStunned) spriteRenderer.color = new Color(0.5f, 0.5f, 1f, 1f);
         currentSpeed = baseSpeed * (1f - percent);
         yield return new WaitForSeconds(duration);
         currentSpeed = baseSpeed;
-        if (!isStunned)
-            spriteRenderer.color = baseColor; //색 되돌리기
-
+        if (!isStunned) spriteRenderer.color = baseColor;
         slowCoroutine = null;
     }
 
@@ -300,36 +348,27 @@ public class Monster : MonoBehaviour
 
     IEnumerator DamageAmpRoutine(float ampValue, float duration)
     {
-        // 바위네모 스킬이 10% 증가라면 ampValue는 0.1
         damageMultiplier = 1f + ampValue;
-
         yield return new WaitForSeconds(duration);
-
-        damageMultiplier = 1f; // 원래대로 복구
+        damageMultiplier = 1f;
         debuffCoroutine = null;
     }
-    // 기절 효과
+
     public void ApplyStun(float duration)
     {
         var cm = InGameCrystalManager.Instance;
-        if (cm.FinalEarthStunTime > 0) duration += cm.FinalEarthStunTime; //땅원소 결정 효과
-        
-        if (stunCoroutine != null)
-        {
-            StopCoroutine(stunCoroutine);
-        }
+        if (cm != null && cm.FinalEarthStunTime > 0) duration += cm.FinalEarthStunTime;
+
+        if (stunCoroutine != null) StopCoroutine(stunCoroutine);
         stunCoroutine = StartCoroutine(StunRoutine(duration));
     }
-    
+
     IEnumerator StunRoutine(float duration)
     {
         isStunned = true;
         Color originColor = spriteRenderer.color;
-        spriteRenderer.color = Color.gray; // 기절 시각 효과
-
+        spriteRenderer.color = Color.gray;
         yield return new WaitForSeconds(duration);
-
-        // 기절 해제 로직
         spriteRenderer.color = originColor;
         isStunned = false;
         stunCoroutine = null;
@@ -345,7 +384,7 @@ public class Monster : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            TakeDamage(dps * 0.5f, attacker); // 0.5초마다 데미지
+            TakeDamage(dps * 0.5f, attacker);
             elapsed += 0.5f;
             yield return new WaitForSeconds(0.5f);
         }
@@ -354,14 +393,8 @@ public class Monster : MonoBehaviour
     public void AddVisualEffect(GameObject prefab, float duration)
     {
         if (prefab == null) return;
-
-        // 몬스터를 부모로 설정하여 생성 (따라다니게 됨)
         GameObject visual = Instantiate(prefab, transform.position, Quaternion.identity, transform);
-
-        // 위치는 몬스터 중앙, 크기는 1:1 (이미지는 몬스터 크기에 맞춰짐)
         visual.transform.localPosition = Vector3.zero;
-        //visual.transform.localScale = Vector3.one;
-
         Destroy(visual, duration);
     }
 
@@ -370,6 +403,15 @@ public class Monster : MonoBehaviour
         if (isDead) return;
         isDead = true;
 
+        if (regenCoroutine != null) StopCoroutine(regenCoroutine);
+        if (bossTeleportCoroutine != null) StopCoroutine(bossTeleportCoroutine);
+
+        // 죽기 전에 숲 테마 분열 판정 호출
+        if (isForestTheme)
+        {
+            ForestSplit();
+        }
+
         // 재화 지급 로직
         if (InGameManager.instance != null)
         {
@@ -377,28 +419,43 @@ public class Monster : MonoBehaviour
             {
                 InGameManager.instance.AddElementStone(1);
             }
-            else {
+            else
+            {
                 if (monsterType == MonsterType.MiniBoss)
                 {
-                    int elementStoneReward = CardUIManager.instance.HasCard(CardEffectID.High_BonusReward) ? 2 : 1; // 보상 증가 카드 효과 적용
+                    int elementStoneReward = CardUIManager.instance.HasCard(CardEffectID.High_BonusReward) ? 2 : 1;
                     InGameManager.instance.AddElementStone(elementStoneReward);
-                    // 코인도 보너스로 더 줄 수 있습니다.
                     InGameManager.instance.AddCoin(InGameManager.instance.currentRound * 5);
                 }
                 else if (monsterType == MonsterType.Boss)
                 {
-                    int elementStoneReward = CardUIManager.instance.HasCard(CardEffectID.High_BonusReward) ? 7 : 5; // 보상 증가 카드 효과 적용
-                    InGameManager.instance.AddElementStone(elementStoneReward); // 보스는 더 많이!
+                    int elementStoneReward = CardUIManager.instance.HasCard(CardEffectID.High_BonusReward) ? 7 : 5;
+                    InGameManager.instance.AddElementStone(elementStoneReward);
                     InGameManager.instance.AddCoin(InGameManager.instance.currentRound * 10);
-                    InGameManager.instance.BossKilledSettingTime(); //라운드 남은 시간 줄이기
-                    if(InGameManager.instance.currentRound < 100) CardUIManager.instance.OpenCardDraw(); //마지막 라운드가 아니라면 카드 뽑기
+                    InGameManager.instance.BossKilledSettingTime();
+                    if (InGameManager.instance.currentRound < 100) CardUIManager.instance.OpenCardDraw();
                 }
-                else
+                else // 본체인 경우만 재화 지급
                 {
-                    // 4,5 스테이지라면 적처치 획득 코인이 1로 감소
-                    InGameManager.instance.AddCoin((DataManager.instance.currentUser.selectedStage == 4 || DataManager.instance.currentUser.selectedStage == 5) ? 1 : 2); // 일반 몹
+                    if (!isClone)
+                    {
+                        int stage = DataManager.instance.currentUser.selectedStage;
+                        int rewardCoin = 2; // 기본값
+
+                        // 4, 5 스테이지일 때 40% 확률로 1코인으로 감소
+                        if (stage == 4 || stage == 5)
+                        {
+                            if (Random.value < 0.4f) // 0.0 ~ 1.0 사이의 값 중 0.4 미만일 때 (40%)
+                            {
+                                rewardCoin = 1;
+                            }
+                        }
+
+                        InGameManager.instance.AddCoin(rewardCoin);
+                    }
                 }
 
+                // 매니저에게 본체가 죽었음을 알림
                 InGameManager.instance.OnMonsterDestroyed();
             }
         }

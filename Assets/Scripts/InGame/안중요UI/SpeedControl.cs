@@ -10,8 +10,9 @@ public class SpeedControl : MonoBehaviour
 
     void Awake()
     {
-        // 게임 시작 시 초기화
+        currentFast = 1f;
         Time.timeScale = currentFast;
+        Time.fixedDeltaTime = 0.02f * Time.timeScale;
         UpdateTimeScaleText();
     }
 

@@ -14,6 +14,7 @@ public class Unit : MonoBehaviour
     // 성장/전투 스탯
     public int level = 1;                      // 나중에 로비에서 정해줄 유닛 레벨
     public UnitStats combatStats = new UnitStats(); // 전투용 스탯(공격력, 사거리, 공속 등)
+    public bool isStunned = false;
 
     // 살아있는 작은 태양 리스트
     private readonly List<GameObject> activeSuns = new List<GameObject>();
@@ -345,26 +346,34 @@ public class Unit : MonoBehaviour
     {
         while (true)
         {
-            if (data != null)
+            if (data == null)
             {
-                if (target == null)
-                {
-                    target = null;
-                }
-
-                FindTarget();
-
-                if (target != null)
-                {
-                    Shoot();
-
-                    float atkSpeed = combatStats.Get(StatType.AttackSpeed);
-                    if (atkSpeed <= 0f) atkSpeed = 0.1f;
-                    yield return new WaitForSeconds(1f / atkSpeed);
-                }
+                yield return new WaitForSeconds(0.5f);
+                continue;
             }
 
-            yield return new WaitForSeconds(0.1f);
+            if (isStunned)
+            {
+                yield return new WaitForSeconds(0.1f); // 핵심: 스턴 중에도 한 프레임은 쉬어야 함
+                continue;
+            }
+
+            // 3. 타겟 찾기 및 공격
+            FindTarget();
+
+            if (target != null)
+            {
+                Shoot();
+
+                float atkSpeed = combatStats.Get(StatType.AttackSpeed);
+                if (atkSpeed <= 0f) atkSpeed = 0.1f;
+                yield return new WaitForSeconds(1f / atkSpeed);
+            }
+            else
+            {
+                // 타겟이 없으면 0.1초 뒤에 다시 검색
+                yield return new WaitForSeconds(0.1f);
+            }
         }
     }
 

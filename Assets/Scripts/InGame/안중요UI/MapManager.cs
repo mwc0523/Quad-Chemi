@@ -13,6 +13,7 @@ public class MapManager : MonoBehaviour
 
     public List<Transform> buildTiles = new List<Transform>(); // 유닛을 배치 가능한 타일들
     public List<Vector2> allTilePositions = new List<Vector2>();
+    public List<BuildTile> buildTileScripts = new List<BuildTile>();
 
     // 기획해주신 6x7 맵 구조 (0: 길, 1: 배치칸)
     private int[,] mapData = new int[7, 6] {
@@ -56,6 +57,8 @@ public class MapManager : MonoBehaviour
                 else if (mapData[y, x] == 1) //배치칸
                 {
                     spawnedTile = Instantiate(buildTilePrefab, position, Quaternion.identity, transform);
+                    BuildTile bt = spawnedTile.GetComponent<BuildTile>();
+                    buildTileScripts.Add(bt); // 스크립트 리스트에 추가
                     buildTiles.Add(spawnedTile.transform);
                 }
 

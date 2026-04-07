@@ -3,6 +3,8 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using UnityEngine.EventSystems;
 using System.Collections;
+using System.Collections.Generic;
+
 
 [System.Serializable]
 public struct MergeRecipe //유닛 조합표 구조체
@@ -63,7 +65,18 @@ public class InGameManager : MonoBehaviour
     [Header("디버그 설정")]
     public TMPro.TMP_InputField debugInputField;
 
+    private List<StatModifier> tideModifiers = new List<StatModifier>();
 
+    [Header("해일 연출 설정")]
+    public GameObject tidePrefab; // 해일 프리팹
+    public float spawnXOffset = 15f; // 해일이 시작될 화면 밖 거리
+    public float upperYPos = 2f;    // 상부 타일 라인의 Y축 중앙값
+    public float lowerYPos = -2f;   // 하부 타일 라인의 Y축 중앙값
+
+    [Header("시작 안내 패널")]
+    public GameObject startPanel;
+    public TextMeshProUGUI startTitleText;
+    public TextMeshProUGUI startContentText;
 
     void Awake()
     {
@@ -81,6 +94,54 @@ public class InGameManager : MonoBehaviour
         currentCoin = 50; // 코인 50개로 시작
         currentElementStone = 0;
         UpdateUI();
+        ShowStartNoticePanel();
+    }
+
+    void ShowStartNoticePanel()
+    {
+        Time.timeScale = 0f;
+        startPanel.SetActive(true);
+
+        int themeIdx = DataManager.instance.currentUser.selectedTheme;
+        int stageIdx = DataManager.instance.currentUser.selectedStage;
+
+        // 0. 인덱스 안전장치 (혹시 모를 에러 방지)
+        themeIdx = Mathf.Clamp(themeIdx, 0, 4);
+        // 스테이지는 1~5로 들어오므로, 배열 인덱스(0~4)로 쓰기 위해 -1을 함
+        int stageArrIdx = Mathf.Clamp(stageIdx - 1, 0, 4);
+
+        string[] themeNames = { "바위산", "숲", "바다", "화산", "공허" };
+
+        string[] themeEffects = {
+        "- 가장 기본이 되는 지형입니다.",
+        "- 적이 초당 1% 체력을 회복합니다.\n- 적 처치 시 2마리로 1회 분열합니다.",
+        "- 매 라운드 밀물/썰물이 발생합니다.\n- 상부/하부 구역 네모의 공격속도가 40% 감소합니다.",
+        "- 3라운드마다 필드 랜덤 3칸이 3라운드 동안 봉인됩니다.\n- 봉인된 칸의 네모는 공격 및 이동이 불가합니다.",
+        "- 적 체력 회복 및 처치 시 2마리 분열\n- 라운드별 상/하부 네모 공격속도 40% 감소\n- 3라운드마다 필드 랜덤 3칸 봉인\n- 매 라운드 10% 확률로 필드 5칸 제거 (15초 경고)"
+        };
+
+        string[] stageEffects = {
+        "- 기본 난이도입니다.",
+        "- 적의 이동속도가 30% 증가합니다.",
+        "- 소환 비용 상승량이 40% 확률로 3코인으로 증가합니다. (기본 2)",
+        "- 적 처치 시 획득 코인이 40% 확률로 1코인으로 감소합니다. (기본 2)",
+        "- 적 이동속도 30% 증가\n- 소환 비용 상승량 증가 확률 적용 (40% 확률로 +3)\n- 적 처치 코인 감소 확률 적용 (40% 확률로 1코인)\n- 보스가 5초마다 맵의 랜덤 위치로 이동"
+        };
+
+        startTitleText.text = $"<color=#FFD700>{themeNames[themeIdx]} / {stageIdx}단계</color>";
+
+        startContentText.text = $"<b><color=#FF6666>[테마 효과]</color></b>\n{themeEffects[themeIdx]}\n\n" +
+                                $"<b><color=#6666FF>[스테이지 시련]</color></b>\n{stageEffects[stageArrIdx]}";
+    }
+
+    public void OnClickStartPanel()
+    {
+        startPanel.SetActive(false);
+
+        // SpeedControl에서 설정한 배속으로 시작 (위에서 수정한대로 1배속)
+        Time.timeScale = SpeedControl.GetFast();
+
+        // 이제 게임 시작
         spawner.StartSpawn();
         StartCoroutine(GoldMineRoutine());
     }
@@ -116,10 +177,18 @@ public class InGameManager : MonoBehaviour
 
             if (hit.collider != null)
             {
-                draggingUnit = hit.collider.GetComponent<Unit>();
-
-                if (draggingUnit != null)
+                Unit target = hit.collider.GetComponent<Unit>();
+                if (target != null)
                 {
+                    // ★ 추가: 봉인된 타일의 유닛인지 확인
+                    BuildTile bt = target.GetComponentInParent<BuildTile>();
+                    if (bt != null && bt.isSealed)
+                    {
+                        Debug.Log("이 유닛은 봉인되어 움직일 수 없습니다!");
+                        return; // 드래그 시작 방지
+                    }
+
+                    draggingUnit = target;
                     StartDrag(draggingUnit);
                 }
             }
@@ -168,14 +237,14 @@ public class InGameManager : MonoBehaviour
         isDragging = false;
 
         SpriteRenderer sr = draggingUnit.GetComponent<SpriteRenderer>();
-        if (sr != null)
-            sr.sortingOrder = 0;
+        if (sr != null) sr.sortingOrder = 0;
 
         Collider2D[] hits = Physics2D.OverlapCircleAll(mousePos, 0.1f);
 
         Transform targetTile = null;
         Unit otherUnit = null;
 
+        // 1. 목표 타일 및 그 위의 유닛 탐색
         foreach (var hit in hits)
         {
             if (hit.CompareTag("BuildTile"))
@@ -189,48 +258,54 @@ public class InGameManager : MonoBehaviour
             }
         }
 
-        // 합성
+        // 2. [추가] 봉인 체크: 목표 타일이 봉인되어 있다면 즉시 되돌리기
+        if (targetTile != null)
+        {
+            BuildTile bt = targetTile.GetComponent<BuildTile>();
+            if (bt != null && bt.isSealed)
+            {
+                Debug.Log("봉인된 타일입니다! 이동/합성 불가.");
+                ReturnUnit();
+                draggingUnit = null;
+                return; // 여기서 함수를 종료하여 아래 합성/이동 로직이 실행되지 않게 함
+            }
+        }
+
+        // 3. 합성 로직 (봉인이 아님이 확인된 경우에만 실행됨)
         if (otherUnit != null)
         {
             UnitData result = GetMergeResult(draggingUnit.data, otherUnit.data);
 
             if (result != null)
             {
-                // 1. 삭제될 유닛들을 즉시 비활성화 (이게 "두 마리 팔아야 하는 버그"를 잡는 핵심입니다)
                 otherUnit.gameObject.SetActive(false);
                 draggingUnit.gameObject.SetActive(false);
 
-                // 2. 리스트에서 제거
                 CardUIManager.instance.activeUnits.Remove(otherUnit);
                 CardUIManager.instance.activeUnits.Remove(draggingUnit);
 
-                // 3. 새 유닛 생성
                 Transform tile = otherUnit.transform.parent;
                 GameObject obj = Instantiate(unitBasePrefab, tile.position, Quaternion.identity, tile);
                 obj.transform.localPosition = new Vector3(0, 0, -1);
 
                 Unit newUnit = obj.GetComponent<Unit>();
                 newUnit.SetUnit(result);
-                if(CardUIManager.instance.HasCard(CardEffectID.Mid_ElementReverse)) AddCoin(5); //원소 역전 카드 효과
+                if (CardUIManager.instance.HasCard(CardEffectID.Mid_ElementReverse)) AddCoin(5);
                 OnUnitAdded(newUnit);
 
-                // 4. 새 유닛을 리스트에 즉시 추가 (Start를 기다리지 않음)
                 if (!CardUIManager.instance.activeUnits.Contains(newUnit))
                     CardUIManager.instance.activeUnits.Add(newUnit);
 
-                // 5. 전체 스탯 갱신 (비활성화된 유닛들은 이제 계산에서 빠짐)
                 CardUIManager.instance.RefreshAllUnitStats();
 
-                // 6. 실제 파괴
                 Destroy(otherUnit.gameObject);
                 Destroy(draggingUnit.gameObject);
-
                 draggingUnit = null;
                 return;
             }
         }
 
-        // 이동
+        // 4. 이동 로직 (봉인이 아님이 확인된 경우에만 실행됨)
         if (targetTile != null)
         {
             Unit unitOnTile = targetTile.GetComponentInChildren<Unit>();
@@ -246,7 +321,13 @@ public class InGameManager : MonoBehaviour
                 unitOnTile.transform.localPosition = new Vector3(0, 0, -1);
                 draggingUnit.transform.SetParent(targetTile);
                 draggingUnit.transform.localPosition = new Vector3(0, 0, -1);
+
+                BuildTile bt = unitOnTile.GetComponentInParent<BuildTile>();
+                if (bt != null) bt.CheckUnitStatus();
             }
+
+            BuildTile newTileBT = draggingUnit.GetComponentInParent<BuildTile>();
+            if (newTileBT != null) newTileBT.CheckUnitStatus();
         }
         else
         {
@@ -255,11 +336,12 @@ public class InGameManager : MonoBehaviour
 
         draggingUnit = null;
     }
-
+    
     private void ReturnUnit()
     {
         draggingUnit.transform.SetParent(originalTile);
         draggingUnit.transform.localPosition = new Vector3(0, 0, -1);
+
     }
 
     public void OnClickSummonButton()
@@ -271,8 +353,8 @@ public class InGameManager : MonoBehaviour
             // MapManager가 미리 골라놓은 '배치 타일 리스트'만 검사합니다.
             foreach (Transform tile in mapManager.buildTiles)
             {
-                // 자식이 없으면(= 유닛이 소환되지 않은 빈자리면) 바로 선택!
-                if (tile.childCount == 0)
+                Unit unitOnTile = tile.GetComponentInChildren<Unit>();
+                if (unitOnTile == null)
                 {
                     targetTile = tile;
                     break;
@@ -282,9 +364,23 @@ public class InGameManager : MonoBehaviour
             if (targetTile != null)
             {
                 currentCoin -= summonFee;
-                summonFee += 2; //2씩 증가
-                //3,5 스테이지라면 소환 비용 상승량이 3코인으로 증가
-                if(DataManager.instance.currentUser.selectedStage == 3 || DataManager.instance.currentUser.selectedStage == 5) summonFee += 1;
+
+                // 기본 상승량은 2
+                int increaseAmount = 2;
+
+                // 3, 5 스테이지라면 40% 확률로 상승량이 3으로 변경
+                int stage = DataManager.instance.currentUser.selectedStage;
+                if (stage == 3 || stage == 5)
+                {
+                    if (Random.value < 0.4f)
+                    {
+                        increaseAmount = 3;
+                        Debug.Log("비용 추가 상승 발생! (+3)");
+                    }
+                }
+
+                summonFee += increaseAmount;
+
                 UpdateUI();
                 SpawnRandomUnit(targetTile, 0);
             }
@@ -337,7 +433,8 @@ public class InGameManager : MonoBehaviour
         Transform emptyTile = null;
         foreach (Transform tile in mapManager.buildTiles)
         {
-            if (tile.childCount == 0)
+            Unit unitOnTile = tile.GetComponentInChildren<Unit>();
+            if (unitOnTile == null)
             {
                 emptyTile = tile;
                 break;
@@ -364,6 +461,11 @@ public class InGameManager : MonoBehaviour
 
     // 유닛이 필드에 새롭게 등장(소환/합성)할 때마다 호출할 트리거 함수
     public void OnUnitAdded(Unit newUnit) {
+        BuildTile bt = newUnit.GetComponentInParent<BuildTile>();
+        if (bt != null)
+        {
+            bt.CheckUnitStatus();
+        }
         // 1. [신화의 재림] 카드 효과 처리
         if (CardUIManager.instance != null && CardUIManager.instance.HasCard(CardEffectID.Myth_MythRebirth))
         {
@@ -434,27 +536,195 @@ public class InGameManager : MonoBehaviour
 
 
 
-        // 다음 라운드로 넘어가는 함수
+    // 다음 라운드로 넘어가는 함수
     void NextRound()
     {
-        if (currentRound < maxRound)
-        {
-            currentRound++;
-            if (currentRound%10 != 0) //보스 라운드가 아닐때
-                currentTime = roundDuration; 
-            else currentTime = bossRoundDuration; //보스라운드일때
-            UpdateUI();
+        if (currentRound >= maxRound) return;
 
-            spawner.StartSpawn();
-            Debug.Log(currentRound + " 라운드 시작!");
-        }
-        else
+        currentRound++;
+        currentTime = (currentRound % 10 == 0) ? bossRoundDuration : roundDuration;
+        UpdateUI();
+        spawner.StartSpawn();
+
+        // 테마 기믹 실행
+        ApplyThemeGimmicks();
+    }
+    void ApplyThemeGimmicks()
+    {
+        int theme = DataManager.instance.currentUser.selectedTheme;
+
+        // 1. 바다 & 공허 (밀물/썰물: 공속 90% 감소)
+        if (theme == 2 || theme == 4)
         {
-            // 100라운드까지 다 깼을 때
-            currentTime = 0f;
-            Debug.Log("오잉 이걸 니가 봤다면 뭔가 오류가 났다는 뜻인데");
+            HandleTideEffect();
+        }
+
+        // 2. 화산 & 공허 (3라운드마다 3칸 봉인)
+        if (theme == 3 || theme == 4)
+        {
+            // 기존 봉인 감소
+            foreach (var tile in mapManager.buildTileScripts) tile.ReduceSeal();
+
+            // 3라운드마다 새 봉인
+            if (currentRound % 3 == 0)
+            {
+                SealRandomTiles(3, 3);
+            }
+        }
+
+        // 3. 공허 전용 (10% 확률로 5칸 제거)
+        if (theme == 4)
+        {
+            if (Random.value < 0.1f)
+            {
+                StartCoroutine(VoidDestructionSequence(5, 15f));
+            }
         }
     }
+
+    // --- 기믹 세부 구현 함수들 ---
+
+    void HandleTideEffect()
+    {
+        // 1. 모든 활성화된 유닛으로부터 "TideSystem" 소스의 모든 모디파이어를 제거
+        // (이렇게 하면 이전 라운드에 어디에 있었든 디버프가 완전히 초기화됩니다)
+        foreach (var unit in CardUIManager.instance.activeUnits)
+        {
+            if (unit != null && unit.combatStats != null)
+            {
+                unit.combatStats.RemoveModifiersFromSource("TideSystem");
+            }
+        }
+
+        // 2. 현재 라운드에 맞는 구역 설정
+        // 짝수 라운드: 위쪽(0~7), 홀수 라운드: 아래쪽(8~15)
+        bool isHighTide = (currentRound % 2 == 0);
+
+        if (tidePrefab != null)
+        {
+            Vector3 spawnPos;
+            Vector3 moveDir;
+
+            if (isHighTide) // 상부: 왼쪽 -> 오른쪽
+            {
+                spawnPos = new Vector3(-spawnXOffset, upperYPos, -5f);
+                moveDir = Vector2.right;
+            }
+            else // 하부: 오른쪽 -> 왼쪽
+            {
+                spawnPos = new Vector3(spawnXOffset, lowerYPos, -5f);
+                moveDir = Vector2.left;
+            }
+
+            GameObject tide = Instantiate(tidePrefab, spawnPos, Quaternion.identity);
+            tide.GetComponent<TideEffect>().Setup(moveDir);
+        }
+
+        int startIdx = isHighTide ? 0 : 8;
+        int endIdx = isHighTide ? 8 : 16;
+
+        // 3. 해당 구역의 타일에 있는 유닛에게만 새로 디버프 부여
+        for (int i = startIdx; i < endIdx; i++)
+        {
+            // mapManager.buildTileScripts가 정확히 16개(0~15)라고 가정
+            if (i >= mapManager.buildTileScripts.Count) break;
+
+            BuildTile bt = mapManager.buildTileScripts[i];
+            Unit unit = bt.GetComponentInChildren<Unit>();
+
+            if (unit != null)
+            {
+                // source를 "TideSystem"으로 박아서 생성
+                unit.combatStats.AddModifier(new StatModifier(
+                    StatType.AttackSpeed,
+                    -0.4f,
+                    StatModifierType.PercentAdd,
+                    "TideSystem"
+                ));
+            }
+        }
+    }
+
+    void SealRandomTiles(int count, int duration)
+    {
+        // 1. 리스트가 비어있는지 먼저 체크 (방어적 프로그래밍)
+        if (mapManager.buildTileScripts == null || mapManager.buildTileScripts.Count == 0)
+        {
+            Debug.LogWarning("봉인할 타일 리스트가 비어있습니다!");
+            return;
+        }
+
+        List<BuildTile> candidates = new List<BuildTile>(mapManager.buildTileScripts);
+
+        // 2. 안전한 Fisher-Yates 셔플
+        int n = candidates.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = Random.Range(0, n + 1);
+            BuildTile value = candidates[k];
+            candidates[k] = candidates[n];
+            candidates[n] = value;
+        }
+
+        // 3. 앞에서부터 count만큼 봉인 실행
+        int actualCount = Mathf.Min(count, candidates.Count);
+        for (int i = 0; i < actualCount; i++)
+        {
+            if (candidates[i] != null)
+            {
+                candidates[i].SetSeal(duration);
+                candidates[i].CheckUnitStatus();
+            }
+        }
+    }
+
+    IEnumerator VoidDestructionSequence(int count, float delay)
+    {
+        // 1. 방어적 프로그래밍: 리스트가 비어있는지 확인
+        if (mapManager.buildTileScripts == null || mapManager.buildTileScripts.Count == 0)
+        {
+            Debug.LogWarning("제거할 타일 리스트가 비어있습니다!");
+            yield break;
+        }
+
+        // 2. 인덱스 리스트 생성
+        int tileCount = mapManager.buildTileScripts.Count;
+        List<int> indices = new List<int>();
+        for (int i = 0; i < tileCount; i++)
+        {
+            indices.Add(i);
+        }
+
+        // 3. 안전한 Fisher-Yates 셔플 (무한 루프 방지)
+        for (int i = tileCount - 1; i > 0; i--)
+        {
+            int r = Random.Range(0, i + 1);
+            int tmp = indices[i];
+            indices[i] = indices[r];
+            indices[r] = tmp;
+        }
+
+        // 4. 결정된 인덱스들로 경고 루틴 실행
+        int actualCount = Mathf.Min(count, indices.Count);
+        for (int i = 0; i < actualCount; i++)
+        {
+            int targetIndex = indices[i];
+
+            // 인덱스가 유효한지 한 번 더 확인 후 실행
+            if (targetIndex >= 0 && targetIndex < mapManager.buildTileScripts.Count)
+            {
+                BuildTile tile = mapManager.buildTileScripts[targetIndex];
+                if (tile != null)
+                {
+                    StartCoroutine(tile.VoidWarningRoutine(delay));
+                }
+            }
+        }
+
+        yield break;
+    }
+
     public void BossKilledSettingTime() {
         if(currentRound == 100) isClear = true;
         currentTime = 5f;
@@ -573,7 +843,8 @@ public class InGameManager : MonoBehaviour
             Transform emptyTile = null;
             foreach (Transform tile in mapManager.buildTiles)
             {
-                if (tile.childCount == 0)
+                Unit unitOnTile = tile.GetComponentInChildren<Unit>();
+                if (unitOnTile == null)
                 {
                     emptyTile = tile;
                     break;

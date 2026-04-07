@@ -192,7 +192,7 @@ public class CardUIManager : MonoBehaviour
     // 보스 처치 후 InGameManager에서 이 함수를 호출
     public void OpenCardDraw()
     {
-        rerollCount = 200;
+        rerollCount = 2;
         if (CardUIManager.instance.HasCard(CardEffectID.High_FateCard) && destinyCard1Used > 0) { //운명의 카드 효과 적용
             rerollCount = 4;
             destinyCard1Used--;

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8903326701655675541}
   - component: {fileID: 2016945607814589294}
   - component: {fileID: -3779125075025115872}
+  - component: {fileID: -2880019540156001392}
   m_Layer: 3
   m_Name: BuildTile
   m_TagString: BuildTile
@@ -134,3 +135,19 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.8, y: 0.8}
   m_EdgeRadius: 0
+--- !u!114 &-2880019540156001392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2811621459659907233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13d40f065846db746896627fd6029766, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isSealed: 0
+  sealRemainRound: 0
+  sealEffect: {fileID: 4987267677788952145, guid: 8362c7f3e93faba48b91f3a4c9555444, type: 3}
+  warningEffectPrefab: {fileID: 4987267677788952145, guid: b57deac9982ddda49a819bae6374e139, type: 3}
