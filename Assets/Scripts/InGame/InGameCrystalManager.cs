@@ -229,11 +229,11 @@ public class InGameCrystalManager : MonoBehaviour
         // 2. 각 원소별로 최종 수치가 0보다 큰 경우에만 텍스트를 추가합니다.
         // Fire
         if (FinalFireAtk > 0) sb.AppendLine($"전체 공격력 증가 <color=#FFD700>{FinalFireAtk * 100:F1}%</color>");
-        if (FinalFireExtraDmg > 0) sb.AppendLine($"화염 속성 추가 피해 <color=#FFD700>{FinalFireExtraDmg * 100:F1}%</color>");
+        if (FinalFireExtraDmg > 0) sb.AppendLine($"평타 공격마다 적에게 추가 데미지 <color=#FFD700>{FinalFireExtraDmg * 100:F1}%</color>");
 
         // Water
-        if (FinalWaterSlow > 0) sb.AppendLine($"적 이동속도 <color=#FFD700>{FinalWaterSlow * 100:F1}%</color> 감소");
-        if (FinalWaterSkillChance > 0) sb.AppendLine($"스킬 발동 확률 <color=#FFD700>{FinalWaterSkillChance * 100:F1}%</color> 증가");
+        if (FinalWaterSlow > 0) sb.AppendLine($"공격 시 0.5초간 적 이동속도 <color=#FFD700>{FinalWaterSlow * 100:F1}%</color> 감소");
+        if (FinalWaterSkillChance > 0) sb.AppendLine($"스킬 사용 확률 <color=#FFD700>{FinalWaterSkillChance * 100:F1}%</color> 증가");
 
         // Earth
         if (FinalEarthStunTime > 0) sb.AppendLine($"모든 스턴 지속 시간 <color=#FFD700>{FinalEarthStunTime:F2}초</color> 증가");

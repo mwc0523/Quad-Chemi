@@ -40,6 +40,8 @@ public class CrystalPieceData
     public float primaryValue;   // 첫 번째 능력치 (예: 불의 공격력 증가 %)
     public float secondaryValue; // 두 번째 능력치 (예: 서사 이상 불의 화상 데미지 계수 %)
 
+    public int rotationCount = 0; // 0: 0도, 1: 90도, 2: 180도, 3: 270도
+
     public CrystalPieceData(int shape, CrystalElement elem, CrystalGrade g)
     {
         uid = Guid.NewGuid().ToString();
@@ -117,6 +119,21 @@ public class CrystalPieceData
                 }
                 break;
         }
+    }
+    
+    // 4x4 형태의 2차원 배열을 시계방향으로 90도 회전시키는 헬퍼 함수 (필요한 곳에서 호출해서 사용)
+    public static bool[,] Rotate90(bool[,] shapeMatrix)
+    {
+        int n = 4; // 결정이 4x4 기준
+        bool[,] rotated = new bool[n, n];
+        for (int r = 0; r < n; r++)
+        {
+            for (int c = 0; c < n; c++)
+            {
+                rotated[c, n - 1 - r] = shapeMatrix[r, c];
+            }
+        }
+        return rotated;
     }
 }
 

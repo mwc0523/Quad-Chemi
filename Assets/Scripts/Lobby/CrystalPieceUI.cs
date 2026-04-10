@@ -34,30 +34,47 @@ public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         pieceData = data;
         if (!CrystalDatabase.Shapes.ContainsKey(data.shapeIndex)) return;
 
-        // 1. 배경색 설정 (CrystalGrade 기준)
-        if (backgroundImage != null)
-        {
-            // data.grade가 CrystalGrade 타입이어야 합니다. 
-            // 만약 CrystalPieceData 내부 변수명이 다르다면 그에 맞춰 수정하세요.
-            Color gradeColor = GetColorByGrade(data.grade);
-            backgroundImage.color = gradeColor;
-        }
+        // 1. 배경색 설정 (생략...)
+        backgroundImage.color = GetColorByGrade(data.grade);
 
-        // 2. 모양 이미지 설정 (원소 기준)
-        int[] shape = CrystalDatabase.Shapes[data.shapeIndex];
+        // 2. 모양 이미지 설정 (회전 로직 적용)
+        int[] originalShape = CrystalDatabase.Shapes[data.shapeIndex];
+        int[] rotatedShape = GetRotatedShape(originalShape, data.rotationCount);
         Color elementColor = GetElementColor(data.element);
 
         for (int i = 0; i < 16; i++)
         {
             if (i < shapeImages.Length)
             {
-                shapeImages[i].enabled = (shape[i] == 1);
+                shapeImages[i].enabled = (rotatedShape[i] == 1);
                 if (shapeImages[i].enabled)
                 {
                     shapeImages[i].color = elementColor;
                 }
             }
         }
+    }
+
+    public static int[] GetRotatedShape(int[] original, int rotationCount)
+    {
+        if (rotationCount == 0) return original;
+
+        int[] current = (int[])original.Clone();
+        int[] next = new int[16];
+
+        for (int r = 0; r < rotationCount; r++)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                int row = i / 4;
+                int col = i % 4;
+                // 90도 회전 공식
+                int nextIndex = col * 4 + (3 - row);
+                next[nextIndex] = current[i];
+            }
+            current = (int[])next.Clone();
+        }
+        return current;
     }
 
     private Color GetColorByGrade(CrystalGrade grade)
@@ -177,10 +194,20 @@ public class CrystalPieceUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // 드래그 중이 아니었다면 '정보 패널 열기' 실행
-        if (!isDragging)
+        if (isDragging) return;
+
+        // 1. 현재 씬에 합성 패널이 활성화되어 있는지 확인
+        // FindFirstObjectByType은 Unity 2021.3+ 권장 방식입니다. 구버전이면 FindObjectOfType 사용.
+        CrystalMergePanel mergePanel = Object.FindFirstObjectByType<CrystalMergePanel>(FindObjectsInactive.Exclude);
+
+        if (mergePanel != null && mergePanel.gameObject.activeInHierarchy)
         {
-            // 중앙 정보 패널 띄우기 호출
+            // 2. 합성 패널이 열려있다면 합성 재료로 등록 시도
+            mergePanel.TrySelectMaterial(pieceData);
+        }
+        else
+        {
+            // 3. 합성 패널이 없다면 기존처럼 정보 패널 띄우기
             CrystalUIManager.Instance.ShowCrystalInfoPanel(pieceData);
         }
     }

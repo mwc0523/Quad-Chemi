@@ -15,6 +15,7 @@ public class CrystalUIManager : MonoBehaviour
     public GameObject crystalItemPrefab;
 
     public CrystalInfoPanel infoPanel;
+    public CrystalMergePanel mergePanel;
 
     [Header("Preview Settings")]
     public Color validPreviewColor = new Color(0.5f, 1f, 0.5f, 0.6f); // 연두색 (반투명)
@@ -27,7 +28,7 @@ public class CrystalUIManager : MonoBehaviour
     private List<int> currentPreviewIndices = new List<int>();
 
     [Header("Sort Settings")]
-    public CrystalSortType currentSortType = CrystalSortType.GradeAsc;
+    public CrystalSortType currentSortType = CrystalSortType.GradeDesc;
 
     private CrystalCell currentlyOpenedCell = null;
 
@@ -78,8 +79,11 @@ public class CrystalUIManager : MonoBehaviour
     {
         if (!CrystalDatabase.Shapes.ContainsKey(piece.shapeIndex)) return false;
 
-        int[] shape = CrystalDatabase.Shapes[piece.shapeIndex];
-        List<int> requiredIndices = GetRequiredIndices(shape, rootIndex);
+        // 원본 모양이 아닌, piece의 rotationCount가 적용된 모양을 가져옴
+        int[] originalShape = CrystalDatabase.Shapes[piece.shapeIndex];
+        int[] rotatedShape = CrystalPieceUI.GetRotatedShape(originalShape, piece.rotationCount);
+
+        List<int> requiredIndices = GetRequiredIndices(rotatedShape, rootIndex);
 
         if (requiredIndices == null) return false;
 
@@ -136,23 +140,22 @@ public class CrystalUIManager : MonoBehaviour
 
     public void UpdateGridStatus()
     {
-        // 1. 모든 셀 상태 및 색상 초기화
         foreach (var cell in allCells)
         {
             cell.SetOccupied(false);
             if (cell.cellImage != null)
-            {
                 cell.cellImage.color = cell.isUnlocked ? Color.white : Color.gray;
-            }
         }
 
-        // 2. 배치된 피스들을 순회하며 타일 색칠
         foreach (var piece in DataManager.instance.currentUser.crystalInventory)
         {
             if (piece.isPlaced)
             {
-                int[] shape = CrystalDatabase.Shapes[piece.shapeIndex];
-                List<int> indices = GetRequiredIndices(shape, piece.placedRootIndex);
+                // 여기도 회전 적용!
+                int[] originalShape = CrystalDatabase.Shapes[piece.shapeIndex];
+                int[] rotatedShape = CrystalPieceUI.GetRotatedShape(originalShape, piece.rotationCount);
+
+                List<int> indices = GetRequiredIndices(rotatedShape, piece.placedRootIndex);
 
                 if (indices != null)
                 {
@@ -161,9 +164,7 @@ public class CrystalUIManager : MonoBehaviour
                     {
                         allCells[idx].SetOccupied(true);
                         if (allCells[idx].cellImage != null)
-                        {
                             allCells[idx].cellImage.color = pieceColor;
-                        }
                     }
                 }
             }
@@ -174,8 +175,11 @@ public class CrystalUIManager : MonoBehaviour
     {
         ClearPreview();
 
-        int[] shape = CrystalDatabase.Shapes[piece.shapeIndex];
-        List<int> requiredIndices = GetRequiredIndices(shape, rootIndex); // 보정된 인덱스들 가져오기
+        // 프리뷰 생성 시에도 회전 적용!
+        int[] originalShape = CrystalDatabase.Shapes[piece.shapeIndex];
+        int[] rotatedShape = CrystalPieceUI.GetRotatedShape(originalShape, piece.rotationCount);
+
+        List<int> requiredIndices = GetRequiredIndices(rotatedShape, rootIndex);
 
         bool canPlace = CanPlacePiece(piece, rootIndex);
         Color previewColor = canPlace ? validPreviewColor : invalidPreviewColor;
@@ -217,14 +221,13 @@ public class CrystalUIManager : MonoBehaviour
         {
             if (!piece.isPlaced) continue;
 
-            int[] shape = CrystalDatabase.Shapes[piece.shapeIndex];
-            List<int> indices = GetRequiredIndices(shape, piece.placedRootIndex);
+            // 회수(클릭) 판정 시에도 회전 적용!
+            int[] originalShape = CrystalDatabase.Shapes[piece.shapeIndex];
+            int[] rotatedShape = CrystalPieceUI.GetRotatedShape(originalShape, piece.rotationCount);
 
-            if (indices != null)
-            {
-                //Debug.Log($"배치된 피스 검사 중: 루트 {piece.placedRootIndex}, 차지하는 칸 수: {indices.Count}");
-                if (indices.Contains(cellIndex)) return piece;
-            }
+            List<int> indices = GetRequiredIndices(rotatedShape, piece.placedRootIndex);
+
+            if (indices != null && indices.Contains(cellIndex)) return piece;
         }
         return null;
     }
@@ -369,6 +372,14 @@ public class CrystalUIManager : MonoBehaviour
         if (infoPanel != null)
         {
             infoPanel.SetupAndShow(pieceData);
+        }
+    }
+
+    public void ShowCrystalMergePanel()
+    {
+        if (mergePanel != null)
+        {
+            mergePanel.gameObject.SetActive(true);
         }
     }
 }

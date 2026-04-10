@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections.Generic;
+
+
 public class GameResultManager : MonoBehaviour
 {
     [Header("상단 정보 UI")]
@@ -15,6 +18,7 @@ public class GameResultManager : MonoBehaviour
     public TextMeshProUGUI rewardEssenceText; // 정수(Stone) 획득량
     public TextMeshProUGUI rewardAetherText;  // 에테르(Gold?) 획득량
     public TextMeshProUGUI rewardExpText; //경험치 획득량
+    public TextMeshProUGUI rewardCrystalListText;
 
     [Header("연출 설정")]
     [SerializeField] private float countDuration = 1.5f;
@@ -84,11 +88,19 @@ public class GameResultManager : MonoBehaviour
         int earnedEssence = CalculateEssence(reachedWave, totalStageIndex);
         int earnedAether = CalculateAether(reachedWave, totalStageIndex);
         int earnedExp = CalculateExp(reachedWave, totalStageIndex);
+        List<CrystalPieceData> droppedCrystals = RollForCrystals(reachedWave, currentTheme);
 
         // 5. 데이터 업데이트 및 저장 
         user.essence += earnedEssence;
         user.aether += earnedAether;
         user.AddExp(earnedExp);
+        string crystalResultString = "";
+        foreach (var crystal in droppedCrystals)
+        {
+            user.crystalInventory.Add(crystal);
+            crystalResultString += $"[{GetGradeName(crystal.grade)}] {GetElementName(crystal.element)} 결정 획득!\n";
+        }
+        rewardCrystalListText.text = string.IsNullOrEmpty(crystalResultString) ? "획득한 결정 조각 없음" : crystalResultString;
 
         DataManager.instance.SaveData();
         DataManager.instance.SaveDataImmediate();
@@ -98,6 +110,89 @@ public class GameResultManager : MonoBehaviour
         rewardExpText.text = "+0";
 
         StartCoroutine(ShowRewardSequence(earnedEssence, earnedAether, earnedExp));
+    }
+
+    private List<CrystalPieceData> RollForCrystals(int wave, int themeIndex)
+    {
+        List<CrystalPieceData> results = new List<CrystalPieceData>();
+
+        // 바위산(0)은 제외, 숲(1)부터 확률 적용
+        if (themeIndex < 1) return results;
+
+        // 테마별 드랍 실행 확률 (숲:10%, 바다:20%, 화산:30%, 공허:40% ...)
+        float dropChance = themeIndex * 0.1f;
+
+        // 60라운드부터 10라운드 단위로 체크 (60, 70, 80, 90, 100...)
+        for (int w = 60; w <= wave; w += 10)
+        {
+            if (Random.value < dropChance)
+            {
+                // 1. 차등 확률에 따른 원소 결정
+                CrystalElement selectedElement = GetRandomElementByWeight();
+
+                // 2. 등급 가중치에 따른 모양 결정 (CrystalDatabase 활용)
+                int randomShapeIndex = CrystalDatabase.GetRandomShapeIndex();
+                CrystalGrade grade = GetGradeFromIndex(randomShapeIndex);
+
+                results.Add(new CrystalPieceData(randomShapeIndex, selectedElement, grade));
+            }
+        }
+
+        return results;
+    }
+
+    // 등급 한글 변환 헬퍼
+    private string GetGradeName(CrystalGrade grade)
+    {
+        return grade switch
+        {
+            CrystalGrade.Low => "하급",
+            CrystalGrade.Middle => "중급",
+            CrystalGrade.High => "상급",
+            CrystalGrade.Epic => "서사급",
+            CrystalGrade.Legend => "전설급",
+            CrystalGrade.Myth => "신화급",
+            _ => "일반"
+        };
+    }
+
+    // 원소별 차등 확률 적용 (무속성: 20%, 4원소: 각 18%, 프리즘: 8%)
+    private CrystalElement GetRandomElementByWeight()
+    {
+        int roll = Random.Range(0, 100); // 0 ~ 99
+
+        if (roll < 20) return CrystalElement.None;        // 0~19 (20%)
+        if (roll < 38) return CrystalElement.Fire;        // 20~37 (18%)
+        if (roll < 56) return CrystalElement.Water;       // 38~55 (18%)
+        if (roll < 74) return CrystalElement.Earth;       // 56~73 (18%)
+        if (roll < 92) return CrystalElement.Air;         // 74~91 (18%)
+        return CrystalElement.Prism;                      // 92~99 (8%)
+    }
+
+    // 원소 한글 변환 헬퍼
+    private string GetElementName(CrystalElement element)
+    {
+        return element switch
+        {
+            CrystalElement.None => "무속성",
+            CrystalElement.Fire => "불원소",
+            CrystalElement.Water => "물원소",
+            CrystalElement.Earth => "땅원소",
+            CrystalElement.Air => "공기원소",
+            CrystalElement.Prism => "프리즘",
+            _ => "알 수 없는"
+        };
+    }
+
+    // CrystalUIManager에 있던 함수를 매니저에서 공용으로 쓰거나 복사해서 사용
+    private CrystalGrade GetGradeFromIndex(int index)
+    {
+        if (index <= 9) return CrystalGrade.Low;
+        if (index <= 17) return CrystalGrade.Middle;
+        if (index <= 23) return CrystalGrade.High;
+        if (index <= 27) return CrystalGrade.Epic;
+        if (index <= 29) return CrystalGrade.Legend;
+        return CrystalGrade.Myth;
     }
 
     private IEnumerator ShowRewardSequence(int targetEssence, int targetAether, int targetExp)

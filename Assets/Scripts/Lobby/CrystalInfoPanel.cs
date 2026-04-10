@@ -8,9 +8,11 @@ public class CrystalInfoPanel : MonoBehaviour
     public TextMeshProUGUI primaryStatText;
     public TextMeshProUGUI secondaryStatText;
     public TextMeshProUGUI allStatText;
+    private CrystalPieceData currentData;
 
     public void SetupAndShow(CrystalPieceData data)
     {
+        currentData = data;
         gameObject.SetActive(true);
         nameText.gameObject.SetActive(true);
         primaryStatText.gameObject.SetActive(true);
@@ -48,7 +50,7 @@ public class CrystalInfoPanel : MonoBehaviour
             CrystalElement.Prism => $"인접한 모든 원소 결정 효과 <color=#FFD700>{data.primaryValue}배</color> 적용",
             _ => "능력치 없음"
         };
-    }
+    } 
 
     private string GetSecondaryStatText(CrystalPieceData data)
     {
@@ -56,9 +58,9 @@ public class CrystalInfoPanel : MonoBehaviour
 
         return data.element switch
         {
-            CrystalElement.Fire => $"평타 공격마다 적에게 추가 데미지 <color=#FFD700>{data.secondaryValue}%</color> 계수",
+            CrystalElement.Fire => $"평타 공격마다 적에게 추가 데미지 <color=#FFD700>{data.secondaryValue}%</color>",
             CrystalElement.Water => $"스킬 사용 확률 <color=#FFD700>{data.secondaryValue}%</color> 증가",
-            CrystalElement.Earth => $"치명타 피해 <color=#FFD700>{data.secondaryValue}%</color> 증가",
+            CrystalElement.Earth => $"치명타 피해량 <color=#FFD700>{data.secondaryValue}%</color> 증가",
             CrystalElement.Air => $"치명타 확률 <color=#FFD700>{data.secondaryValue}%</color> 증가",
             CrystalElement.Prism => "", // 프리즘은 서브스탯 없음
             _ => ""
@@ -114,5 +116,24 @@ public class CrystalInfoPanel : MonoBehaviour
         }
 
         allStatText.text = InGameCrystalManager.Instance.GetLobbyBuffSummary();
+    }
+
+    public void OnRotateButtonClicked()
+    {
+        if (currentData == null) return;
+
+        // 1. 회전 값 변경 (0 -> 1 -> 2 -> 3 -> 0)
+        currentData.rotationCount = (currentData.rotationCount + 1) % 4;
+
+        // 2. 서버/로컬 데이터 저장
+        DataManager.instance.SaveData();
+
+        // 인벤토리 전체 갱신 (배치용 프리뷰 등 포함)
+        if (CrystalUIManager.Instance != null)
+        {
+            CrystalUIManager.Instance.RefreshInventory();
+        }
+
+        Debug.Log($"조각 회전 완료: 현재 {currentData.rotationCount * 90}도");
     }
 }
