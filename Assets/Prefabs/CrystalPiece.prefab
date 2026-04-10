@@ -1223,6 +1223,8 @@ MonoBehaviour:
     acquisitionTick: 0
     isPlaced: 0
     placedRootIndex: 0
+    primaryValue: 0
+    secondaryValue: 0
   backgroundImage: {fileID: 3754364564426187414}
   shapeImages:
   - {fileID: 7012816722556598270}

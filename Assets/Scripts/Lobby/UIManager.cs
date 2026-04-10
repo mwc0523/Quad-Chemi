@@ -205,7 +205,7 @@ public class UIManager : MonoBehaviour
 
         // 테마를 변경하면 단계를 안전하게 1단계로 초기화
         data.selectedStage = 1;
-
+        LobbyBackgroundManager.instance.UpdateBackground();
         UpdateStageSelectionUI();
     }
 
