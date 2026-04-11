@@ -17,6 +17,8 @@ public class ShopManager : MonoBehaviour
 
     public GameObject shopSlotPrefab;
     public TMP_Text refreshBtnText;
+    public TMP_Text resetTimerText;   // 남은 시간 표시용
+    private Coroutine timerCoroutine; // 타이머 코루틴 추적용
 
     [Header("Gacha UI")]
     public GameObject gachaResultPanel;    // 결과창 패널 전체
@@ -48,45 +50,74 @@ public class ShopManager : MonoBehaviour
 
     private IEnumerator InitShopWithServerTime()
     {
-        // 한국 표준시(KST)를 반환하는 무료 공용 API 호출
         UnityWebRequest req = UnityWebRequest.Get("https://worldtimeapi.org/api/timezone/Asia/Seoul");
         yield return req.SendWebRequest();
 
-        DateTime currentTime = DateTime.Now; // 통신 실패 시 기본값으로 기기 시간 사용
+        DateTime currentTime = DateTime.Now;
 
         if (req.result == UnityWebRequest.Result.Success)
         {
-            // JSON 응답에서 날짜("YYYY-MM-DD") 부분만 간단히 파싱
             string json = req.downloadHandler.text;
             int startIndex = json.IndexOf("datetime\":\"") + 11;
             if (startIndex > 10)
             {
-                string dateStr = json.Substring(startIndex, 10);
-                DateTime.TryParse(dateStr, out currentTime);
+                // 기존 10글자(YYYY-MM-DD)에서 19글자(YYYY-MM-DDTHH:mm:ss)로 늘려 시간까지 파싱합니다.
+                string dateTimeStr = json.Substring(startIndex, 19);
+                DateTime.TryParse(dateTimeStr, out currentTime);
             }
         }
 
         string todayStr = currentTime.ToString("yyyy-MM-dd");
         var user = DataManager.instance.currentUser;
 
-        // 날짜가 바뀌었거나, 오늘 저장된 상점 목록이 아예 없으면 새로 갱신
         if (user.lastShopRefreshDate != todayStr || user.savedDailyShop.Count == 0)
         {
             user.lastShopRefreshDate = todayStr;
-            user.dailyShopRefreshCount = 0; // 새로고침 횟수 초기화
+            user.dailyShopRefreshCount = 0;
             GenerateDailyShop();
         }
         else
         {
-            // 날짜가 안 바뀌었다면 유저 데이터에 저장된 어제(오늘) 상점 불러오기
             LoadSavedDailyShop();
         }
         refreshBtnText.text = $"새로고침 {10 - user.dailyShopRefreshCount}/10";
-        // 정수와 에테르 상점은 고정이므로 그대로 생성
         GenerateFixedShop(essenceShopGrid, ShopItemType.Currency, "정수", 3);
         GenerateFixedShop(aetherShopGrid, ShopItemType.Currency, "에테르", 3);
-    }
 
+        // -- 여기서부터 타이머 로직 시작 --
+
+        // 현재 시간의 '자정(Date)' 기준에서 하루를 더해 다음 날 자정 구하기
+        DateTime nextResetTime = currentTime.Date.AddDays(1);
+        TimeSpan remainingTime = nextResetTime - currentTime;
+
+        // 기존 타이머가 돌고 있다면 멈추고 새 타이머 시작
+        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        timerCoroutine = StartCoroutine(Co_UpdateResetTimer(remainingTime));
+    }
+    private IEnumerator Co_UpdateResetTimer(TimeSpan initialRemainingTime)
+    {
+        float remainingSeconds = (float)initialRemainingTime.TotalSeconds;
+        // 게임 켜진 후 경과 시간 + 남은 초 = 타이머 종료 시점
+        float finishTime = Time.realtimeSinceStartup + remainingSeconds;
+
+        while (Time.realtimeSinceStartup < finishTime)
+        {
+            float currentRemaining = finishTime - Time.realtimeSinceStartup;
+            TimeSpan ts = TimeSpan.FromSeconds(currentRemaining);
+
+            if (resetTimerText != null)
+            {
+                // {0:D2}는 한 자리 수일 때 앞에 0을 붙여주는 포맷 (예: 5 -> 05)
+                resetTimerText.text = string.Format("초기화까지 남은 시간 : {0:D2}:{1:D2}:{2:D2}", ts.Hours, ts.Minutes, ts.Seconds);
+            }
+            yield return null; // 매 프레임마다 UI 업데이트
+        }
+
+        // 시간이 다 되어 0초가 되면 00:00:00 표시 후 알아서 상점 정보 갱신(자정 지남)
+        if (resetTimerText != null) resetTimerText.text = "초기화까지 남은 시간 : 00:00:00";
+        StartCoroutine(InitShopWithServerTime());
+    }
+    
     public void OnClickGacha(int drawCount)
     {
         nowCount = drawCount;
