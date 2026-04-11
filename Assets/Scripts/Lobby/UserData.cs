@@ -278,7 +278,8 @@ public class UserProfile
     // 티켓 회복을 위한 마지막 접속 시간 기록
     public string lastTicketChargeTime = "";
     public string lastShopRefreshDate = "";  // 마지막 상점 갱신 날짜
-    public int dailyShopRefreshCount = 0;    // 오늘 수동 새로고침 한 횟수
+    public int dailyShopRefreshCount = 0; // 에테르 새로고침
+    public int adShopRefreshCount = 0; // 광고 새로고침
     public List<ShopItemData> savedDailyShop = new List<ShopItemData>();
 
     // 보유 유닛 목록

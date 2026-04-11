@@ -17,6 +17,8 @@ public class ShopManager : MonoBehaviour
 
     public GameObject shopSlotPrefab;
     public TMP_Text refreshBtnText;
+    public TMP_Text adRefreshBtnText;
+
     public TMP_Text resetTimerText;   // 남은 시간 표시용
     private Coroutine timerCoroutine; // 타이머 코루틴 추적용
 
@@ -74,13 +76,15 @@ public class ShopManager : MonoBehaviour
         {
             user.lastShopRefreshDate = todayStr;
             user.dailyShopRefreshCount = 0;
+            user.adShopRefreshCount = 0;
             GenerateDailyShop();
         }
         else
         {
             LoadSavedDailyShop();
         }
-        refreshBtnText.text = $"새로고침 {10 - user.dailyShopRefreshCount}/10";
+        refreshBtnText.text = $"새로고침 [{3 - user.dailyShopRefreshCount}/3]";
+        adRefreshBtnText.text = $"광고 시청 [{3 - user.adShopRefreshCount}/3]";
         GenerateFixedShop(essenceShopGrid, ShopItemType.Currency, "정수", 3);
         GenerateFixedShop(aetherShopGrid, ShopItemType.Currency, "에테르", 3);
 
@@ -280,9 +284,9 @@ public class ShopManager : MonoBehaviour
     {
         var user = DataManager.instance.currentUser;
 
-        if (user.dailyShopRefreshCount >= 10)
+        if (user.dailyShopRefreshCount >= 3)
         {
-            Debug.LogWarning("오늘 새로고침 횟수를 모두 소진했습니다. (10/10)");
+            Debug.LogWarning("오늘 새로고침 횟수를 모두 소진했습니다. (3/3)");
             return;
         }
 
@@ -302,10 +306,35 @@ public class ShopManager : MonoBehaviour
         // 상단 UI 재화 갱신 (선택 사항)
         UIManager ui = FindObjectOfType<UIManager>();
         if (ui != null) ui.RefreshTopBar();
-        refreshBtnText.text = $"새로고침 {10 - user.dailyShopRefreshCount}/10";
-
-        Debug.Log($"상점 새로고침 완료! 남은 횟수: {10 - user.dailyShopRefreshCount}/10");
+        refreshBtnText.text = $"새로고침 [{3 - user.dailyShopRefreshCount}/3]";
+        Debug.Log($"상점 새로고침 완료! 남은 횟수: {3 - user.dailyShopRefreshCount}/3");
     }
+
+    public void OnClickAdRefresh()
+    {
+        var user = DataManager.instance.currentUser;
+
+        if (user.adShopRefreshCount >= 3)
+        {
+            Debug.LogWarning("오늘 광고 새로고침 횟수를 모두 소진했습니다. (3/3)");
+            return;
+        }
+
+        // AdManager를 호출하여 광고 시청 후 성공하면 실행될 람다 함수(Action)를 넘김
+        AdManager.instance.ShowRewardedAd(() =>
+        {
+            // 이 중괄호 안의 코드는 유저가 광고를 끝까지 봤을 때만 실행됩니다.
+            user.adShopRefreshCount++;
+            GenerateDailyShop();
+
+            adRefreshBtnText.text = $"광고 시청 [{3 - user.adShopRefreshCount}/3]";
+            Debug.Log("광고 시청 완료로 상점이 갱신되었습니다!");
+        });
+    }
+
+
+
+
 
     // 2. 고정 재화 상점 (정수, 에테르 등)
     private void GenerateFixedShop(Transform grid, ShopItemType type, string id, int count)
