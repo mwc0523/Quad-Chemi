@@ -39,6 +39,12 @@ public class UIManager : MonoBehaviour
 
     public static readonly string[] themeNames = { "바위산", "숲", "바다", "화산", "공허" };
 
+
+    [Header("Quest UI")]
+    public GameObject questPanel;      // 퀘스트 패널 오브젝트
+    public GameObject questRedDot;
+
+
     void Awake()
     {
         // 싱글톤 인스턴스 할당
@@ -222,6 +228,30 @@ public class UIManager : MonoBehaviour
     }
 
 
+    public void OnClickQuestButton()
+    {
+        questPanel.SetActive(true);
+        // 패널 안의 스크롤 뷰 데이터 갱신 로직 호출
+        questPanel.GetComponent<QuestPanelUI>().RefreshUI();
+    }
+
+    // 레드닷 갱신 (데이터가 바뀔 때마다 호출)
+    public void RefreshQuestRedDot()
+    {
+        bool hasNotice = false;
+        var user = DataManager.instance.currentUser;
+
+        // 1. 완료했지만 수령 안 한 퀘스트가 있는가?
+        foreach (var q in user.questLogs)
+        {
+            if (q.isCompleted && !q.isClaimed) { hasNotice = true; break; }
+        }
+
+        // 2. 추가 보상(Milestone)을 받을 수 있는 상태인가?
+        // (현재 달성 개수 체크 로직 추가)
+
+        questRedDot.SetActive(hasNotice);
+    }
 
 
 

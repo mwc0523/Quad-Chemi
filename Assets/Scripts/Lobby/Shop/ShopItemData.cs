@@ -13,7 +13,8 @@ public enum CostType
 {
     Essence,
     Aether,
-    Ad        // 광고 보고 무료 획득
+    Ad,        // 광고 보고 무료 획득
+    Cash
 }
 
 // 3. 상품 정보 설계도

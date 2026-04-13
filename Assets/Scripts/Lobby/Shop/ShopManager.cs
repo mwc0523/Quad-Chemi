@@ -27,6 +27,11 @@ public class ShopManager : MonoBehaviour
     public Transform gachaResultGrid;      // 카드가 나열될 GridLayoutGroup
     public GameObject unitCardPrefab;
 
+    [Header("Purchase Confirm UI")]
+    public GameObject confirmPanel;      // 구매 확인 패널
+    public TMP_Text confirmMessageText;  // "정수 X1,000개를 구매하시겠습니까?" 메시지
+    private ShopItemSlot pendingSlot;
+
     public int nowCount = 0;
 
 
@@ -337,22 +342,116 @@ public class ShopManager : MonoBehaviour
 
 
     // 2. 고정 재화 상점 (정수, 에테르 등)
+    // 2. 고정 재화 상점 생성 (정수: 에테르로 구매, 에테르: 현금으로 구매)
     private void GenerateFixedShop(Transform grid, ShopItemType type, string id, int count)
     {
         ClearGrid(grid);
-        for (int i = 1; i <= count; i++)
+        int[] amounts = { 1000, 10000, 100000 };
+        int[] aetherPrices = { 1600, 15000, 140000 }; // 에테르(현금가)
+
+        for (int i = 0; i < 3; i++)
         {
             ShopItemData newItem = new ShopItemData
             {
                 itemType = type,
                 itemID = id,
-                amount = 100 * i, // 예: 100개, 200개, 300개
-                costType = CostType.Aether, // 에테르로 정수를 사는 식
-                costAmount = 50 * i,
+                amount = amounts[i],
                 isSoldOut = false
             };
+
+            if (id == "정수")
+            {
+                newItem.costType = CostType.Aether;
+                newItem.costAmount = amounts[i] / 10; // 가격은 수량의 1/10
+            }
+            else
+            {
+                newItem.costType = CostType.Cash;
+                newItem.costAmount = aetherPrices[i]; // 정해진 현금가
+            }
             CreateSlot(grid, newItem);
         }
+    }
+
+    public void OpenConfirmPanel(ShopItemSlot slot)
+    {
+        pendingSlot = slot;
+        ShopItemData data = slot.myData;
+
+        // 메시지 구성 (아이템 이름 + 수량)
+        string itemName = data.itemID;
+        confirmMessageText.text = $"{itemName} X{data.amount:#,###}개를\n구매하시겠습니까?";
+
+        confirmPanel.SetActive(true);
+    }
+
+    public void OnClickConfirmPurchase()
+    {
+        if (pendingSlot != null)
+        {
+            ExecutePurchase(pendingSlot);
+        }
+        confirmPanel.SetActive(false);
+    }
+
+    public void OnClickCancelPurchase()
+    {
+        pendingSlot = null;
+        confirmPanel.SetActive(false);
+    }
+
+    private void ExecutePurchase(ShopItemSlot slot)
+    {
+        ShopItemData item = slot.myData;
+        var user = DataManager.instance.currentUser;
+
+        if (item.costType == CostType.Aether)
+        {
+            if (user.aether >= item.costAmount)
+            {
+                user.aether -= item.costAmount;
+                AddCurrency(item.itemID, item.amount);
+                CompletePurchase(slot, item);
+            }
+            else Debug.Log("에테르가 부족합니다.");
+        }
+        else if (item.costType == CostType.Essence)
+        {
+            if (user.essence >= item.costAmount)
+            {
+                user.essence -= item.costAmount;
+                if (item.itemType == ShopItemType.Unit) AddUnit(item.itemID, item.amount);
+                CompletePurchase(slot, item);
+            }
+            else Debug.Log("정수가 부족합니다.");
+        }
+        else if (item.costType == CostType.Cash)
+        {
+            // 현금 결제는 외부 API 호출 후 성공 시 AddCurrency 호출
+            AddCurrency(item.itemID, item.amount);
+            CompletePurchase(slot, item);
+        }
+    }
+
+    //공통 구매 분기
+    private void CompletePurchase(ShopItemSlot slot, ShopItemData item)
+    {
+        // 재화(Currency) 타입이 아닐 때만 품절 처리
+        if (item.itemType != ShopItemType.Currency)
+        {
+            item.isSoldOut = true;
+        }
+
+        slot.SetupSlot(item); // UI 갱신 (재화는 품절 표시 안 뜸)
+        DataManager.instance.SaveData();
+        FindObjectOfType<UIManager>()?.RefreshTopBar();
+    }
+
+    // 재화 지급 헬퍼
+    private void AddCurrency(string id, int amount)
+    {
+        if (id == "정수") DataManager.instance.currentUser.essence += amount;
+        else if (id == "에테르") DataManager.instance.currentUser.aether += amount;
     }
 
     // --- 헬퍼 함수들 ---
@@ -426,41 +525,6 @@ public class ShopManager : MonoBehaviour
     private void ClearGrid(Transform grid)
     {
         foreach (Transform child in grid) Destroy(child.gameObject);
-    }
-
-    public void AttemptPurchase(ShopItemSlot slot)
-    {
-        ShopItemData item = slot.myData;
-
-        // 재화 확인 및 차감 로직
-        if (item.costType == CostType.Essence)
-        {
-            if (DataManager.instance.currentUser.essence >= item.costAmount)
-            {
-                DataManager.instance.currentUser.essence -= item.costAmount;
-
-                // 상품 지급 (유닛일 경우)
-                if (item.itemType == ShopItemType.Unit)
-                {
-                    AddUnit(item.itemID, item.amount);
-                }
-
-                item.isSoldOut = true;
-                slot.SetupSlot(item); // UI 갱신
-                // 서버 저장 및 상단 바 UI 갱신 (선택 사항)
-                DataManager.instance.SaveData();
-                UIManager ui = FindObjectOfType<UIManager>();
-                if (ui != null)
-                {
-                    ui.RefreshTopBar();
-                }
-                Debug.Log($"{item.itemID} 구매 성공!");
-            }
-            else
-            {
-                Debug.Log("잔액이 부족합니다.");
-            }
-        }
     }
 
     private void AddUnit(string id, int amount)

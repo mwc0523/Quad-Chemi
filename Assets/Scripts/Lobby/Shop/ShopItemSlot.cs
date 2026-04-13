@@ -38,7 +38,17 @@ public class ShopItemSlot : MonoBehaviour
         // 유닛이면 템플릿의 이름을, 아니면 ID를 그대로 사용
         nameText.text = (unitTemplate != null) ? unitTemplate.unitName : data.itemID;
         amountText.text = $"X{data.amount}";
-        costText.text = data.costAmount.ToString("#,###");
+        if (data.costType == CostType.Cash)
+        {
+            costText.text = $"₩{data.costAmount:#,###}";
+            if (costIcon != null) costIcon.gameObject.SetActive(false); // 현금일 때 아이콘 숨김
+        }
+        else
+        {
+            costText.text = data.costAmount.ToString("#,###");
+            if (costIcon != null) costIcon.gameObject.SetActive(true);
+            SetCostIcon(data.costType);
+        }
         soldOutDim.SetActive(data.isSoldOut);
 
         // 3. 아이콘 세팅 (Resources.Load 대신 직접 참조)
@@ -102,7 +112,6 @@ public class ShopItemSlot : MonoBehaviour
 
     private void SetCostIcon(CostType type)
     {
-        // 재화 타입에 맞는 아이콘도 Resources에서 로드하거나 인스펙터 배열에서 할당
         string iconName = (type == CostType.Essence) ? "정수" : "에테르";
         costIcon.sprite = Resources.Load<Sprite>($"Icons/{iconName}");
     }
@@ -118,7 +127,7 @@ public class ShopItemSlot : MonoBehaviour
     public void OnClickBuy()
     {
         if (myData.isSoldOut) return;
-        FindObjectOfType<ShopManager>().AttemptPurchase(this);
+        FindObjectOfType<ShopManager>().OpenConfirmPanel(this);
     }
 
     private Color GetColorByGrade(UnitGrade grade)

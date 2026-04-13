@@ -235,6 +235,24 @@ public class SettingsData
     public bool isPushNotificationOn = true;
 }
 
+[Serializable]
+public enum QuestType { Daily, Weekly, Permanent } //퀘스트 저장용
+
+[Serializable]
+public class QuestSaveData
+{
+    public string questID;
+    public int currentProgress;
+    public bool isCompleted; // 목표치 달성 여부
+    public bool isClaimed;   // 보상 수령 여부
+}
+
+
+
+
+
+
+
 // 4. 최상위 유저 데이터 (서버나 파일로 저장될 '본체')
 [Serializable]
 public class UserProfile
@@ -271,7 +289,13 @@ public class UserProfile
     public List<CrystalPieceData> crystalInventory = new List<CrystalPieceData>(); //보유 결정 목록
     public List<int> unlockedCrystalGridIndices = new List<int> { 6,7,8,11,12,13 }; //해금된 필드 목록 (초기 위치)
 
-
+    public List<QuestSaveData> questLogs = new List<QuestSaveData>();
+    // 마지막 초기화 시간 저장 (Ticks 사용)
+    public long lastDailyResetTick;
+    public long lastWeeklyResetTick;
+    // 추가 보상 수령 여부 (예: 일일 1/3/5/7회 달성 보상)
+    public List<bool> dailyMilestoneClaimed = new List<bool> { false, false, false, false };
+    public List<bool> weeklyMilestoneClaimed = new List<bool> { false, false, false, false };
 
 
 
