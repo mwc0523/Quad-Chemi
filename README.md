@@ -181,3 +181,8 @@ Projectile proj = projObj.GetComponent<Projectile>();<br>
 배운점: Window - Package Manager - Advertisement Legacy를 설치하고, Unity Dashboard에서 광고 enable 버튼을 눌러 설정을 마친 뒤, 광고를 적용할 수 있었다. <br>
 내일 할 일: SHA-1 인증서부터 이어서 하자, 에테르로 정수 살 수 있게 하기, 스페셜 스킬 구상하기, 구글 로그인 연동하기, 결제 연결하기, 유닛 탭의 각 유닛 클릭시 나오는 패널에서 업그레이드 가격이 MAX일 경우 이상하게 표기되는 문제 수정/개수도 max면 표기하지 말자<br>
 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ<br>
+2026-04-13<br>
+오늘 한 일: 에테르로 정수 구매 가능하게 수정, 에테르 정수 무제한 구매 가능하게 수정, 에테르 정수 구매 전 팝업 띄움, 일일퀘스트 추가 시작<br> 
+배운점: 게임 화면에서의 깔끔한 테스트를 위해 CardUIManager의 SetActive를 false처리했더니 Unit의 카드 효과 계산 부분이 CardUIManager.instance의 부재로 작동하지 않는 문제가 생겼다. SetActive를 false로 두면 instance 자체도 인식되지 않는다는 사실을 배웠다. <br>
+내일 할 일:<br>
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ<br>
