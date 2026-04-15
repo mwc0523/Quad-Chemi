@@ -1,25 +1,63 @@
 using UnityEngine;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 
+// 퀘스트 보상 구조체
+[Serializable]
+public class QuestReward
+{
+    public CurrencyType rewardType;
+    public int amount;
+}
+
+// 인스펙터에서 설정할 퀘스트 원본 데이터 (ScriptableObject로 빼도 무방합니다)
+[Serializable]
+public class QuestTemplate
+{
+    public string questID;       // 예: "daily_kill_1000"
+    public string questName;     // 예: "일일 몬스터 처치"
+    public QuestType questType;
+    public int targetValue;      // 예: 1000
+    public List<QuestReward> rewards;
+}
 
 public class QuestManager : MonoBehaviour
 {
     public static QuestManager instance;
 
-    // 퀘스트 원본 데이터 (ScriptableObject 등으로 관리 권장)
-    // 여기서는 예시로 리스트로 처리
+    [Header("모든 퀘스트 목록 (인스펙터에서 세팅)")]
     public List<QuestTemplate> allQuests = new List<QuestTemplate>();
 
     void Awake() => instance = this;
 
     void Start()
     {
+        InitializeQuests(); // 퀘스트 목록 동기화
         CheckAndResetQuests();
+    }
+
+    // 유저 데이터에 없는 신규 퀘스트가 있다면 추가해주는 동기화 작업
+    private void InitializeQuests()
+    {
+        var user = DataManager.instance.currentUser;
+        foreach (var template in allQuests)
+        {
+            if (!user.questLogs.Exists(q => q.questID == template.questID))
+            {
+                user.questLogs.Add(new QuestSaveData
+                {
+                    questID = template.questID,
+                    currentProgress = 0,
+                    isCompleted = false,
+                    isClaimed = false
+                });
+            }
+        }
     }
 
     public void CheckAndResetQuests()
     {
+        if (DataManager.instance == null) return;
         var user = DataManager.instance.currentUser;
         DateTime now = DateTime.Now;
 
@@ -33,7 +71,6 @@ public class QuestManager : MonoBehaviour
         }
 
         // 2. 주간 퀘스트 초기화 (월요일 00:00)
-        // 현재 주의 월요일 구하기
         DateTime lastWeekly = new DateTime(user.lastWeeklyResetTick);
         int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
         DateTime currentMonday = now.AddDays(-diff).Date;
@@ -46,20 +83,42 @@ public class QuestManager : MonoBehaviour
         }
 
         DataManager.instance.SaveData();
+        UIManager.instance.RefreshQuestRedDot();
     }
 
     private void ResetQuestGroup(QuestType type)
     {
         var user = DataManager.instance.currentUser;
-        // 해당 타입의 퀘스트 로그만 찾아 초기화
-        // 실제로는 원본 리스트에서 해당 타입의 ID들을 가져와서 덮어씌웁니다.
+        foreach (var log in user.questLogs)
+        {
+            var template = allQuests.Find(q => q.questID == log.questID);
+            if (template != null && template.questType == type)
+            {
+                log.currentProgress = 0;
+                log.isCompleted = false;
+                log.isClaimed = false;
+            }
+        }
     }
 
-    // 퀘스트 진행도 상승 호출 함수 (예: 몬스터 처치 시 호출)
-    public void OnQuestProgress(string actionID, int amount)
+    // 몬스터 처치 등 이벤트 발생 시 호출할 함수
+    // 사용 예: QuestManager.instance.OnQuestProgress("daily_kill", 1);
+    public void OnQuestProgress(string targetQuestID, int amount)
     {
-        // 로직: user.questLogs에서 actionID가 일치하는 퀘스트의 progress를 올림
-        // 완료 시 IsCompleted 체크 및 UI 레드닷 갱신 호출
-        UIManager.instance.RefreshQuestRedDot();
+        var user = DataManager.instance.currentUser;
+        var log = user.questLogs.Find(q => q.questID == targetQuestID);
+        var template = allQuests.Find(q => q.questID == targetQuestID);
+
+        if (log != null && template != null && !log.isCompleted)
+        {
+            log.currentProgress += amount;
+
+            if (log.currentProgress >= template.targetValue)
+            {
+                log.currentProgress = template.targetValue;
+                log.isCompleted = true;
+                UIManager.instance.RefreshQuestRedDot(); // 달성 시 레드닷 켜기
+            }
+        }
     }
 }
