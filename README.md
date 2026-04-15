@@ -186,3 +186,8 @@ Projectile proj = projObj.GetComponent<Projectile>();<br>
 배운점: 게임 화면에서의 깔끔한 테스트를 위해 CardUIManager의 SetActive를 false처리했더니 Unit의 카드 효과 계산 부분이 CardUIManager.instance의 부재로 작동하지 않는 문제가 생겼다. SetActive를 false로 두면 instance 자체도 인식되지 않는다는 사실을 배웠다. <br>
 내일 할 일:<br>
 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ<br>
+2026-04-15<br>
+오늘 한 일: 일일퀘스트/주간퀘스트/업적 패널 구현 및 코드 수정<br> 
+배운점: <br>
+내일 할 일: <br>
+ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ<br>
