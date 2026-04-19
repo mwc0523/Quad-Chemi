@@ -17,7 +17,7 @@ public class QuestTemplate
     public string questID;       // 예: "daily_kill_1000"
     public string questName;     // 예: "일일 몬스터 처치"
     public QuestType questType;
-    public int targetValue;      // 예: 1000
+    public float targetValue;      // 예: 1000
     public List<QuestReward> rewards;
 }
 
@@ -60,6 +60,7 @@ public class QuestManager : MonoBehaviour
         if (DataManager.instance == null) return;
         var user = DataManager.instance.currentUser;
         DateTime now = DateTime.Now;
+        bool isFirstLoginToday = false; // 오늘 첫 로그인인지 판별용
 
         // 1. 일일 퀘스트 초기화 (매일 00:00)
         DateTime lastDaily = new DateTime(user.lastDailyResetTick);
@@ -68,7 +69,12 @@ public class QuestManager : MonoBehaviour
             ResetQuestGroup(QuestType.Daily);
             user.lastDailyResetTick = now.Ticks;
             user.dailyMilestoneClaimed = new List<bool> { false, false, false, false };
+
+            user.lastLoginDate = now.ToString("yyyy-MM-dd");
+            user.totalLoginCount++;
+            isFirstLoginToday = true;
         }
+        
 
         // 2. 주간 퀘스트 초기화 (월요일 00:00)
         DateTime lastWeekly = new DateTime(user.lastWeeklyResetTick);
@@ -80,6 +86,12 @@ public class QuestManager : MonoBehaviour
             ResetQuestGroup(QuestType.Weekly);
             user.lastWeeklyResetTick = now.Ticks;
             user.weeklyMilestoneClaimed = new List<bool> { false, false, false, false };
+        }
+
+        if (isFirstLoginToday)
+        {
+            OnQuestProgress("daily_login", 1);
+            OnQuestProgress("weekly_login", 1);
         }
 
         DataManager.instance.SaveData();
@@ -103,7 +115,7 @@ public class QuestManager : MonoBehaviour
 
     // 몬스터 처치 등 이벤트 발생 시 호출할 함수
     // 사용 예: QuestManager.instance.OnQuestProgress("daily_kill", 1);
-    public void OnQuestProgress(string targetQuestID, int amount)
+    public void OnQuestProgress(string targetQuestID, float amount) // 더하는 용도
     {
         var user = DataManager.instance.currentUser;
         var log = user.questLogs.Find(q => q.questID == targetQuestID);
@@ -118,6 +130,30 @@ public class QuestManager : MonoBehaviour
                 log.currentProgress = template.targetValue;
                 log.isCompleted = true;
                 UIManager.instance.RefreshQuestRedDot(); // 달성 시 레드닷 켜기
+            }
+        }
+    }
+
+    public void UpdateQuestHighest(string targetQuestID, float value) //갱신하는 용도
+    {
+        var user = DataManager.instance.currentUser;
+        var log = user.questLogs.Find(q => q.questID == targetQuestID);
+        var template = allQuests.Find(q => q.questID == targetQuestID);
+
+        if (log != null && template != null && !log.isCompleted)
+        {
+            // 새로 달성한 수치가 기존 기록보다 높을 때만 갱신
+            if (value > log.currentProgress)
+            {
+                log.currentProgress = value;
+
+                // 목표치 도달 여부 체크
+                if (log.currentProgress >= template.targetValue)
+                {
+                    log.currentProgress = template.targetValue;
+                    log.isCompleted = true;
+                    UIManager.instance.RefreshQuestRedDot();
+                }
             }
         }
     }

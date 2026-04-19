@@ -142,6 +142,8 @@ public class ShopManager : MonoBehaviour
         }
 
         // 2. 재화 차감
+        QuestManager.instance.OnQuestProgress("daily_spendaether", costAmount);
+        QuestManager.instance.OnQuestProgress("weekly_gatcha", drawCount);
         user.aether -= costAmount;
 
         // 3. 뽑기 진행 및 합산
@@ -302,6 +304,7 @@ public class ShopManager : MonoBehaviour
         }
 
         // 재화 차감 및 횟수 증가
+        QuestManager.instance.OnQuestProgress("daily_spendaether", 10);
         user.aether -= 10;
         user.dailyShopRefreshCount++;
 
@@ -329,6 +332,7 @@ public class ShopManager : MonoBehaviour
         AdManager.instance.ShowRewardedAd(() =>
         {
             // 이 중괄호 안의 코드는 유저가 광고를 끝까지 봤을 때만 실행됩니다.
+            QuestManager.instance.OnQuestProgress("daily_adwatcher", 1);
             user.adShopRefreshCount++;
             GenerateDailyShop();
 
@@ -409,6 +413,7 @@ public class ShopManager : MonoBehaviour
         {
             if (user.aether >= item.costAmount)
             {
+                QuestManager.instance.OnQuestProgress("daily_spendaether", item.costAmount);
                 user.aether -= item.costAmount;
                 AddCurrency(item.itemID, item.amount);
                 CompletePurchase(slot, item);

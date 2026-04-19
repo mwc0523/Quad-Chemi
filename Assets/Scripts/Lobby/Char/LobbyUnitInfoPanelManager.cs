@@ -194,13 +194,17 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
         // 1. 재차 조건 확인 (보안 및 안전성)
         if (currentSaveData.count >= reqCount && user.essence >= reqEssence)
         {
+            QuestManager.instance.OnQuestProgress("daily_enhance", 1);
+            QuestManager.instance.OnQuestProgress("weekly_enhance", 1);
             // 2. 재화 차감
             currentSaveData.count -= reqCount;
             user.essence -= reqEssence;
 
             // 3. 레벨업!
             currentSaveData.level++; //
-
+            if (currentSaveData.level >= 30) QuestManager.instance.OnQuestProgress("perm_enhance1", 1);
+            if (currentSaveData.level >= 40) QuestManager.instance.OnQuestProgress("perm_enhance2", 1);
+            if (currentSaveData.level >= 50) QuestManager.instance.OnQuestProgress("perm_enhance3", 1);
             // 4. UI 갱신 (현재 창을 다시 그려서 레벨과 스탯 변화 확인)
             ShowUnitInfo(currentSaveData);
             UIManager.instance.RefreshTopBar();

@@ -14,7 +14,9 @@ public class DataManager : MonoBehaviour
     private Coroutine saveCoroutine;    // 저장 대기 코루틴
     private float saveDelay = 3.0f;     // 3초 대기 후 저장
     // -------------------------
-
+    public int mobcount;
+    public int summoncount;
+    public float maxdamage;
 
     [Header("모든 유닛 데이터베이스")]
     public List<UnitData> allUnitTemplates;

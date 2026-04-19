@@ -1724,6 +1724,7 @@ public class Unit : MonoBehaviour
 
         if (CardUIManager.instance != null)
         {
+            QuestManager.instance.OnQuestProgress("daily_sell", 1);
             gameObject.SetActive(false);
             CardUIManager.instance.activeUnits.Remove(this); //나를 먼저 제거
             CardUIManager.instance.RefreshAllUnitStats(); //내가 사라짐으로 인한 원소 평형 조건 체크
@@ -1733,6 +1734,7 @@ public class Unit : MonoBehaviour
 
     public void ChangeUnit() {
         if(InGameManager.instance.currentElementStone >= 1) {
+            QuestManager.instance.OnQuestProgress("daily_change", 1);
             InGameManager.instance.AddElementStone(-1);
             Transform parentTile = this.transform.parent;
 

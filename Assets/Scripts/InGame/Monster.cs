@@ -215,10 +215,11 @@ public class Monster : MonoBehaviour
         finalDamage = Mathf.Max(1f, Mathf.Round(finalDamage));
 
         float damageToRecord = Mathf.Min(finalDamage, Mathf.Max(0f, hp));
-        if (attacker != null)
-        {
-            attacker.stats.totalDamage += damageToRecord;
-        }
+        if (attacker != null) attacker.stats.totalDamage += damageToRecord;
+
+        if (DataManager.instance.maxdamage < finalDamage) DataManager.instance.maxdamage = finalDamage; //최대 데미지 갱신
+        Debug.Log("최대 데미지 갱신! : " + DataManager.instance.maxdamage);
+
         ShowDamageText(finalDamage, isCriticalHit);
         hp -= finalDamage;
 
@@ -227,6 +228,7 @@ public class Monster : MonoBehaviour
         {
             if (attacker != null)
             {
+                DataManager.instance.mobcount++;
                 attacker.stats.killCount++;
                 attacker.OnMonsterKilled(this);
             }

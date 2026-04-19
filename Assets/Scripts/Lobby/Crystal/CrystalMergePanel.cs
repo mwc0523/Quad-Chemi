@@ -118,6 +118,7 @@ public class CrystalMergePanel : MonoBehaviour
             inventory.Remove(mat);
         }
 
+        QuestManager.instance.OnQuestProgress("weekly_crystal", 1);
         // 결정된 등급과 모양으로 새 조각 생성 및 인벤토리 추가
         CrystalPieceData newCrystal = new CrystalPieceData(randomShapeIndex, elem, resultGrade);
         inventory.Add(newCrystal);

@@ -90,6 +90,32 @@ public class GameResultManager : MonoBehaviour
         int earnedExp = CalculateExp(reachedWave, totalStageIndex);
         List<CrystalPieceData> droppedCrystals = RollForCrystals(reachedWave, currentTheme);
 
+        if (DataManager.instance.mobcount > 0) { //퀘스트용
+            QuestManager.instance.OnQuestProgress("daily_kill", DataManager.instance.mobcount);
+            QuestManager.instance.OnQuestProgress("weekly_kill", DataManager.instance.mobcount);
+            QuestManager.instance.OnQuestProgress("perm_kill1", DataManager.instance.mobcount);
+            QuestManager.instance.OnQuestProgress("perm_kill2", DataManager.instance.mobcount);
+            QuestManager.instance.OnQuestProgress("perm_kill3", DataManager.instance.mobcount);
+        }
+        if (DataManager.instance.summoncount > 0) { //퀘스트용
+            QuestManager.instance.OnQuestProgress("daily_summon", DataManager.instance.summoncount);
+            QuestManager.instance.OnQuestProgress("weekly_summon", DataManager.instance.summoncount);
+            QuestManager.instance.OnQuestProgress("perm_summon1", DataManager.instance.summoncount);
+            QuestManager.instance.OnQuestProgress("perm_summon2", DataManager.instance.summoncount);
+            QuestManager.instance.OnQuestProgress("perm_summon3", DataManager.instance.summoncount);
+        }
+        QuestManager.instance.OnQuestProgress("daily_wave", reachedWave);
+        QuestManager.instance.OnQuestProgress("weekly_earnessence", earnedEssence);
+        QuestManager.instance.OnQuestProgress("weekly_gameplay", 1);
+        QuestManager.instance.UpdateQuestHighest("perm_onehit1", DataManager.instance.maxdamage);
+        QuestManager.instance.UpdateQuestHighest("perm_onehit2", DataManager.instance.maxdamage);
+        QuestManager.instance.UpdateQuestHighest("perm_onehit3", DataManager.instance.maxdamage);
+
+        if (isClear) {
+            QuestManager.instance.OnQuestProgress("weekly_clear", 1);
+
+        }
+
         // 5. 데이터 업데이트 및 저장 
         user.essence += earnedEssence;
         user.aether += earnedAether;

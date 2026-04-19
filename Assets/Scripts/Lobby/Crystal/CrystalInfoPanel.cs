@@ -9,6 +9,7 @@ public class CrystalInfoPanel : MonoBehaviour
     public TextMeshProUGUI secondaryStatText;
     public TextMeshProUGUI allStatText;
     private CrystalPieceData currentData;
+    public Button rotateButton;
 
     public void SetupAndShow(CrystalPieceData data)
     {
@@ -18,6 +19,7 @@ public class CrystalInfoPanel : MonoBehaviour
         primaryStatText.gameObject.SetActive(true);
         secondaryStatText.gameObject.SetActive(true);
         allStatText.gameObject.SetActive(false);
+        rotateButton.gameObject.SetActive(true);
 
         // 1. 이름 세팅 (예: "전설급 물의 결정")
         string gradeStr = GetGradeString(data.grade);
@@ -101,6 +103,7 @@ public class CrystalInfoPanel : MonoBehaviour
         primaryStatText.gameObject.SetActive(false);
         secondaryStatText.gameObject.SetActive(false);
         allStatText.gameObject.SetActive(true);
+        rotateButton.gameObject.SetActive(false);
 
         if (InGameCrystalManager.Instance == null)
         {

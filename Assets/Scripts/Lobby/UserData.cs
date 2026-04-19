@@ -242,7 +242,7 @@ public enum QuestType { Daily, Weekly, Permanent } //퀘스트 저장용
 public class QuestSaveData
 {
     public string questID;
-    public int currentProgress;
+    public float currentProgress;
     public bool isCompleted; // 목표치 달성 여부
     public bool isClaimed;   // 보상 수령 여부
 }
@@ -286,8 +286,8 @@ public class UserProfile
     public int selectedTheme = 0; // 현재 선택된 테마 (0:바위산 ~ 4:공허)
     public int selectedStage = 1;
 
-    public List<CrystalPieceData> crystalInventory = new List<CrystalPieceData>(); //보유 결정 목록
-    public List<int> unlockedCrystalGridIndices = new List<int> { 6,7,8,11,12,13 }; //해금된 필드 목록 (초기 위치)
+    public string lastLoginDate = "";    // 마지막으로 로그인 기록이 된 날짜 (yyyy-MM-dd)
+    public int totalLoginCount = 0;     // 누적 로그인 횟수
 
     public List<QuestSaveData> questLogs = new List<QuestSaveData>();
     // 마지막 초기화 시간 저장 (Ticks 사용)
@@ -305,6 +305,9 @@ public class UserProfile
     public int dailyShopRefreshCount = 0; // 에테르 새로고침
     public int adShopRefreshCount = 0; // 광고 새로고침
     public List<ShopItemData> savedDailyShop = new List<ShopItemData>();
+
+    public List<CrystalPieceData> crystalInventory = new List<CrystalPieceData>(); //보유 결정 목록
+    public List<int> unlockedCrystalGridIndices = new List<int> { 6, 7, 8, 11, 12, 13 }; //해금된 필드 목록 (초기 위치)
 
     // 보유 유닛 목록
     public List<UnitSaveData> unitList = new List<UnitSaveData>();

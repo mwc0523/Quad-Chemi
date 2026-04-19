@@ -273,6 +273,7 @@ public class CrystalUIManager : MonoBehaviour
         if (DataManager.instance.currentUser.aether >= price)
         {
             // 1. 재화 차감
+            QuestManager.instance.OnQuestProgress("daily_spendaether", price);
             DataManager.instance.currentUser.aether -= price;
 
             // 2. 해금 인덱스 추가

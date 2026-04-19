@@ -93,6 +93,9 @@ public class InGameManager : MonoBehaviour
         currentTime = roundDuration;
         currentCoin = 50; // 코인 50개로 시작
         currentElementStone = 0;
+        DataManager.instance.mobcount = 0; //잡은 몹 수 = 0
+        DataManager.instance.summoncount = 0; //네모 소환 수 = 0
+        DataManager.instance.maxdamage = 0; //최대 데미지 = 0
         UpdateUI();
         ShowStartNoticePanel();
     }
@@ -380,7 +383,6 @@ public class InGameManager : MonoBehaviour
                 }
 
                 summonFee += increaseAmount;
-
                 UpdateUI();
                 SpawnRandomUnit(targetTile, 0);
             }
@@ -461,6 +463,7 @@ public class InGameManager : MonoBehaviour
 
     // 유닛이 필드에 새롭게 등장(소환/합성)할 때마다 호출할 트리거 함수
     public void OnUnitAdded(Unit newUnit) {
+        DataManager.instance.summoncount++; //소환횟수 증가
         BuildTile bt = newUnit.GetComponentInParent<BuildTile>();
         if (bt != null)
         {
