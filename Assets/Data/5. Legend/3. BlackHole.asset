@@ -21,8 +21,9 @@ MonoBehaviour:
   projectilePrefab: {fileID: 4113111827210690632, guid: b21b289ef49bc1c40b5c3d6dbf6e9060, type: 3}
   skills:
   - skillName: "\uC0AC\uAC74\uC758 \uC9C0\uD3C9\uC120"
-    description: "15% \uD655\uB960\uB85C \uC9C0\uD3C9\uC120\uC744 \uBFCC\uB824 \uBC94\uC704\uB0B4
-      \uC801\uC758 \uCCB4\uB825\uC774 5% \uC774\uD558\uB77C\uBA74 \uCC98\uD615\uD569\uB2C8\uB2E4"
+    description: "15{chance}% \uD655\uB960\uB85C \uC9C0\uD3C9\uC120\uC744 \uBFCC\uB824
+      \uBC94\uC704\uB0B4 \uC801\uC758 \uCCB4\uB825\uC774 5% \uC774\uD558\uB77C\uBA74
+      \uCC98\uD615\uD569\uB2C8\uB2E4"
     trigger: 0
     triggerChance: 0.15
     triggerCount: 0
@@ -34,7 +35,7 @@ MonoBehaviour:
       count: 0
       effectPrefab: {fileID: 6094360297785955000, guid: 79ec7bb4a2b257f49adf69e087c0d87c, type: 3}
   - skillName: "\uD2B9\uC774\uC810 \uBD95\uAD34"
-    description: "10% \uD655\uB960\uB85C 3\uCE78 \uD06C\uAE30\uC758 \uBE14\uB799\uD640\uC744
+    description: "10{chance}% \uD655\uB960\uB85C 3\uCE78 \uD06C\uAE30\uC758 \uBE14\uB799\uD640\uC744
       \uC18C\uD658\uD574 7\uCD08\uAC04 \uC801\uC744 \uC911\uC2EC\uBD80\uB85C \uB04C\uC5B4\uB2F9\uAE30\uBA70
       \uCD08\uB2F9 300%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
     trigger: 0
@@ -48,11 +49,11 @@ MonoBehaviour:
       count: 0
       effectPrefab: {fileID: 6094360297785955000, guid: cf306c54934b0ee4296ce3f1ffa402e7, type: 3}
   - skillName: "\uC554\uD751 \uBB3C\uC9C8"
-    description: "15% \uD655\uB960\uB85C \uAC80\uC740 \uAD6C\uCCB4\uB97C \uBC1C\uC0AC\uD574
-      \uCC98\uC74C \uB2FF\uC740 \uC801\uC5D0\uAC8C 2000%\uC758 \uB370\uBBF8\uC9C0\uB97C
-      \uC90D\uB2C8\uB2E4. \uAD6C\uCCB4\uB294 \uC801\uC5D0\uAC8C \uB2FF\uC73C\uBA74
-      \uD3ED\uBC1C\uD558\uC5EC 2\uCE78 \uBC94\uC704\uC758 \uC801\uC5D0\uAC8C 500%\uC758
-      \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
+    description: "15{chance}% \uD655\uB960\uB85C \uAC80\uC740 \uAD6C\uCCB4\uB97C
+      \uBC1C\uC0AC\uD574 \uCC98\uC74C \uB2FF\uC740 \uC801\uC5D0\uAC8C 2000%\uC758
+      \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4. \uAD6C\uCCB4\uB294 \uC801\uC5D0\uAC8C
+      \uB2FF\uC73C\uBA74 \uD3ED\uBC1C\uD558\uC5EC 2\uCE78 \uBC94\uC704\uC758 \uC801\uC5D0\uAC8C
+      500%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
     trigger: 0
     triggerChance: 0.15
     triggerCount: 0

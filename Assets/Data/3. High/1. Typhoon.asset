@@ -21,7 +21,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 4687881338895394918, guid: a824ec8fc03614d42b9543fa1346f291, type: 3}
   skills:
   - skillName: "\uD0DC\uD48D \uBC1C\uC0AC"
-    description: "10% \uD655\uB960\uB85C \uC77C\uC790\uB85C \uAE34 \uAC70\uB9AC\uB97C
+    description: "10{chance}% \uD655\uB960\uB85C \uC77C\uC790\uB85C \uAE34 \uAC70\uB9AC\uB97C
       \uC774\uB3D9\uD558\uB294 \uD0DC\uD48D\uC744 \uBC1C\uC0AC\uD574 \uC801\uC5D0\uAC8C
       1500%\uC758 \uD53C\uD574\uB97C \uC900\uB2E4(\uAD00\uD1B5) "
     trigger: 0

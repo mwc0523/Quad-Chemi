@@ -423,7 +423,7 @@ public class Unit : MonoBehaviour
         {
             if (skill.trigger == SkillTrigger.OnAttack)
             {
-                float finalChance = skill.triggerChance + skillChanceBonus + skillChanceBonusByCard + skillChanceBonusByCrystal;
+                float finalChance = skill.triggerChance + TotalSkillChanceBonus;
 
                 if (Random.value < finalChance)
                 {
@@ -483,6 +483,14 @@ public class Unit : MonoBehaviour
         if (proj != null) proj.Setup(target, attack, ProjectileType.Normal, this);
     }
 
+    public float TotalSkillChanceBonus
+    {
+        get
+        {
+            // 흩어져 있는 보너스 확률들을 모두 더해서 반환해 줍니다.
+            return skillChanceBonus + skillChanceBonusByCard + skillChanceBonusByCrystal;
+        }
+    }
     #endregion
 
     #region 스킬 실행

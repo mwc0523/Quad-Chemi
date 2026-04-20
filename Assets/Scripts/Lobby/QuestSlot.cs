@@ -32,7 +32,8 @@ public class QuestSlot : MonoBehaviour
         t_Title.text = template.questName;
         s_ProgressBar.maxValue = template.targetValue;
         s_ProgressBar.value = saveData.currentProgress;
-        t_Amount.text = $"{saveData.currentProgress}/{template.targetValue}";
+        
+        t_Amount.text = DamageText.GetUnitText(saveData.currentProgress) + "/" + DamageText.GetUnitText(template.targetValue);
 
         // 2. 보상 텍스트 조합 (예: "정수 2000, 에테르 300")
         string rewardStr = "";
@@ -71,27 +72,30 @@ public class QuestSlot : MonoBehaviour
     }
 
     // 보상 수령 버튼 클릭 시
+    // QuestSlot의 OnClickClaim 내부 수정
     private void OnClickClaim()
     {
         if (mySaveData.isCompleted && !mySaveData.isClaimed)
         {
             var user = DataManager.instance.currentUser;
+            int e = 0, a = 0, t = 0;
 
-            // 보상 지급 로직
             foreach (var reward in myTemplate.rewards)
             {
-                if (reward.rewardType == CurrencyType.Essence) user.essence += reward.amount;
-                else if (reward.rewardType == CurrencyType.Aether) user.aether += reward.amount;
-                else if (reward.rewardType == CurrencyType.Ticket) user.ticket += reward.amount;
+                if (reward.rewardType == CurrencyType.Essence) { user.essence += reward.amount; e += reward.amount; }
+                else if (reward.rewardType == CurrencyType.Aether) { user.aether += reward.amount; a += reward.amount; }
+                else if (reward.rewardType == CurrencyType.Ticket) { user.ticket += reward.amount; t += reward.amount; }
             }
 
             mySaveData.isClaimed = true;
-            DataManager.instance.SaveData();
 
-            // 탑바 재화 및 UI 갱신
+            // 부모 패널의 팝업 띄우기
+            parentPanel.ShowRewardPopup(e, a, t);
+
+            DataManager.instance.SaveData();
             UIManager.instance.RefreshTopBar();
             UIManager.instance.RefreshQuestRedDot();
-            parentPanel.RefreshUI(); // 전체 창 새로고침 (정렬이나 마일스톤 확인용)
+            parentPanel.RefreshUI();
         }
     }
 }

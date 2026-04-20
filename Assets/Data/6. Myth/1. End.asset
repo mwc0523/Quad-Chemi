@@ -29,9 +29,9 @@ MonoBehaviour:
     range: 0
     effects: []
   - skillName: "\uCC9C\uCCB4\uBD95\uAD34"
-    description: "15% \uD655\uB960\uB85C \uB9F5 \uC804\uCCB4\uC758 \uB79C\uB364 \uD0C0\uC77C
-      5\uAC1C\uC5D0 \uAC70\uB300\uD55C \uC6B4\uC11D\uC744 \uB5A8\uAD88 4000%\uC758
-      \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
+    description: "15{chance}% \uD655\uB960\uB85C \uB9F5 \uC804\uCCB4\uC758 \uB79C\uB364
+      \uD0C0\uC77C 5\uAC1C\uC5D0 \uAC70\uB300\uD55C \uC6B4\uC11D\uC744 \uB5A8\uAD88
+      4000%\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4"
     trigger: 0
     triggerChance: 0.15
     triggerCount: 0
@@ -43,7 +43,7 @@ MonoBehaviour:
       count: 5
       effectPrefab: {fileID: 6094360297785955000, guid: 2a895a66a83ae3246b0e62a005efcff7, type: 3}
   - skillName: "\uCC28\uC6D0\uB2E8\uC808"
-    description: "12% \uD655\uB960\uB85C \uACF5\uACA9\uBC94\uC704 \uD06C\uAE30\uC758
+    description: "12{chance}% \uD655\uB960\uB85C \uACF5\uACA9\uBC94\uC704 \uD06C\uAE30\uC758
       \uC6D0\uD615 \uC885\uB9D0\uC744 \uD718\uB458\uB7EC 3000%\uC758 \uB370\uBBF8\uC9C0\uB97C
       \uC90D\uB2C8\uB2E4 "
     trigger: 0

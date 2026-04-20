@@ -480,9 +480,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   data: {fileID: 11400000, guid: eda787465d8b24f40ac44a77a92d8e05, type: 2}
   level: 1
+  isStunned: 0
   skillChanceBonus: 0
   judgementLaserLine: {fileID: 3261417466493029716}
   skillChanceBonusByCard: 0
+  skillChanceBonusByCrystal: 0
   auraRenderer: {fileID: 5184019441439614}
   rangeCircle: {fileID: 7932112952598016715}
   basicProjectilePrefab: {fileID: 4113111827210690632, guid: 2fc285519df487e4f942b3d2be2eaf44, type: 3}
@@ -1242,7 +1244,7 @@ SpriteRenderer:
   m_SortingLayer: 2
   m_SortingOrder: -2
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.11764706}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.078431375}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

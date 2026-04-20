@@ -121,13 +121,12 @@ public class QuestManager : MonoBehaviour
         var log = user.questLogs.Find(q => q.questID == targetQuestID);
         var template = allQuests.Find(q => q.questID == targetQuestID);
 
-        if (log != null && template != null && !log.isCompleted)
+        if (log != null && template != null)
         {
             log.currentProgress += amount;
 
             if (log.currentProgress >= template.targetValue)
             {
-                log.currentProgress = template.targetValue;
                 log.isCompleted = true;
                 UIManager.instance.RefreshQuestRedDot(); // 달성 시 레드닷 켜기
             }
@@ -140,7 +139,7 @@ public class QuestManager : MonoBehaviour
         var log = user.questLogs.Find(q => q.questID == targetQuestID);
         var template = allQuests.Find(q => q.questID == targetQuestID);
 
-        if (log != null && template != null && !log.isCompleted)
+        if (log != null && template != null)
         {
             // 새로 달성한 수치가 기존 기록보다 높을 때만 갱신
             if (value > log.currentProgress)
@@ -150,7 +149,6 @@ public class QuestManager : MonoBehaviour
                 // 목표치 도달 여부 체크
                 if (log.currentProgress >= template.targetValue)
                 {
-                    log.currentProgress = template.targetValue;
                     log.isCompleted = true;
                     UIManager.instance.RefreshQuestRedDot();
                 }

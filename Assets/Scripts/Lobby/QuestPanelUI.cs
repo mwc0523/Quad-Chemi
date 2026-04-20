@@ -10,7 +10,9 @@ public class QuestPanelUI : MonoBehaviour
     public GameObject questSlotPrefab; // 방금 만든 QuestSlot 프리팹
     public UnityEngine.UI.Slider milestoneSlider;
     public GameObject[] milestoneIcons;
-    
+
+    [Header("Reward Popup")]
+    public RewardPopupUI rewardPopup;
 
     private QuestType currentTab = QuestType.Daily; //현재 탭(일일/주간/영구)
     private List<GameObject> spawnedSlots = new List<GameObject>();
@@ -26,6 +28,7 @@ public class QuestPanelUI : MonoBehaviour
     // UIManager에서 패널 켤 때 호출됨
     public void RefreshUI()
     {
+        Debug.Log("버튼 눌림2!");
         var user = DataManager.instance.currentUser;
 
         if (title != null)
@@ -90,36 +93,76 @@ public class QuestPanelUI : MonoBehaviour
 
     }
 
-    // 일일 퀘스트 추가 보상 (일괄 지급 버튼)
+    // 기존 OnClickDailyMilestoneBonus 수정
     public void OnClickDailyMilestoneBonus()
     {
         var user = DataManager.instance.currentUser;
-        int completedDailyCount = GetCompletedCount(QuestType.Daily);
+        int completedCount = GetCompletedCount(currentTab);
+        List<bool> claimedList;
+
+        if (currentTab == QuestType.Daily) claimedList = user.dailyMilestoneClaimed;
+        else if (currentTab == QuestType.Weekly) claimedList = user.weeklyMilestoneClaimed;
+        else return;
+
         int[] milestones = { 1, 3, 5, 7 };
+
+        // 합산 보상 변수
+        int totalE = 0, totalA = 0, totalT = 0;
         bool gotAnyReward = false;
 
         for (int i = 0; i < milestones.Length; i++)
         {
-            // 마일스톤 조건을 달성했고, 아직 수령하지 않았다면
-            if (completedDailyCount >= milestones[i] && !user.dailyMilestoneClaimed[i])
+            if (completedCount >= milestones[i] && !claimedList[i])
             {
-                // 예시: 1회=에테르10, 3회=에테르30... (기획에 맞게 수정)
-                int bonusAether = milestones[i] * 10;
-                user.aether += bonusAether;
+                // 보상 계산 및 합산
+                var rewards = CalculateMilestoneReward(currentTab, i);
+                user.essence += rewards.essence;
+                user.aether += rewards.aether;
 
-                user.dailyMilestoneClaimed[i] = true;
+                totalE += rewards.essence;
+                totalA += rewards.aether;
+
+                claimedList[i] = true;
                 gotAnyReward = true;
             }
         }
 
         if (gotAnyReward)
         {
-            Debug.Log("일일 추가 보상 일괄 수령 완료!");
+            // 팝업 띄우기
+            rewardPopup.Show(totalE, totalA, totalT);
+
             DataManager.instance.SaveData();
             UIManager.instance.RefreshTopBar();
             UIManager.instance.RefreshQuestRedDot();
             RefreshUI();
         }
+    }
+
+    // GiveMilestoneReward를 수치 반환형으로 수정
+    private (int essence, int aether) CalculateMilestoneReward(QuestType tab, int index)
+    {
+        int e = 0, a = 0;
+        if (tab == QuestType.Daily)
+        {
+            int[] essenceRewards = { 500, 1000, 1500, 2000 };
+            e = essenceRewards[index];
+            if (index == 3) a = 100;
+        }
+        else if (tab == QuestType.Weekly)
+        {
+            int[] essenceRewards = { 2000, 3000, 5000, 10000 };
+            int[] aetherRewards = { 0, 100, 200, 500 };
+            e = essenceRewards[index];
+            a = aetherRewards[index];
+        }
+        return (e, a);
+    }
+
+    // QuestSlot에서 개별 보상 수령 시 호출할 Public 함수
+    public void ShowRewardPopup(int e, int a, int t)
+    {
+        rewardPopup.Show(e, a, t);
     }
 
     private int GetCompletedCount(QuestType type)

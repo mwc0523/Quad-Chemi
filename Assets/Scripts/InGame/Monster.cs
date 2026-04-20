@@ -218,7 +218,7 @@ public class Monster : MonoBehaviour
         if (attacker != null) attacker.stats.totalDamage += damageToRecord;
 
         if (DataManager.instance.maxdamage < finalDamage) DataManager.instance.maxdamage = finalDamage; //최대 데미지 갱신
-        Debug.Log("최대 데미지 갱신! : " + DataManager.instance.maxdamage);
+        //Debug.Log("최대 데미지 갱신! : " + DataManager.instance.maxdamage);
 
         ShowDamageText(finalDamage, isCriticalHit);
         hp -= finalDamage;
