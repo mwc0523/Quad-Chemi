@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
+using UnityEngine.UI;
+
 
 public class QuestPanelUI : MonoBehaviour
 {
@@ -11,11 +13,18 @@ public class QuestPanelUI : MonoBehaviour
     public UnityEngine.UI.Slider milestoneSlider;
     public GameObject[] milestoneIcons;
 
+    [Header("Milestone Box Sprites")] //보상 상자 이미지들
+    public Sprite lockedBoxSprite;  // 달성 전 (회색 상자)
+    public Sprite readyBoxSprite;   // 수령 가능 (빛나는 상자)
+    public Sprite claimedBoxSprite; // 수령 완료 (열린 상자 또는 V표시)
+
     [Header("Reward Popup")]
     public RewardPopupUI rewardPopup;
 
     private QuestType currentTab = QuestType.Daily; //현재 탭(일일/주간/영구)
     private List<GameObject> spawnedSlots = new List<GameObject>();
+
+
 
 
     public void OnClickDailyTab() { currentTab = QuestType.Daily; RefreshUI(); }
@@ -28,7 +37,6 @@ public class QuestPanelUI : MonoBehaviour
     // UIManager에서 패널 켤 때 호출됨
     public void RefreshUI()
     {
-        Debug.Log("버튼 눌림2!");
         var user = DataManager.instance.currentUser;
 
         if (title != null)
@@ -54,7 +62,6 @@ public class QuestPanelUI : MonoBehaviour
         // 기존 슬롯 삭제
         foreach (var slot in spawnedSlots) Destroy(slot);
         spawnedSlots.Clear();
-
         // 퀘스트 슬롯 생성
         foreach (var log in user.questLogs)
         {
@@ -67,28 +74,66 @@ public class QuestPanelUI : MonoBehaviour
                 spawnedSlots.Add(go);
             }
         }
-        if(currentTab != QuestType.Permanent) { //업적 탭이 아닐 경우
+
+
+        if (currentTab != QuestType.Permanent) //업적 탭이 아닐 경우 마일스톤 표시용
+        {
             milestoneSlider.gameObject.SetActive(true);
             int completedCount = GetCompletedCount(currentTab);
+
             if (milestoneSlider != null)
             {
-                milestoneSlider.maxValue = 7; // 마일스톤 최대치 (기획에 따라 변경 가능)
+                milestoneSlider.maxValue = 7;
                 milestoneSlider.value = completedCount;
             }
 
-            // 달성 개수에 따라 보상 아이콘(체크 표시 등) 활성화
+            // 현재 탭에 맞는 수령 여부 리스트 가져오기
+            List<bool> claimedList = (currentTab == QuestType.Daily) ? user.dailyMilestoneClaimed : user.weeklyMilestoneClaimed;
             int[] milestones = { 1, 3, 5, 7 };
+
             for (int i = 0; i < milestones.Length; i++)
             {
                 if (i < milestoneIcons.Length && milestoneIcons[i] != null)
                 {
-                    // 퀘스트 달성 수가 마일스톤 요구치 이상이면 해당 아이콘 켜기
-                    milestoneIcons[i].SetActive(completedCount >= milestones[i]);
+                    // 아이콘 오브젝트는 항상 켜둡니다. (숨기는 게 아니라 이미지를 바꿀 거니까요)
+                    milestoneIcons[i].SetActive(true);
+
+                    // Image 컴포넌트를 가져옵니다.
+                    Image iconImg = milestoneIcons[i].GetComponent<Image>();
+                    if (iconImg != null)
+                    {
+                        bool isReached = completedCount >= milestones[i];
+                        bool isClaimed = claimedList[i];
+
+                        if (isClaimed)
+                        {
+                            // 1. 이미 받음 -> 열린 상자
+                            iconImg.sprite = claimedBoxSprite;
+                        }
+                        else if (isReached)
+                        {
+                            // 2. 달성했는데 아직 안 받음 -> 수령 가능 상자
+                            iconImg.sprite = readyBoxSprite;
+                        }
+                        else
+                        {
+                            // 3. 아직 달성 못함 -> 잠긴 상자
+                            iconImg.sprite = lockedBoxSprite;
+                        }
+                    }
                 }
             }
         }
-        else {
+        else
+        {
+            // 업적 탭일 경우: 슬라이더 끄기
             milestoneSlider.gameObject.SetActive(false);
+
+            // 업적 탭일 경우: 아이콘들도 모두 끄기
+            foreach (var icon in milestoneIcons)
+            {
+                if (icon != null) icon.SetActive(false);
+            }
         }
 
     }

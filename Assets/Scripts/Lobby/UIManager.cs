@@ -230,7 +230,7 @@ public class UIManager : MonoBehaviour
 
     public void OnClickQuestButton()
     {
-        Debug.Log("버튼 눌림!");
+        //Debug.Log("버튼 눌림!");
         questPanel.GetComponent<QuestPanelUI>().RefreshUI();
         questPanel.SetActive(true);
     }
