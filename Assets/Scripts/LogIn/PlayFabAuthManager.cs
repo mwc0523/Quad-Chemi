@@ -2,12 +2,15 @@ using PlayFab;
 using PlayFab.ClientModels;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using PlayFab.ClientModels;
 
 public class PlayFabAuthManager : MonoBehaviour
 {
     public static PlayFabAuthManager Instance;
 
+    [SerializeField] private GameObject privacyPanel;
     [SerializeField] private GameObject nicknamePanel;
+    private const string PrivacyUrl = "https://www.notion.so/1685aef59a728015aff2cbdf5a7af552?source=copy_link"; //개인정보처리방침 링크
 
     void Awake()
     {
@@ -20,6 +23,8 @@ public class PlayFabAuthManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        privacyPanel.SetActive(false);
+        nicknamePanel.SetActive(false);
     }
 
     // [게스트 로그인] 기기 고유 ID를 사용하여 로그인
@@ -56,11 +61,12 @@ public class PlayFabAuthManager : MonoBehaviour
         {
             if (isNewUser)
             {
-                // 신규 유저라면 닉네임 패널 활성화
-                nicknamePanel.SetActive(true);
+                // 신규 유저라면 동의 패널 활성화
+                privacyPanel.SetActive(true);
             }
             else
             {
+                //privacyPanel.SetActive(true);
                 // 기존 유저라면 바로 이동
                 SceneManager.LoadScene("Lobby");
             }
@@ -70,5 +76,35 @@ public class PlayFabAuthManager : MonoBehaviour
     private void OnLoginFailure(PlayFabError error)
     {
         Debug.LogError($"로그인 실패: {error.GenerateErrorReport()}");
+    }
+
+    public void OnClickOpenPrivacyNotion()
+    {
+        Application.OpenURL(PrivacyUrl);
+    }
+
+    // [동의 및 시작 버튼] 연결
+    public void OnClickAgreeAndContinue()
+    {
+        var request = new ExecuteCloudScriptRequest
+        {
+            FunctionName = "setPrivacyAgreement", // 위에서 만든 JS 함수 이름
+            GeneratePlayStreamEvent = true
+        };
+
+        PlayFabClientAPI.ExecuteCloudScript(request, OnCloudScriptSuccess, OnCloudScriptFailure);
+    }
+
+    private void OnCloudScriptSuccess(ExecuteCloudScriptResult result)
+    {
+        Debug.Log("ReadOnly Data에 동의 여부 저장 완료");
+        privacyPanel.SetActive(false);
+        nicknamePanel.SetActive(true);
+    }
+
+    private void OnCloudScriptFailure(PlayFabError error)
+    {
+        Debug.LogError("데이터 저장 실패: " + error.GenerateErrorReport());
+        // 실패 시 다시 시도하거나 에러 메시지 표시
     }
 }
