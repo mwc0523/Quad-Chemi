@@ -40,7 +40,8 @@ public class ShopItemSlot : MonoBehaviour
         amountText.text = $"X{data.amount}";
         if (data.costType == CostType.Cash)
         {
-            costText.text = $"₩{data.costAmount:#,###}";
+            costText.text = "준비중..";
+            //costText.text = $"₩{data.costAmount:#,###}";
             if (costIcon != null) costIcon.gameObject.SetActive(false); // 현금일 때 아이콘 숨김
         }
         else
@@ -100,7 +101,7 @@ public class ShopItemSlot : MonoBehaviour
         // 슬라이더 갱신 (0~1 사이 값)
         progressSlider.value = Mathf.Clamp01(progressRatio);
 
-        progressImage2.color = (progressRatio >= 1f) ? Color.green : new Color(245f / 255f, 113f / 255f, 0f / 255f);
+        progressImage2.color = (progressRatio >= 1f) ? Color.green : new Color(198f / 255f, 144f / 255f, 96f / 255f);
     }
 
     private void LoadNonUnitIcon(string id)
@@ -126,6 +127,9 @@ public class ShopItemSlot : MonoBehaviour
 
     public void OnClickBuy()
     {
+        //Debug.Log($"[Shop] {myData.itemID}");
+        //아직 결제를 안만들었으니 에테르는 리턴
+        if (myData.itemID == "에테르") return;
         if (myData.isSoldOut) return;
         FindObjectOfType<ShopManager>().OpenConfirmPanel(this);
     }

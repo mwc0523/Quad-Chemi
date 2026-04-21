@@ -8,7 +8,7 @@ public class AdManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityA
 
     [Header("유니티 애즈 게임 ID (대시보드에서 복사)")]
     public string androidGameId = "6088047";
-    public bool testMode = true; // 출시할 때는 false로 변경!
+    public bool testMode = false; // 출시할 때는 false로 변경!
 
     private string adUnitId = "Rewarded_Android"; // 기본 보상형 광고 ID
     private Action onRewardCallback; // 광고 시청 완료 후 실행할 함수 보관용

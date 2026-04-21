@@ -36,6 +36,9 @@ public class CrystalUIManager : MonoBehaviour
 
     void Start()
     {
+        infoPanel.gameObject.SetActive(false);
+        mergePanel.gameObject.SetActive(false);
+
         if (DataManager.instance == null) return;
 
         // 1. 이미 데이터 로드가 끝났다면 즉시 UI 생성 (씬 이동 시 등)

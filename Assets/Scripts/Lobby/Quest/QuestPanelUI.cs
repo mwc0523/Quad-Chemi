@@ -32,6 +32,7 @@ public class QuestPanelUI : MonoBehaviour
     public void OnClickPermTab() { currentTab = QuestType.Permanent; RefreshUI(); }
 
     void Start() {
+        rewardPopup.gameObject.SetActive(false);
         gameObject.SetActive(false);
     }
     // UIManager에서 패널 켤 때 호출됨

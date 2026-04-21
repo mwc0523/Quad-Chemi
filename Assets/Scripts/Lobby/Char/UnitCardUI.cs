@@ -52,7 +52,7 @@ public class UnitCardUI : MonoBehaviour, IPointerClickHandler
         {
             // 1 이상(또는 MAX)이면 초록색, 아니면 주황색(245, 113, 0)
             progressImage.color = (progressRatio >= 1f) ?
-                Color.green : new Color(245f / 255f, 113f / 255f, 0f / 255f);
+                Color.green : new Color(198f / 255f, 144f / 255f, 96f / 255f);
         }
     }
 

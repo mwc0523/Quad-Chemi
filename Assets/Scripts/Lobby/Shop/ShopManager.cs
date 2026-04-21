@@ -8,6 +8,7 @@ using TMPro;
 using UnityEngine.UI;
 
 
+
 public class ShopManager : MonoBehaviour
 {
     [Header("UI Grids")]
@@ -48,6 +49,7 @@ public class ShopManager : MonoBehaviour
 
     void Awake() {
         gachaResultPanel.SetActive(false);
+        confirmPanel.gameObject.SetActive(false);
     }
     void Start()
     {
@@ -318,8 +320,7 @@ public class ShopManager : MonoBehaviour
         Debug.Log($"상점 새로고침 완료! 남은 횟수: {3 - user.dailyShopRefreshCount}/3");
     }
 
-    public void OnClickAdRefresh()
-    {
+    public void OnClickAdRefresh() {
         var user = DataManager.instance.currentUser;
 
         if (user.adShopRefreshCount >= 3)
@@ -432,9 +433,11 @@ public class ShopManager : MonoBehaviour
         }
         else if (item.costType == CostType.Cash)
         {
+            
+
             // 현금 결제는 외부 API 호출 후 성공 시 AddCurrency 호출
-            AddCurrency(item.itemID, item.amount);
-            CompletePurchase(slot, item);
+            //AddCurrency(item.itemID, item.amount);
+            //CompletePurchase(slot, item);
         }
     }
 

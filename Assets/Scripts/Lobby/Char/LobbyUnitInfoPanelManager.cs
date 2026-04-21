@@ -150,7 +150,11 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
 
         var skill = currentUnitData.skills[index];
         skillNameText.text = skill.skillName;
-        skillDescriptionText.text = skill.description;
+        string finalDescription = skill.description;
+        if (finalDescription.Contains("{chance}")) {
+            finalDescription = finalDescription.Replace("{chance}", "");
+        }
+        skillDescriptionText.text = finalDescription;
     }
 
     public void HideUnitInfo() {
