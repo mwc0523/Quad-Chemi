@@ -78,26 +78,39 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
         unitNameText.text = currentUnitData.unitName;
         levelText.text = $"Lv.{saveData.level}";
 
-        // 게이지 및 카드 수량 (UnitSaveData의 수식 활용)
-        int requiredCount = saveData.GetRequiredCount();
-        float progressRatio = (float)saveData.count / requiredCount;
-        cardCountText.text = $"{saveData.count}/{requiredCount}";
-        progressBar.value = Mathf.Clamp01(progressRatio);
-        if (progressFillImage != null)
+        // ★ 수정된 부분: 만렙(50) 체크 및 UI 처리
+        bool isMaxLevel = saveData.level >= 50;
+
+        if (isMaxLevel)
         {
-            // 1 이상이면 초록색, 아니면 지정하신 주황색
-            progressFillImage.color = (progressRatio >= 1f) ? Color.green : new Color(245f / 255f, 113f / 255f, 0f / 255f); ;
+            // 50레벨일 경우 개수 숨기고(혹은 MAX 표시) 슬라이더 풀로 채움
+            cardCountText.text = "MAX";
+            progressBar.value = 1f;
+            if (progressFillImage != null) progressFillImage.color = Color.green;
+        }
+        else
+        {
+            // 기존 로직
+            int requiredCount = saveData.GetRequiredCount();
+            float progressRatio = (float)saveData.count / requiredCount;
+            cardCountText.text = $"{saveData.count}/{requiredCount}";
+            progressBar.value = Mathf.Clamp01(progressRatio);
+
+            if (progressFillImage != null)
+            {
+                progressFillImage.color = (progressRatio >= 1f) ? Color.green : new Color(245f / 255f, 113f / 255f, 0f / 255f);
+            }
         }
 
-        // 스탯 (현재 레벨의 배율이 적용된 최종 스탯을 보여주고 싶다면 계산 필요)
-        float damageMult = saveData.GetDamageMultiplier(); //
+        // 스탯
+        float damageMult = saveData.GetDamageMultiplier();
         attackPowerText.text = (currentUnitData.damage * damageMult).ToString("F1");
         attackSpeedText.text = currentUnitData.attackSpeed.ToString("F1");
         attackRangeText.text = currentUnitData.attackRange.ToString("F1");
 
         RefreshSkillButtons();
 
-        // ★ 레벨업 버튼 상태 업데이트
+        // 레벨업 버튼 상태 업데이트
         UpdateUpgradeButtonState();
     }
 
@@ -105,25 +118,32 @@ public class LobbyUnitInfoPanelManager : MonoBehaviour
     {
         if (currentSaveData == null || DataManager.instance == null) return;
 
-        // 1. 만렙 체크 (예: 50레벨이 최대라면)
         bool isMaxLevel = currentSaveData.level >= 50;
 
         int reqCount = currentSaveData.GetRequiredCount();
         long reqEssence = currentSaveData.GetRequiredEssence();
         long myEssence = DataManager.instance.currentUser.essence;
 
-        // 2. 만렙이 '아니면서' 재화가 충분할 때만 true
         bool canUpgrade = !isMaxLevel && (currentSaveData.count >= reqCount) && (myEssence >= reqEssence);
 
         upgradeButton.gameObject.SetActive(canUpgrade);
         upgradeIcon.gameObject.SetActive(canUpgrade);
 
-        if (canUpgrade && upgradeCostText != null)
+        // ★ 원인 해결: canUpgrade 조건과 상관없이 텍스트는 무조건 갱신합니다.
+        if (upgradeCostText != null)
         {
-            upgradeCostText.text = reqEssence.ToString("N0");
+            if (isMaxLevel)
+            {
+                // 만렙이면 비용을 보여줄 필요가 없으니 가려줍니다.
+                upgradeCostText.text = "-";
+            }
+            else
+            {
+                upgradeCostText.text = reqEssence.ToString("N0");
+                upgradeCostText.color = (myEssence >= reqEssence) ? Color.black : Color.red;
+            }
         }
     }
-
     private void RefreshSkillButtons()
     {
         // 기존 버튼 제거
