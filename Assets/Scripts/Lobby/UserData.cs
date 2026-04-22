@@ -312,6 +312,7 @@ public class UserProfile
     // 보유 유닛 목록
     public List<UnitSaveData> unitList = new List<UnitSaveData>();
 
+    public string profileIconName;
     // 설정 데이터
     public SettingsData settings = new SettingsData();
 
